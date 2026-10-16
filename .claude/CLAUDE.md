@@ -4,7 +4,9 @@ Claude Codeが起動時に自動で読むファイル。`.claude/` に置くの�
 
 ## このサイト
 - シャンプー・保湿クリームなどの**成分表を、決まったルールで読み解いて比べる**サイト。サイト名は「クラベル」（ロゴの横に小さく kurabelle。検索結果のタイトルは「クラベル｜成分でくらべるシャンプー・スキンケア」）、ドメインは kurabelle.com。
-- 本番は Cloudflare Pages が `npm run build`（`src/build.js`）を実行し、`dist/` を公開する。`dist/` はリポジトリに入れない。
+- 本番は Cloudflare Pages（アカウント Ishimonzukan、プロジェクト kurabelle）が `npm run build`（`src/build.js`）を実行し、`dist/` を公開する。`dist/` はリポジトリに入れない。GitHub は amekaigan/kurabelle（非公開）。
+- ドメイン kurabelle.com はお名前.comで取得（2026年10月）、ネームサーバーを Cloudflare（joselyn / achiel）に切り替え済み。kurabelle.com・www.kurabelle.com とも Pages のカスタムドメインで有効。
+- 反映の確認：`https://kurabelle.com/version.txt` にビルドした日時とコミットが出る。
 - 商品データは `data/products.json` の1ファイル。ページはすべて `src/gen.js` が作る（商品・成分・ブランド・目的別・カテゴリ）。
 - 診断つきの比較ツールは `app/index.html`（1ファイル）。ビルド時に gen.js が、サイトと同じヘッダー・フッター（`<!--KB:HEAD-->` `<!--KB:FOOT-->` の位置）を差し込み、products.json と一緒に `dist/app/` に置く。ヘッダー・フッター・方眼の背景は `src/chrome.css`（サイトと比較ツールで共通）。
 

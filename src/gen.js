@@ -23,7 +23,7 @@ const OPERATOR_OK = false; // 「運営者より」の文章をユーザーが�
 const HAND = JSON.parse(fs.readFileSync(path.join(__dirname, "hand.json"), "utf8"));
 const SYM = new Map([...HAND.symbols.matchAll(/<symbol id="([^"]+)"[\s\S]*?<\/symbol>/g)].map(m => [m[1], m[0]]));
 const sprite = (html, extra = []) => { const ids = [...new Set([...[...html.matchAll(/href="#([a-z][\w-]*)"/g)].map(m => m[1]), ...extra])].filter(id => SYM.has(id));
-  return ids.length ? `<svg class="sprite" aria-hidden="true" focusable="false"><defs>${ids.map(id => SYM.get(id)).join("")}</defs></svg>` : ""; };
+  return ids.length ? `<svg class="sprite kb-sprite" aria-hidden="true" focusable="false"><defs>${ids.map(id => SYM.get(id)).join("")}</defs></svg>` : ""; };
 const PH = { shampoo: "ph-bottle", colorrinse: "ph-bottle", skincare: "ph-jar", facewash: "ph-tube" };
 
 /* ---------- 共通 ---------- */
@@ -113,6 +113,25 @@ function rel(from, to) { // from, to: サイトのルートからのパス（"pr
   const t = PREVIEW && (to === "" || to.endsWith("/")) ? to + "index.html" : to;
   return "../".repeat(depth) + t;
 }
+/* 全ページ共通のヘッダー・フッター（比較ツールにも同じものを差し込む） */
+const NAV = [["concerns/", "悩み・目的から選ぶ"], ["app/", "診断つきの比較ツール"], ["categories/shampoo/", "シャンプー"], ["ingredients/", "成分の一覧"], ["about/", "クラベルとは"]];
+function chrome(r, cur) {
+  const on = u => (u === "" ? cur === "" : cur.startsWith(u)) ? ' aria-current="page"' : "";
+  const logo = `<a class="kb-logo" href="${r("")}"><svg viewBox="0 0 48 48" aria-hidden="true"><use href="#mark"/></svg>クラベル<span>kurabelle</span></a>`;
+  const head = `<header class="kb-top"><div class="in">${logo}
+<nav class="kb-nav" aria-label="サイト内">${NAV.filter(([u]) => u !== "categories/shampoo/").map(([u, n]) => `<a href="${r(u)}"${on(u)}>${n.replace("診断つきの比較ツール", "診断")}</a>`).join("")}</nav>
+<details class="kb-menu"><summary>メニュー</summary><nav class="panel" aria-label="サイト内">${[["", "トップ"], ...NAV].map(([u, n]) => `<a href="${r(u)}"${on(u)}>${n}</a>`).join("")}</nav></details>
+</div></header>`;
+  const foot = `<footer class="kb-foot"><div class="in">
+${logo}
+<nav aria-label="サイトの案内"><a href="${r("")}">トップ</a>${NAV.map(([u, n]) => `<a href="${r(u)}">${n}</a>`).join("")}<a href="${r("brands/")}">ブランド</a><a href="${r("about/scoring/")}">点数のつけ方</a></nav>
+<p>成分表示は、メーカーの製品ページ・販売ページ・パッケージの記載をそのまま写しています。リニューアルで成分が変わることがあるため、商品ごとに出典と確認日を載せています。</p>
+<p>点数は、成分表から読み取れる処方の傾向を、決まったルールで数えたものです。配合量・使い心地・効果を表すものではなく、髪や肌に合うかどうかには個人差があります。医薬部外品の効能は、各商品の表示で確かめてください。</p>
+${RK_ON || PREVIEW ? `<p>商品画像と販売ページへのリンクは、楽天ウェブサービスから提供されています。<a href="https://webservice.rakuten.co.jp/" rel="noopener" target="_blank">Supported by Rakuten Developers</a></p>` : ""}
+<p>商品データ ${PRODUCTS.length}件・最終更新 ${esc(UPDATED)}</p>
+</div></footer>`;
+  return { head, foot };
+}
 function write(p, title, desc, body, opts = {}) {
   const dir = path.join(OUT, p); fs.mkdirSync(dir, { recursive: true });
   const r = to => rel(p, to);
@@ -122,8 +141,7 @@ function write(p, title, desc, body, opts = {}) {
     itemListElement: crumbs.map((c, i) => ({ "@type": "ListItem", position: i + 1, name: c[0], item: SITE ? `${SITE}/${c[1]}` : undefined })) })}</script>` : "";
   const main = body(r);
   const root = "../".repeat(p.split("/").filter(Boolean).length) || "./";
-  const head = `<header class="top"><div class="wrap topin"><a class="logo" href="${r("")}"><svg viewBox="0 0 48 48" aria-hidden="true"><use href="#mark"/></svg>クラベル<span>kurabelle</span></a>
-<nav aria-label="サイト内"><a href="${r("concerns/")}">悩みから選ぶ</a><a href="${r("categories/shampoo/")}">シャンプー</a><a href="${r("ingredients/")}">成分</a><a href="${r("about/")}">クラベルとは</a></nav></div></header>`;
+  const { head, foot } = chrome(r, p);
   const html = `<!doctype html>
 <html lang="ja"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -134,7 +152,7 @@ ${canon ? `<link rel="canonical" href="${esc(canon)}">` : ""}
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&text=${encodeURIComponent("全成分ここ大事5.0やさしさ")}&display=swap">
-<link rel="stylesheet" href="${r("assets/site.css")}">
+<link rel="stylesheet" href="${r("assets/site.css")}"><link rel="stylesheet" href="${r("assets/chrome.css")}">
 ${ld}
 </head><body>
 ${sprite(head + main, opts.sym || [])}
@@ -143,13 +161,7 @@ ${head}
 ${crumbs.length > 1 ? `<nav class="crumbs" aria-label="現在地">${crumbs.map((c, i) => i < crumbs.length - 1 ? `<a href="${r(c[1])}">${esc(c[0])}</a>` : `<span>${esc(c[0])}</span>`).join("<i>›</i>")}</nav>` : ""}
 ${main}
 </main>
-<footer class="foot"><div class="wrap">
-<nav aria-label="サイトの案内"><a href="${r("")}">トップ</a><a href="${r("concerns/")}">悩み・目的から選ぶ</a><a href="${r("ingredients/")}">成分の一覧</a><a href="${r("brands/")}">ブランド</a><a href="${r("app/")}">診断つきの比較ツール</a><a href="${r("about/")}">クラベルとは</a><a href="${r("about/scoring/")}">点数のつけ方</a></nav>
-<p>成分表示は、メーカーの製品ページ・販売ページ・パッケージの記載をそのまま写しています。リニューアルで成分が変わることがあるため、商品ごとに出典と確認日を載せています。</p>
-<p>点数は、成分表から読み取れる処方の傾向を、決まったルールで数えたものです。配合量・使い心地・効果を表すものではなく、髪や肌に合うかどうかには個人差があります。医薬部外品の効能は、各商品の表示で確かめてください。</p>
-${RK_ON || PREVIEW ? `<p class="rk-credit">商品画像と販売ページへのリンクは、楽天ウェブサービスから提供されています。<a href="https://webservice.rakuten.co.jp/" rel="noopener" target="_blank">Supported by Rakuten Developers</a></p>` : ""}
-<p>商品データ ${PRODUCTS.length}件・最終更新 ${esc(UPDATED)}</p>
-</div></footer>
+${foot}
 <script>window.KB={root:${JSON.stringify(root)},pv:${PREVIEW}}</script><script src="${r("assets/kb.js")}" defer></script>
 ${RK_ON ? `<script>window.RK={app:${JSON.stringify(RK_APP)},aff:${JSON.stringify(RK_AFF)}}</script><script src="${r("assets/rk.js")}" defer></script>` : ""}
 </body></html>`;
@@ -510,6 +522,21 @@ ${latest.length ? `<section aria-labelledby="h-new"><div class="sec-h"><h2 id="h
 fs.mkdirSync(path.join(OUT, "assets"), { recursive: true });
 fs.writeFileSync(path.join(OUT, "assets/site.css"), fs.readFileSync(path.join(__dirname, "site.css"), "utf8").split("__MKL__").join(HAND.markerLight).split("__MKD__").join(HAND.markerDark));
 fs.copyFileSync(path.join(__dirname, "kb.js"), path.join(OUT, "assets/kb.js"));
+fs.copyFileSync(path.join(__dirname, "chrome.css"), path.join(OUT, "assets/chrome.css"));
+
+/* ---------- 比較ツール：同じヘッダー・フッターを差し込む ---------- */
+const APP = rest.includes("--app") ? rest[rest.indexOf("--app") + 1] : "";
+if (APP && fs.existsSync(APP)) {
+  const ap = "app/", r = to => rel(ap, to);
+  const { head, foot } = chrome(r, ap);
+  let h = fs.readFileSync(APP, "utf8");
+  const inject = `<link rel="stylesheet" href="${r("assets/chrome.css")}">${sprite(head + foot)}${head}`;
+  h = h.replace(/<!--KB:HEAD-->[\s\S]*?<!--\/KB:HEAD-->/, `<!--KB:HEAD-->${inject}<!--/KB:HEAD-->`).replace(/<!--KB:FOOT-->[\s\S]*?<!--\/KB:FOOT-->/, `<!--KB:FOOT-->${foot}<!--/KB:FOOT-->`);
+  fs.mkdirSync(path.join(OUT, ap), { recursive: true });
+  fs.writeFileSync(path.join(OUT, ap, "index.html"), h);
+  fs.copyFileSync(SRC, path.join(OUT, ap, "products.json"));
+  PAGES.push(ap);
+}
 if (RK_ON) fs.copyFileSync(path.join(__dirname, "rk.js"), path.join(OUT, "assets/rk.js"));
 if (SITE) {
   fs.writeFileSync(path.join(OUT, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${PAGES.map(p => `  <url><loc>${SITE}/${encodeURI(p)}</loc>${UPDATED ? `<lastmod>${UPDATED}</lastmod>` : ""}</url>`).join("\n")}\n</urlset>\n`);

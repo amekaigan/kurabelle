@@ -1,56 +1,60 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!--KB:HEAD--><!--/KB:HEAD-->
 <title>比較ツール｜クラベル</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap">
 <style>
 /* layout: 商品ラベル裏面のような縦長の一枚。カテゴリ → 診断 → ランキング → 比較 → 追加 → 採点ルール */
 :root{
-  --paper:#F3F5F2; --card:#FFFFFF; --ink:#1C2220; --ink2:#525A57; --ink3:#848B88;
-  --line:#DBDFD9; --line2:#C3C9C2;
-  --accent:#23498A; --accent-ink:#FFFFFF; --accent-soft:#E3E9F4;
+  --paper:#F7F7F2; --card:#FFFFFF; --ink:#1B2230; --ink2:#545C66; --ink3:#767D86;
+  --line:#DCDFD8; --line2:#C3C8C0;
+  --accent:#1B2230; --accent-ink:#F7F7F2; --accent-soft:#FBF3CF;
+  --grid:#EDEFE8; --hl:#F3D54E; --hl-soft:#FBF3CF; --c:#FFFFFF; --soft:#FBF3CF; --ic:#1B2230; --note:#FBE77A; --note-ink:#2A2610;
   --warn:#A3531A; --warn-soft:#F6E8DA; --bad:#A33838;
   --r-base:#C9CDD0; --r-active:#2D5BC9; --r-hum:#1C9884; --r-beauty:#BF8618; --r-oil:#D96E34; --r-cond:#6F8F22;
   --r-emul:#8A70C8; --r-uv:#CC5585; --r-pres:#6C7B83; --r-clean:#3A97BF; --r-other:#A7A196;
   --p1:#2B6CD4; --p2:#DD6528; --p3:#10966F; --p4:#C94A87; --p5:#6A55CF; --p-ink:#FFFFFF;
-  --f-display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-display:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
   --f-body:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --paper:#111514; --card:#191E1D; --ink:#E5E9E6; --ink2:#AAB2AE; --ink3:#7C8480;
-  --line:#2A312F; --line2:#3A4240;
-  --accent:#8EAEE6; --accent-ink:#0F1A2E; --accent-soft:#1E2A3D;
+  --paper:#16191E; --card:#1E2229; --ink:#ECEDEA; --ink2:#A8AEB6; --ink3:#8C929A;
+  --line:#30353D; --line2:#41474F;
+  --accent:#F3D54E; --accent-ink:#16191E; --accent-soft:#2E2A17;
+  --grid:#1C2026; --hl:#8C7A1E; --hl-soft:#2E2A17; --c:#1E2229; --soft:#2E2A17; --ic:#F3D54E; --note:#5C5218; --note-ink:#F6EFC8;
   --warn:#E3A06A; --warn-soft:#3A2A1D; --bad:#E58A8A;
   --r-base:#4A5155; --r-active:#6B92EC; --r-hum:#3FBBA6; --r-beauty:#DDAA45; --r-oil:#EE8D58; --r-cond:#A3C255;
   --r-emul:#A893E0; --r-uv:#E27AA4; --r-pres:#8D9CA4; --r-clean:#62B5DA; --r-other:#8E897F;
   --p1:#6A9CEE; --p2:#F28A52; --p3:#3DC497; --p4:#E77DB0; --p5:#9C8CEC; --p-ink:#10141A;
   color-scheme:dark}}
 :root[data-theme="dark"]{
-  --paper:#111514; --card:#191E1D; --ink:#E5E9E6; --ink2:#AAB2AE; --ink3:#7C8480;
-  --line:#2A312F; --line2:#3A4240;
-  --accent:#8EAEE6; --accent-ink:#0F1A2E; --accent-soft:#1E2A3D;
+  --paper:#16191E; --card:#1E2229; --ink:#ECEDEA; --ink2:#A8AEB6; --ink3:#8C929A;
+  --line:#30353D; --line2:#41474F;
+  --accent:#F3D54E; --accent-ink:#16191E; --accent-soft:#2E2A17;
+  --grid:#1C2026; --hl:#8C7A1E; --hl-soft:#2E2A17; --c:#1E2229; --soft:#2E2A17; --ic:#F3D54E; --note:#5C5218; --note-ink:#F6EFC8;
   --warn:#E3A06A; --warn-soft:#3A2A1D; --bad:#E58A8A;
   --r-base:#4A5155; --r-active:#6B92EC; --r-hum:#3FBBA6; --r-beauty:#DDAA45; --r-oil:#EE8D58; --r-cond:#A3C255;
   --r-emul:#A893E0; --r-uv:#E27AA4; --r-pres:#8D9CA4; --r-clean:#62B5DA; --r-other:#8E897F;
   --p1:#6A9CEE; --p2:#F28A52; --p3:#3DC497; --p4:#E77DB0; --p5:#9C8CEC; --p-ink:#10141A;
   color-scheme:dark}
 *{box-sizing:border-box}
-body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7;-webkit-text-size-adjust:100%}
+body{background-color:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.75;-webkit-text-size-adjust:100%}
 .wrap{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:0 56px}
 h1,h2,h3{text-wrap:balance;margin:0}
-h1{font-family:var(--f-display);font-weight:700;font-size:30px;letter-spacing:.04em;line-height:1.2}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,6.5vw,34px);letter-spacing:.01em;line-height:1.4}
 h2{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.03em}
 h3{font-size:16px;font-weight:700;line-height:1.45}
 p{margin:0}
-a{color:var(--accent)}
+a{color:var(--ink);text-decoration-color:var(--hl);text-decoration-thickness:3px;text-underline-offset:3px}
 .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
 .muted{color:var(--ink2)}
 .small{font-size:13px}
 .xs{font-size:12px}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.masthead{padding-block:28px 12px;display:grid;gap:6px}
+.masthead{padding-block:24px 12px;display:grid;gap:8px}
 .masthead .label{font-size:12px;letter-spacing:.14em;color:var(--ink3)}
 .masthead p{color:var(--ink2);font-size:14px}
 .cats{display:flex;gap:8px;flex-wrap:wrap;padding-block:4px 10px}
@@ -59,7 +63,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .cats button span{font-size:11.5px;color:var(--ink3)}
 .cats button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .cats button[aria-pressed="true"] span{color:var(--accent-ink);opacity:.8}
-.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--line);margin-inline:-16px;padding:8px 16px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;align-items:center}
+.nav{position:sticky;top:calc(env(safe-area-inset-top,0px) + 63px);z-index:5;background:var(--card);border-bottom:1px solid var(--line);margin-inline:-16px;padding:8px 16px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;align-items:center}
 .nav .now{flex:none;font-size:12.5px;font-weight:700;color:var(--accent);padding-right:4px}
 .nav a{flex:none;text-decoration:none;color:var(--ink2);font-size:13px;padding:5px 12px;border:1px solid var(--line2);border-radius:999px;background:var(--card)}
 .nav a:hover{color:var(--ink);border-color:var(--ink3)}
@@ -223,8 +227,8 @@ footer{padding-top:34px;font-size:12px;color:var(--ink3);display:grid;gap:10px}
 
 <div class="wrap">
   <header class="masthead">
-    <span class="label">kurabelle · 成分でくらべる比較ツール v0.3</span>
-    <h1>クラベル</h1>
+    <span class="label">クラベル　診断つきの比較ツール</span>
+    <h1>あなたに合いそうな順に、<br>成分でくらべる。</h1>
     <p>全成分表示から、あなたに合いそうな商品を比べます。</p>
   </header>
   <div class="cats" id="cats" role="group" aria-label="カテゴリ"></div>
@@ -1434,4 +1438,5 @@ initClaude();
 })();
 </script>
 
+<!--KB:FOOT--><!--/KB:FOOT-->
 </body></html>

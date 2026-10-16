@@ -306,6 +306,35 @@ function radarSVG(x) {
   return `<svg class="radar" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(T.map(t => `${L[t.k] || t.s} ${x.sc.v[t.k]}`).join("、"))}（5点満点）">
 ${rings}${spokes}${hasAvg ? `<polygon points="${poly(t => avg[t.k])}" class="avg"/>` : ""}<polygon points="${poly(t => x.sc.v[t.k])}" class="me"/>${dots}${labels}</svg>`;
 }
+/* 商品ページのグラフの下に出す、観点ごとの見方（何が多いと高くなるか。効果ではなく処方の傾向として書く） */
+const AX_DESC = {
+  shampoo: { mild: "主な洗浄成分が、アミノ酸系・ベタイン系などのマイルドなものほど高くなります。",
+    clean: "主な洗浄成分が、硫酸系などの洗浄力の高いものほど高くなります。皮脂をしっかり落とす処方の傾向です。",
+    scalp: "グリチルリチン酸2K・ピロクトンオラミンなど、頭皮ケアの成分が多いほど高くなります。",
+    repair: "ケラチン・セラミド・加水分解タンパクなど、髪の補修成分が多いほど高くなります。",
+    smooth: "カチオン成分・シリコーン・油分が多いほど高くなります。洗っているときにきしみにくい処方の傾向です。",
+    gentle: "香料・アルコール・メントール・着色料などが少ないほど高くなります。" },
+  conditioner: { smooth: "カチオン成分・シリコーンが多いほど高くなります。髪の表面をなめらかにする処方の傾向です。",
+    repair: "ケラチン・セラミド・加水分解タンパクなど、髪の補修成分が多いほど高くなります。",
+    moist: "アミノ酸・ヒアルロン酸・PCA-Naなど、保湿成分が多いほど高くなります。",
+    light: "油分やシリコーンが少ないほど高くなります。高いほど「さらっと軽め」、低いほど「しっとり重め」の処方の傾向です。どちらが良いではなく、好みで選ぶ観点です。",
+    gentle: "香料・アルコールなどが少ないほど高くなります。" },
+  skincare: { moist: "ヒアルロン酸・セラミドなど、保湿成分が多いほど高くなります。",
+    barrier: "ワセリン・シア脂など、肌の表面にフタをする油分が多いほど高くなります。しっとり重めの処方の傾向です。",
+    light: "油分が少ないほど高くなります。高いほど「さっぱり軽め」の処方の傾向です。「保護力」とは反対向きの観点です。",
+    beauty: "ナイアシンアミド・ビタミン類・コエンザイムQ10など、ケア成分が多いほど高くなります。",
+    concern: "乾燥・ベタつき・肌あれ・シミ・ハリ・敏感の6つの悩みに関係する成分を数えて平均したものです。診断で悩みを選ぶと、その悩みだけで数えます。",
+    gentle: "香料・アルコール・紫外線吸収剤などが少ないほど高くなります。" }
+};
+function axesBlock(x, r) {
+  const cat = x.p.category, T = C.CATS[cat].themes, D = AX_DESC[cat] || {}, ty = typeOf(x);
+  if (!T.length) return "";
+  return `<div class="axes">
+    <h3>それぞれの観点の見方</h3>
+    ${ty.top.length ? `<p class="small">「${esc(ty.title)}」は、この商品で点数が高い観点です。</p>` : ""}
+    <dl>${T.map(t => `<div><dt>${esc(t.n)}<b class="mono">${x.sc.v[t.k].toFixed(1)}</b></dt><dd>${esc(D[t.k] || "")}<small>この商品：${esc(x.sc.why[t.k] || "")}</small></dd></div>`).join("")}</dl>
+  </div>`;
+}
 function typeBlock(x, r) {
   if (!x.sc) return "";
   const cat = x.p.category, catN = CAT_N[cat] || cat, ty = typeOf(x), rk = CAT_RANK[cat];
@@ -319,6 +348,7 @@ function typeBlock(x, r) {
     <li><span>平均より上</span><b class="mono">${ty.above}</b><i>${ty.total}つの観点のうち</i></li>
     <li><span>いちばん控えめ</span><b>${esc(ty.low.n)}</b><i>${ty.low.v.toFixed(1)}点</i></li>
   </ul>
+  ${axesBlock(x, r)}
   <p class="small muted">成分表に何が入っているかを、決まったルールで5点満点に数えたものです。効果や使い心地を表すものではありません。数え方は<a href="${r("about/scoring/")}">点数のつけ方</a>に${QUIZ[x.p.category] ? `、自分の${x.p.category === "skincare" ? "肌" : "髪や頭皮"}に合わせた順位は<a href="${r("app/")}${QUIZ[x.p.category].hash}">診断つきの比較ツール</a>に` : ""}あります。${QUIZ_CATS.includes(x.p.category) ? "" : `${esc(CAT_N[x.p.category])}の診断は準備中です。`}</p>
 </section>`;
 }

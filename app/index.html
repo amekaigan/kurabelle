@@ -109,6 +109,8 @@ section{padding-top:30px;display:grid;gap:14px;scroll-margin-top:56px}
 .dres h3{font-size:16px;margin:0 0 6px}
 .dres .radar{display:block;width:min(100%,340px);margin:0 auto}
 .dres .radar text{font-size:16px;fill:var(--ink2)}
+.dres .radar text.v{font-family:var(--f-mono);font-size:16px;font-weight:600;fill:var(--ink)}
+.dres .rnote{font-size:13px;color:var(--ink3);text-align:center;margin-top:2px}
 .dres .pts{display:grid;gap:10px;margin:0;padding:0;list-style:none}
 .dres .pts li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
 .dres .pts .no{display:grid;place-items:center;width:28px;height:28px;border-radius:14px;background:var(--ink);color:var(--paper);font-weight:700;font-size:14px}
@@ -1218,8 +1220,9 @@ function weightRadar(w){
   const pt = (i,r)=>{ const a=-Math.PI/2+i*2*Math.PI/n; return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; };
   const ring = f => T.map((_,i)=>pt(i,R*f).map(v=>v.toFixed(1)).join(',')).join(' ');
   const poly = T.map((t,i)=>pt(i,R*Math.max(0.15,Math.sqrt(w[t.k]/max))).map(v=>v.toFixed(1)).join(',')).join(' ');
-  const lab = T.map((t,i)=>{ const [x,y]=pt(i,R+22); const anc = Math.abs(x-cx)<8?'middle':x>cx?'start':'end'; return `<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="${anc}">${esc(t.s)}</text>`; }).join('');
-  return `<svg class="radar" viewBox="-30 0 360 256" role="img" aria-label="重視していることのグラフ">
+  const lv = t => Math.max(0.5, Math.round(w[t.k]/max*10)/2); /* 重視の度合い（いちばん重視している観点を5.0として） */
+  const lab = T.map((t,i)=>{ const [x,y]=pt(i,R+24); const anc = Math.abs(x-cx)<8?'middle':x>cx?'start':'end'; const top = y<cy-R*0.5; return `<text x="${x.toFixed(1)}" y="${(y+(top?-12:0)).toFixed(1)}" text-anchor="${anc}">${esc(t.s)}</text><text class="v" x="${x.toFixed(1)}" y="${(y+(top?6:18)).toFixed(1)}" text-anchor="${anc}">${lv(t).toFixed(1)}</text>`; }).join('');
+  return `<svg class="radar" viewBox="-34 -6 368 280" role="img" aria-label="重視していることのグラフ">
     ${[1,0.66,0.33].map(f=>`<polygon points="${ring(f)}" fill="none" stroke="var(--line)" stroke-width="1"/>`).join('')}
     <polygon points="${poly}" fill="var(--hl)" fill-opacity=".55" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>${lab}</svg>`;
 }
@@ -1288,7 +1291,7 @@ function diagResult(a, w, QS, cur){
   const lowT = order.filter(t=>w[t.k]<=0.8).slice(-1)[0];
   const low = lowT ? `<p class="low">「${esc(lowT.n)}」は控えめにしています。</p>` : '';
   return `<div class="type"><small>あなたの診断結果</small><b><span class="tmk">${esc(type)}</span><span class="sfx">タイプ</span></b><p>${esc(lead)}</p></div>
-    <div><h3>重視していること</h3>${weightRadar(w)}</div>
+    <div><h3>重視していること</h3>${weightRadar(w)}<p class="rnote">いちばん重視している観点を5.0としたときの度合いです</p></div>
     ${pts?`<div><h3>あなたにおすすめの商品</h3><ol class="pts">${pts}</ol></div>`:''}${low}
     <p class="xs muted">おすすめは、あなたの答えと成分表の中身を、決まったルールで照らし合わせたものです。効果や使い心地を約束するものではありません。</p>`;
 }

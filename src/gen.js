@@ -179,21 +179,27 @@ ${RK_ON || PREVIEW ? `<p>商品画像と販売ページへのリンクは、楽�
   return { head, foot };
 }
 /* 各ページの下に置く「迷ったら診断」
-   診断があるのはシャンプーと保湿クリームだけ（QUIZ_CATS）。それ以外のカテゴリでは、2つの診断があることを正直に書き、近いほうを先に出す。 */
-const QUIZ_CATS = ["shampoo", "skincare"];
+   診断があるカテゴリは QUIZ。それ以外のカテゴリでは、準備中と書き、近い診断を2つ出す。 */
+const QUIZ = {
+  shampoo: { n: "シャンプー", hash: "", what: "頭皮のタイプ" },
+  conditioner: { n: "コンディショナー", hash: "#conditioner", what: "髪の長さ" },
+  skincare: { n: "保湿クリーム", hash: "#skincare", what: "肌のタイプ" }
+};
+const QUIZ_CATS = Object.keys(QUIZ);
 const HAIR = new Set(["shampoo", "conditioner", "scalp", "colorrinse"]);
+const quizLink = (r, c) => `<a href="${r("app/")}${QUIZ[c].hash}">${QUIZ[c].n}の診断をはじめる</a>`;
 const quizCta = (r, cat) => {
-  const hair = `<a href="${r("app/")}">シャンプーの診断をはじめる</a>`, skin = `<a href="${r("app/")}#skincare">保湿クリームの診断をはじめる</a>`;
-  if (QUIZ_CATS.includes(cat)) return `<aside class="quiz-cta" aria-label="診断の案内"><div class="sticky">
+  if (QUIZ[cat]) return `<aside class="quiz-cta" aria-label="診断の案内"><div class="sticky">
   <h2>迷ったら、<br>${QUIZ_N}つの質問で。</h2>
-  <p>年代や${cat === "skincare" ? "肌" : "頭皮"}のタイプ、気になること、仕上がりの好みなどを選ぶと、成分表から合いそうな順に並べます。1分ほどで終わります。</p>
-  ${cat === "skincare" ? skin : hair}
+  <p>年代や${QUIZ[cat].what}、気になること、仕上がりの好みなどを選ぶと、成分表から合いそうな順に並べます。1分ほどで終わります。</p>
+  ${quizLink(r, cat)}
 </div></aside>`;
   const isHair = !cat || HAIR.has(cat), name = cat ? CAT_N[cat] : "";
+  const pick = isHair ? ["shampoo", "conditioner"] : ["skincare", "shampoo"];
   return `<aside class="quiz-cta" aria-label="診断の案内"><div class="sticky">
   <h2>迷ったら、<br>診断で。</h2>
-  <p>診断は、いまはシャンプーと保湿クリームの2つです。${name ? `${esc(name)}の診断は準備中です。` : ""}${QUIZ_N}つの質問に答えると、成分表から合いそうな順に並べます。</p>
-  <div class="two">${isHair ? hair + skin : skin + hair}</div>
+  <p>診断は、いまは${QUIZ_CATS.map(c => QUIZ[c].n).join("・")}の${QUIZ_CATS.length}つです。${name ? `${esc(name)}の診断は準備中です。` : ""}${QUIZ_N}つの質問に答えると、成分表から合いそうな順に並べます。</p>
+  <div class="two">${pick.map(c => quizLink(r, c)).join("")}</div>
 </div></aside>`;
 };
 function write(p, title, desc, body, opts = {}) {
@@ -305,7 +311,7 @@ function typeBlock(x, r) {
     <li><span>平均より上</span><b class="mono">${ty.above}</b><i>${ty.total}つの観点のうち</i></li>
     <li><span>いちばん控えめ</span><b>${esc(ty.low.n)}</b><i>${ty.low.v.toFixed(1)}点</i></li>
   </ul>
-  <p class="small muted">成分表に何が入っているかを、決まったルールで5点満点に数えたものです。効果や使い心地を表すものではありません。数え方は<a href="${r("about/scoring/")}">点数のつけ方</a>に${QUIZ_CATS.includes(x.p.category) ? `、自分の${x.p.category === "skincare" ? "肌" : "髪や頭皮"}に合わせた順位は<a href="${r("app/")}${x.p.category === "skincare" ? "#skincare" : ""}">診断つきの比較ツール</a>に` : ""}あります。${QUIZ_CATS.includes(x.p.category) ? "" : `${esc(CAT_N[x.p.category])}の診断は準備中です。`}</p>
+  <p class="small muted">成分表に何が入っているかを、決まったルールで5点満点に数えたものです。効果や使い心地を表すものではありません。数え方は<a href="${r("about/scoring/")}">点数のつけ方</a>に${QUIZ[x.p.category] ? `、自分の${x.p.category === "skincare" ? "肌" : "髪や頭皮"}に合わせた順位は<a href="${r("app/")}${QUIZ[x.p.category].hash}">診断つきの比較ツール</a>に` : ""}あります。${QUIZ_CATS.includes(x.p.category) ? "" : `${esc(CAT_N[x.p.category])}の診断は準備中です。`}</p>
 </section>`;
 }
 function leadText(x) {

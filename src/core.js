@@ -505,11 +505,33 @@ function scoreConditioner(items){
   why.moist = h2.length||h1.length ? [...h2,...h1].join('、') : '保湿成分なし';
   const oS=namesWith(items,'occS'), lt=namesWith(items,'light');
   const heavy = oils.length + si.length;
-  v.light = 3.5 - 0.75*oS.length - 0.25*Math.max(0, heavy-4) + Math.min(1.5, 0.5*lt.length);
-  why.light = `強い保護油${oS.length}種・油分とシリコーン${heavy}種（5種目から減点）` + (lt.length?` ／ 軽さを出す：${lt.join('、')}`:'');
+  v.light = 5 - 0.75*oS.length - 0.5*Math.max(0, heavy-3) + Math.min(1, 0.5*lt.length);
+  why.light = `強い保護油${oS.length}種・油分とシリコーン${heavy}種（4種目から減点）` + (lt.length?` ／ 軽さを出す：${lt.join('、')}`:'');
   const g = gentleScore(items,{surf:false}); v.gentle=g.v; why.gentle=g.why;
   for(const k in v) v[k]=clampR(v[k]);
   return {v, why};
+}
+
+function adjConditioner(a){
+  const out=[];
+  if(!a) return out;
+  if(a.gender==='men') out.push(['メンズ', {light:0.5}, {}]);
+  const age = {teen:['10代',{light:0.5},{}], '30s':['30代',{repair:0.25},{}], '40s':['40代',{repair:0.25,moist:0.25},{}], '50s':['50代以上',{repair:0.5,moist:0.5},{}]}[a.age];
+  if(age) out.push(age);
+  return out;
+}
+function weightsConditioner(w, a){
+  const c=a.concerns||[];
+  if(c.includes('damage')){w.repair+=1.5;w.smooth+=0.5;}
+  if(c.includes('tangle')) w.smooth+=1.5;
+  if(c.includes('dry')) w.moist+=1.5;
+  if(c.includes('volume')){w.light+=1.5;w.smooth*=0.7;}
+  if(c.includes('sensitive')) w.gentle+=2;
+  if(a.texture==='rich'){w.moist+=1;w.smooth+=0.5;w.light*=0.5;}
+  else if(a.texture==='light') w.light+=1.5;
+  if(a.color==='yes'){w.repair+=1;w.gentle+=0.5;}
+  if(a.length==='long'){w.smooth+=1;w.repair+=0.5;}
+  else if(a.length==='short') w.light+=0.5;
 }
 
 const CATS = {
@@ -522,10 +544,10 @@ const CATS = {
     ng:{fragrance:'香料', alcohol:'アルコール', uvabs:'紫外線吸収剤', silicone:'シリコーン', paraben:'パラベン', mineral:'鉱物油'},
     score:scoreSkincare, adjust:adjSkincare, weigh:weightsSkincare},
   facewash:{n:'洗顔料', scored:false, unit:'g'},
-  conditioner:{n:'コンディショナー・トリートメント', scored:true, quiz:false, unit:'g',
+  conditioner:{n:'コンディショナー・トリートメント', scored:true, unit:'g',
     themes:[{k:'smooth',n:'指通り',s:'指通り'},{k:'repair',n:'髪の補修',s:'補修'},{k:'moist',n:'うるおい',s:'うるおい'},{k:'light',n:'仕上がりの軽さ',s:'軽さ'},{k:'gentle',n:'刺激の少なさ',s:'低刺激'}],
     ng:{fragrance:'香料', silicone:'シリコーン', alcohol:'アルコール', paraben:'パラベン'},
-    score:scoreConditioner, adjust:()=>[], weigh:()=>{}},
+    score:scoreConditioner, adjust:adjConditioner, weigh:weightsConditioner},
   scalp:{n:'育毛剤・頭皮用エッセンス', scored:false, unit:'ml'},
   serum:{n:'美容液', scored:false, unit:'ml'},
   handsoap:{n:'ハンドソープ', scored:false, unit:'ml'},

@@ -13,17 +13,33 @@
     function sync() {
       var on = load().some(function (x) { return x.id === d.id; });
       b.setAttribute("aria-pressed", on ? "true" : "false");
-      b.textContent = on ? "お気に入り済み" : "お気に入りに追加";
+      var lab = on ? "お気に入りから外す" : "お気に入りに追加";
+      if (b.classList.contains("star")) { b.setAttribute("aria-label", lab); b.title = lab; } else b.textContent = on ? "お気に入り済み" : "お気に入りに追加";
     }
     b.addEventListener("click", function () {
       var l = load(), i = -1;
       l.forEach(function (x, k) { if (x.id === d.id) i = k; });
       if (i >= 0) l.splice(i, 1); else l.unshift(d);
-      if (!save(l.slice(0, 30))) { b.textContent = "このブラウザでは保存できません"; return; }
+      if (!save(l.slice(0, 30))) { if (b.classList.contains("star")) b.title = "このブラウザでは保存できません"; else b.textContent = "このブラウザでは保存できません"; return; }
       sync();
     });
     sync(); b.hidden = false;
   });
+
+  /* 画面の下の診断の案内：×で7日間出さない。ページ下の「迷ったら診断」が見えている間は隠す */
+  var bar = document.querySelector(".kb-qbar");
+  if (bar) {
+    var off = 0; try { off = +localStorage.getItem("kb-qbar-off") || 0; } catch (e) {}
+    if (Date.now() - off > 7 * 864e5) {
+      bar.hidden = false; document.body.classList.add("has-qbar");
+      bar.querySelector("button").addEventListener("click", function () {
+        bar.hidden = true; document.body.classList.remove("has-qbar");
+        try { localStorage.setItem("kb-qbar-off", String(Date.now())); } catch (e) {}
+      });
+      var cta = document.querySelector(".quiz-cta");
+      if (cta && "IntersectionObserver" in window) new IntersectionObserver(function (es) { es.forEach(function (e) { bar.classList.toggle("away", e.isIntersecting); }); }).observe(cta);
+    }
+  }
 
   /* トップのお気に入り */
   var box = document.getElementById("favs");

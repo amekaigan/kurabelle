@@ -94,7 +94,8 @@ main section{display:block}
 .prod .phead h1{font-size:clamp(22px,5.6vw,30px);line-height:1.45;text-wrap:pretty}
 .thumb,.pimg{flex:none;display:grid;place-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .thumb{width:88px;height:88px}
-.pimg{width:min(100%,340px);height:auto;aspect-ratio:1/1;border-radius:20px;align-self:center;background:#fff}
+.pfig{position:relative;width:min(100%,300px);align-self:center}
+.pimg{width:100%;height:auto;aspect-ratio:1/1;border-radius:20px;background:#fff}
 .thumb svg,.pimg svg{width:100%;height:100%;display:block}
 .thumb img,.pimg img{width:100%;height:100%;object-fit:contain;background:#fff}
 .pimg img{padding:6px}
@@ -103,6 +104,21 @@ main section{display:block}
 .fav-btn::before{content:"☆";font-size:19px;line-height:1}
 .fav-btn[aria-pressed="true"]{background:var(--hl);color:var(--note-ink);border-color:var(--hl)}
 .fav-btn[aria-pressed="true"]::before{content:"★"}
+/* 商品ページは画像の右上に星だけ */
+.fav-btn.star{position:absolute;top:10px;right:10px;width:48px;height:48px;min-height:0;padding:0;justify-content:center;border-radius:24px;border:1.5px solid var(--line);background:color-mix(in srgb,var(--card) 92%,transparent);box-shadow:0 4px 10px -6px rgba(0,0,0,.35)}
+.fav-btn.star::before{font-size:24px}
+.fav-btn.star[aria-pressed="true"]{background:var(--hl);border-color:var(--hl)}
+/* 画面の下に出す診断の案内 */
+.kb-qbar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:40;display:flex;align-items:center;gap:4px;padding:4px 4px 4px 18px;border-radius:16px;background:var(--note-ink);color:var(--note);box-shadow:0 12px 24px -12px rgba(0,0,0,.6);transition:transform .25s,opacity .25s}
+.kb-qbar[hidden]{display:none}
+.kb-qbar.away{transform:translateY(150%);opacity:0;pointer-events:none}
+.kb-qbar a{flex:1;min-width:0;min-height:56px;display:flex;flex-direction:column;justify-content:center;color:inherit;text-decoration:none;line-height:1.35}
+.kb-qbar a b{font-size:17px}
+.kb-qbar a b::after{content:" →"}
+.kb-qbar a small{font-size:13px;opacity:.85}
+.kb-qbar button{flex:none;width:48px;height:48px;border:0;background:transparent;color:inherit;font-size:24px;line-height:1;cursor:pointer;border-radius:12px}
+body.has-qbar{padding-bottom:88px}
+@media (min-width:760px){.kb-qbar{left:auto;right:24px;width:400px}}
 .rk-buy{display:inline-flex;align-items:center;gap:6px;min-height:48px;font-size:16px;font-weight:700;text-decoration:none;color:var(--paper);background:var(--ink);border-radius:12px;padding:0 16px}
 .rk-buy::after{content:"↗";font-weight:500}
 .rk-buy[hidden]{display:none}
@@ -158,7 +174,7 @@ table.ings tr:last-child td{border-bottom:0}
 .rv dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;margin:4px 0}
 .rv dl div{background:var(--paper);border-radius:8px;padding:6px 10px}
 .rv dt{font-size:12.5px;color:var(--ink3)}.rv dd{margin:0;font-size:15px}
-@media (min-width:760px){.phead{flex-direction:row;gap:24px;align-items:flex-start}.pimg{width:300px;align-self:flex-start}}
+@media (min-width:760px){.phead{flex-direction:row;gap:24px;align-items:flex-start}.pfig{width:280px;align-self:flex-start}}
 
 /* トップ */
 .home-hero{display:grid;gap:12px}

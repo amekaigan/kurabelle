@@ -97,7 +97,9 @@ section{padding-top:30px;display:grid;gap:14px;scroll-margin-top:56px}
 .opt[aria-pressed="true"] .tick{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
 .wbars{display:grid;gap:6px}
 /* 診断の結果（掛け率は出さず、タイプ・重視していること・上位に来やすい成分で見せる） */
+#diag{scroll-margin-top:calc(env(safe-area-inset-top) + 130px)}
 .dres{display:grid;gap:16px}
+.dres .to-rank{min-height:52px;font-size:16px;font-weight:700;text-decoration:none}
 .dres .type{display:grid;gap:4px}
 .dres .type small{font-size:13px;color:var(--ink3)}
 .dres .type b{font-family:var(--f-display);font-size:26px;line-height:1.45}
@@ -1195,6 +1197,7 @@ function renderDiag(cur){
   meta.textContent='診断済み';
   body.innerHTML = `<div class="dres">${diagResult(a, w, QS, cur)}
     <div class="row">${chips.map(c=>`<span class="chip acc">${esc(c)}</span>`).join('')}${(a.ng||[]).filter(n=>ngMap[n]).map(n=>`<span class="chip warn">避けたい：${esc(ngMap[n])}</span>`).join('')}</div>
+    <a class="btn to-rank" href="#rank">あなたに合う順のランキングを見る</a>
     <div class="row"><button type="button" class="btn ghost sm" data-act="q-start">診断をやり直す</button><button type="button" class="btn ghost sm" data-act="q-clear">診断を消す</button></div></div>`;
 }
 /* ---------- 診断の結果の見せ方 ----------
@@ -1625,7 +1628,7 @@ document.addEventListener('click', e=>{
     if(S.quiz.step<QS.length-1){ S.quiz.step++; S.quiz.err=''; render(); return; }
     S.answers[S.cat] = Object.assign({}, d);
     S.quiz=null; S.sort='match'; S.compare[S.cat]=null; save(); render();
-    $('#rank').scrollIntoView({behavior:'smooth', block:'start'});
+    $('#diag').scrollIntoView({block:'start'}); /* まず診断結果を見せる（ランキングはその下） */
     return;
   }
   if(act==='toggle'){ S.open[id]=!S.open[id]; render(); return; }

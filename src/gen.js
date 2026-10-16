@@ -557,7 +557,8 @@ if (APP && fs.existsSync(APP)) {
   const ap = "app/", r = to => rel(ap, to);
   const { head, foot } = chrome(r, ap);
   let h = fs.readFileSync(APP, "utf8");
-  const inject = `<link rel="stylesheet" href="${r("assets/chrome.css")}">${sprite(head + foot)}${head}`;
+  const rk = RK_ON ? `<script>window.RK={api:${JSON.stringify(r("api/rk"))}}</script><script src="${r("assets/rk.js")}" defer></script>` : "";
+  const inject = `<link rel="stylesheet" href="${r("assets/chrome.css")}">${rk}${sprite(head + foot, Object.values(PH))}${head}`;
   h = h.replace(/<!--KB:HEAD-->[\s\S]*?<!--\/KB:HEAD-->/, `<!--KB:HEAD-->${inject}<!--/KB:HEAD-->`).replace(/<!--KB:FOOT-->[\s\S]*?<!--\/KB:FOOT-->/, `<!--KB:FOOT-->${foot}<!--/KB:FOOT-->`);
   fs.mkdirSync(path.join(OUT, ap), { recursive: true });
   fs.writeFileSync(path.join(OUT, ap, "index.html"), h);

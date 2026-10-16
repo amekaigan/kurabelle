@@ -117,6 +117,20 @@ section{padding-top:30px;display:grid;gap:14px;scroll-margin-top:56px}
 .pc-rank small{display:block;font-family:var(--f-body);font-size:10px;font-weight:500;letter-spacing:.04em;margin-top:3px}
 .pc-title{display:grid;gap:6px;min-width:0}
 .pc-title h3{overflow-wrap:anywhere}
+.pc-title h3 a{color:inherit;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:4px}
+.pc-title h3 a:hover{text-decoration-color:var(--ink)}
+.pc-pic{position:relative;width:76px}
+.pc-pic .thumb{width:76px;height:76px;flex:none;display:grid;place-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;color:var(--ink3)}
+.pc-pic .thumb svg{width:100%;height:100%;display:block}
+.pc-pic .thumb img{width:100%;height:100%;object-fit:contain;background:#fff}
+.pc-pic .pc-rank{position:absolute;top:-8px;left:-8px;min-width:30px;height:30px;padding:0 7px;display:flex;align-items:baseline;justify-content:center;padding-top:7px;box-sizing:border-box;border-radius:15px;background:var(--ink);color:var(--paper);font-size:15px;line-height:1}
+.pc-pic .pc-rank small{display:inline;font-size:10px;margin:0 0 0 1px;color:inherit}
+.pc-go{flex-basis:100%;min-height:48px;font-size:15px;font-weight:700;text-decoration:none}
+.rk-price{font-size:13px;color:var(--ink2)}
+.rk-price b{font-family:var(--f-mono,monospace);font-size:15px;font-weight:600;color:var(--ink);margin-right:4px}
+.rk-price[hidden]{display:none}
+.crumbs{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--ink3);white-space:nowrap;overflow-x:auto}
+.crumbs a{color:var(--ink2)}
 .pc-score{display:grid;justify-items:end;gap:2px}
 .pc-score .big{display:flex;align-items:baseline;gap:6px}
 .pc-score .n{font-family:var(--f-mono);font-size:30px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
@@ -227,7 +241,7 @@ footer{padding-top:34px;font-size:12px;color:var(--ink3);display:grid;gap:10px}
 
 <div class="wrap">
   <header class="masthead">
-    <span class="label">クラベル　診断つきの比較ツール</span>
+    <nav class="crumbs" aria-label="現在地"><a href="../">トップ</a><span aria-hidden="true">›</span><span>迷ったら診断</span></nav>
     <h1>あなたに合いそうな順に、<br>成分でくらべる。</h1>
     <p>全成分表示から、あなたに合いそうな商品を比べます。</p>
   </header>
@@ -1084,8 +1098,14 @@ function renderRank(cur){
   let html = ar.main.map(e=>card(e, cmp.includes(e.p.id), false)).join('');
   if(ar.ng.length) html += `<div class="group-head">⚠ 避けたい成分を含む商品（${ar.ng.length}）</div>` + ar.ng.map(e=>card(e, cmp.includes(e.p.id), true)).join('');
   $('#plist').innerHTML = html;
+  if(window.RK && RK.scan) RK.scan();
   if(S.flash){ const el=document.querySelector(`[data-pid="${CSS.escape(S.flash)}"]`); if(el){ el.classList.add('flash'); el.scrollIntoView({behavior:'smooth',block:'center'}); } S.flash=null; }
 }
+/* サイトの商品ページ・楽天の画像と価格（共通データの商品だけ。自分で追加した商品は対象外） */
+const PH = {shampoo:'ph-bottle', colorrinse:'ph-bottle', skincare:'ph-jar', facewash:'ph-tube'};
+const isShared = p => !String(p.id).startsWith('u-');
+const pageUrl = p => isShared(p) ? `../products/${String(p.id).replace(/[^A-Za-z0-9_-]/g,'-')}/` : '';
+const rkKey = p => isShared(p) && window.RK ? (p.jan || `${p.brand||''} ${p.name}`.trim()) : '';
 function card(e, inCmp, isNg){
   const {p,a,sc}=e;
   const T = themes(), w = weights(S.cat, ans());
@@ -1095,15 +1115,18 @@ function card(e, inCmp, isNg){
   const heavy = ans() ? T.filter(t=>w[t.k]>=maxw).map(t=>t.k) : [];
   const open = !!S.open[p.id];
   const ngMap = CATS[S.cat].ng;
-  const rankHtml = isNg ? `<div class="pc-rank" style="color:var(--warn)" aria-label="順位なし">⚠</div>`
+  const url = pageUrl(p), key = rkKey(p);
+  const rankHtml = isNg ? `<div class="pc-rank" style="background:var(--warn)" aria-label="順位なし">⚠</div>`
     : e.rank==null ? `<div class="pc-rank" aria-label="順位なし">–</div>`
     : `<div class="pc-rank" aria-label="${e.rank}位">${e.rank}<small>位</small></div>`;
+  const pic = `<div class="pc-pic">${key?`<span class="thumb" data-rk="${esc(key)}"${p.jan?' data-jan="1"':''}>`:'<span class="thumb">'}<svg viewBox="0 0 120 120" aria-hidden="true"><use href="#${PH[p.category]||'ph-bottle'}"/></svg></span>${rankHtml}</div>`;
   const surf = sc.mainSurf ? `　主洗浄 <strong>${esc(sc.mainSurf.name)}</strong>` : '';
   return `<article class="card pcard${isNg?' dim':''}" data-pid="${esc(p.id)}">
     <div class="pc-head">
-      ${rankHtml}
-      <div class="pc-title"><h3>${esc(p.name)}</h3>
-        <div class="row" style="gap:6px">${metaChips(p,e)}${e.ngHits.map(n=>`<span class="chip warn">⚠ ${esc(ngMap[n])}</span>`).join('')}</div></div>
+      ${pic}
+      <div class="pc-title"><h3>${url?`<a href="${esc(url)}">${esc(p.name)}</a>`:esc(p.name)}</h3>
+        <div class="row" style="gap:6px">${metaChips(p,e)}${e.ngHits.map(n=>`<span class="chip warn">⚠ ${esc(ngMap[n])}</span>`).join('')}</div>
+        ${key?`<span class="rk-price sm" data-rk-price="${esc(key)}" hidden></span>`:''}</div>
       <div class="pc-score"><span class="lbl">相性</span><span class="big"><span class="n">${e.match}</span><span class="grade g-${e.grade}" aria-label="ランク${e.grade}">${e.grade}</span></span></div>
     </div>
     ${mixBar(a.items)}
@@ -1111,6 +1134,7 @@ function card(e, inCmp, isNg){
     <div class="themes">${T.map(t=>`<div class="th${heavy.includes(t.k)?' hi':''}${S.sort===t.k?' sk':''}"><span class="tn">${t.n}</span>${pips(sc.v[t.k])}<span class="tv">${f1(sc.v[t.k])}</span></div>`).join('')}</div>
     ${open?`<div class="detail">${labelHtml(p,a)}${aiBox(p,a)}<div class="whys">${T.map(t=>`<div><span>${t.n} ${f1(sc.v[t.k])}</span><span>${esc(sc.why[t.k])}</span></div>`).join('')}</div>${srcLine(p)}<p class="xs muted">${p.kind==='quasi'?'医薬部外品は表示順が配合量の順とは限りません。':'化粧品は1%を超える成分が配合量の多い順に並びます。'}</p>${delRow(p)}</div>`:''}
     <div class="pc-foot">
+      ${url?`<a class="btn pc-go" href="${esc(url)}">商品ページを見る（画像・説明・楽天）</a>`:''}
       <label><input type="checkbox" data-act="cmp" data-id="${esc(p.id)}" ${inCmp?'checked':''}> 横並び比較に入れる</label>
       <button type="button" class="btn ghost sm" data-act="toggle" data-id="${esc(p.id)}" aria-expanded="${open}">${open?'閉じる':`成分と根拠を見る（${a.items.length}）`}</button>
     </div>

@@ -10,8 +10,8 @@ const C = require("./core.js");
 const [, , SRC, OUT, ...rest] = process.argv;
 if (!SRC || !OUT) { console.error("usage: gen.js products.json outdir [--site URL]"); process.exit(1); }
 const SITE = rest.includes("--site") ? (rest[rest.indexOf("--site") + 1] || "").replace(/\/$/, "") : "";
-const RK_APP = process.env.RAKUTEN_APP_ID || "", RK_AFF = process.env.RAKUTEN_AFFILIATE_ID || ""; // 楽天ウェブサービスのアプリID・アフィリエイトID（画像の表示に使う）
-const RK_ON = !!RK_APP;
+// 楽天の画像は、Cloudflare に RAKUTEN_APP_ID が入っているときだけ出す（鍵は functions/api/rk.js だけが使い、ページには出さない）
+const RK_ON = !!process.env.RAKUTEN_APP_ID;
 const PREVIEW = rest.includes("--preview"); // ファイルを直接開く見本用：リンクの末尾に index.html を付ける
 const DATA = JSON.parse(fs.readFileSync(SRC, "utf8"));
 const PRODUCTS = DATA.products;
@@ -216,7 +216,7 @@ ${p && !opts.noQuiz ? quizCta(r, opts.cat) : ""}
 </main>
 ${foot}
 <script>window.KB={root:${JSON.stringify(root)},pv:${PREVIEW}}</script><script src="${r("assets/kb.js")}" defer></script>
-${RK_ON ? `<script>window.RK={app:${JSON.stringify(RK_APP)},aff:${JSON.stringify(RK_AFF)}}</script><script src="${r("assets/rk.js")}" defer></script>` : ""}
+${RK_ON ? `<script>window.RK={api:${JSON.stringify(root + "api/rk")}}</script><script src="${r("assets/rk.js")}" defer></script>` : ""}
 </body></html>`;
   fs.writeFileSync(path.join(dir, "index.html"), html);
   PAGES.push(p);

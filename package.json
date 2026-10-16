@@ -1,7 +1,7 @@
 {
   "name": "kurabelle",
   "private": true,
-  "description": "成分くらべ（kurabelle.com）— 成分表から商品をくらべるサイト",
+  "description": "クラベル（kurabelle.com）— 成分表から商品をくらべるサイト",
   "scripts": { "build": "node src/build.js" },
   "engines": { "node": ">=18" }
 }

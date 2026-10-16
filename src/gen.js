@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* 成分くらべ 静的サイト生成
+/* クラベル（kurabelle.com）静的サイト生成
    使い方: node src/gen.js <products.json> <出力フォルダ> [--site https://example.com]
    商品データから、トップ・カテゴリ・商品・成分・ブランド・目的別のページを作る。
    リンクはすべて相対パス（どこに置いても動く）。--site を渡すと canonical と sitemap.xml に使う。 */
@@ -16,7 +16,7 @@ const PREVIEW = rest.includes("--preview"); // ファイルを直接開く見本
 const DATA = JSON.parse(fs.readFileSync(SRC, "utf8"));
 const PRODUCTS = DATA.products;
 const UPDATED = DATA.updated || "";
-const SITE_NAME = "成分くらべ";
+const SITE_NAME = "クラベル";
 
 /* ---------- 共通 ---------- */
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -124,7 +124,7 @@ ${canon ? `<link rel="canonical" href="${esc(canon)}">` : ""}
 <link rel="stylesheet" href="${r("assets/site.css")}">
 ${ld}
 </head><body>
-<header class="top"><div class="wrap topin"><a class="logo" href="${r("")}">成分くらべ<span>INGREDIENT COMPARE</span></a>
+<header class="top"><div class="wrap topin"><a class="logo" href="${r("")}">クラベル<span>kurabelle</span></a>
 <nav aria-label="サイト内"><a href="${r("categories/shampoo/")}">シャンプー</a><a href="${r("ingredients/")}">成分</a><a href="${r("concerns/")}">目的から選ぶ</a><a href="${r("brands/")}">ブランド</a></nav></div></header>
 <main class="wrap">
 ${crumbs.length > 1 ? `<nav class="crumbs" aria-label="現在地">${crumbs.map((c, i) => i < crumbs.length - 1 ? `<a href="${r(c[1])}">${esc(c[0])}</a>` : `<span>${esc(c[0])}</span>`).join("<i>›</i>")}</nav>` : ""}
@@ -313,7 +313,7 @@ ING_PAGES.forEach(g => {
 });
 
 /* 成分の一覧 */
-write("ingredients/", "成分の一覧｜シャンプー・スキンケアの成分を役割で調べる", `成分くらべに登録した商品に2件以上入っている成分${ING_PAGES.length}種類を、洗浄・保湿・指通りなどの役割ごとに並べました。`, r => `
+write("ingredients/", "成分の一覧｜シャンプー・スキンケアの成分を役割で調べる", `クラベルに登録した商品に2件以上入っている成分${ING_PAGES.length}種類を、洗浄・保湿・指通りなどの役割ごとに並べました。`, r => `
 <h1>成分の一覧</h1><p class="lead">登録している商品のうち、2件以上に入っている成分です。役割ごとに、入っている商品の数が多い順に並べています。</p>
 ${C.ROLE_ORDER.filter(ro => ING_PAGES.some(g => g.role === ro)).map(ro => `<section><h2><span class="role big" style="--c:var(${ROLE_C(ro)})">${esc(ROLE_N(ro))}</span></h2><div class="tags">${ING_PAGES.filter(g => g.role === ro).map(g => `<a class="tagl" href="${r(ingUrl.get(g.name))}">${esc(g.name)}<span class="mono">${g.uses.length}</span></a>`).join("")}</div></section>`).join("")}`,
   { crumbs: [["トップ", ""], ["成分", "ingredients/"]] });
@@ -328,7 +328,7 @@ ${common.length ? `<section><h2>全商品に共通する成分</h2><div class="t
 <section><h2>商品</h2><div class="plist">${list.slice().sort((a, b) => (b.match || 0) - (a.match || 0)).map(x => productCard(x, r)).join("")}</div></section>`,
     { crumbs: [["トップ", ""], ["ブランド", "brands/"], [b, u]] });
 });
-write("brands/", "ブランドの一覧", `成分くらべに登録した商品のブランド一覧です。`, r => `
+write("brands/", "ブランドの一覧", `クラベルに登録した商品のブランド一覧です。`, r => `
 <h1>ブランドの一覧</h1><p class="lead">商品が3件以上あるブランドは、ブランドのページで比べられます。</p>
 <div class="tags">${[...BR.entries()].sort((a, b) => b[1].length - a[1].length).map(([b, l]) => brandUrl.has(b) ? `<a class="tagl" href="${r(brandUrl.get(b))}">${esc(b)}<span class="mono">${l.length}</span></a>` : `<span class="tagl plain">${esc(b)}<span class="mono">${l.length}</span></span>`).join("")}</div>`,
   { crumbs: [["トップ", ""], ["ブランド", "brands/"]] });
@@ -362,15 +362,15 @@ ${cat === "shampoo" ? `<div class="clist">${CONCERNS.map(c => `<a class="cl" hre
 
 /* ---------- 点数のつけ方 ---------- */
 const appHtml = fs.existsSync(path.join(__dirname, "rules.html")) ? fs.readFileSync(path.join(__dirname, "rules.html"), "utf8") : "";
-write("about/", "点数のつけ方", "成分くらべの点数は、成分表から読み取れる処方の傾向を、決まったルールで数えたものです。", r => `
+write("about/", "点数のつけ方", "クラベルの点数は、成分表から読み取れる処方の傾向を、決まったルールで数えたものです。", r => `
 <h1>点数のつけ方</h1><p class="lead">成分表に書かれた成分を辞書で役割ごとに分け、決まったルールで数えています。配合量・使い心地・効果は点数に入っていません。</p>${appHtml}`,
   { crumbs: [["トップ", ""], ["点数のつけ方", "about/"]] });
 
 /* ---------- トップ ---------- */
 const topIngs = ING_PAGES.slice(0, 24);
-write("", "成分くらべ｜シャンプーの全成分を、役割つきで比べる", `シャンプーやスキンケアの全成分を、洗浄・保湿・指通りなどの役割に分けて比べられます。商品${PRODUCTS.length}件・成分${ING_PAGES.length}種類。`, r => `
-<section class="hero"><p class="eyebrow">INGREDIENT COMPARE</p><h1>シャンプーの全成分を、<br>役割つきで比べる。</h1>
-<p class="lead">パッケージの裏の「全成分」は、読み方さえ分かれば商品選びのいちばん確かな手がかりです。成分くらべは、成分を洗浄・保湿・指通りなどの役割に分け、商品どうしを比べられるようにしました。</p>
+write("", "クラベル｜成分でくらべるシャンプー・スキンケア", `シャンプーやスキンケアの全成分を、洗浄・保湿・指通りなどの役割に分けて比べられます。商品${PRODUCTS.length}件・成分${ING_PAGES.length}種類。`, r => `
+<section class="hero"><p class="eyebrow">クラベル ─ 成分でくらべる</p><h1>シャンプーの全成分を、<br>役割つきで比べる。</h1>
+<p class="lead">パッケージの裏の「全成分」は、読み方さえ分かれば商品選びのいちばん確かな手がかりです。クラベルは、成分を洗浄・保湿・指通りなどの役割に分け、商品どうしを比べられるようにしました。</p>
 <div class="stats"><div><b class="mono">${PRODUCTS.length}</b><span>商品</span></div><div><b class="mono">${ING_PAGES.length}</b><span>成分のページ</span></div><div><b class="mono">${BR.size}</b><span>ブランド</span></div></div></section>
 <section><h2>目的から選ぶ</h2><div class="clist">${CONCERNS.map(c => `<a class="cl" href="${r(concernUrl(c))}"><b>${esc(c.short)}</b><span>${esc(c.n)}</span><i class="mono">${c.list.length}件</i></a>`).join("")}</div></section>
 <section><h2>よく使われている成分</h2><div class="tags">${topIngs.map(g => `<a class="tagl" href="${r(ingUrl.get(g.name))}"><i class="dot" style="background:var(${ROLE_C(g.role)})"></i>${esc(g.name)}<span class="mono">${g.uses.length}</span></a>`).join("")}</div><p><a href="${r("ingredients/")}">成分の一覧を見る ›</a></p></section>

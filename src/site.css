@@ -1,4 +1,4 @@
-/* 成分くらべ：商品ラベルの裏面のような紙と細い罫線。表示名は明朝、本文はゴシック、数値は等幅。 */
+/* クラベル：商品ラベルの裏面のような紙と細い罫線。表示名は明朝、本文はゴシック、数値は等幅。 */
 :root{
   --paper:#F3F5F2; --card:#FFFFFF; --ink:#1C2220; --ink2:#525A57; --ink3:#7E8582; --line:#DBDFD9; --line2:#C3C9C2;
   --accent:#23498A; --accent-ink:#FFFFFF; --accent-soft:#E3E9F4; --warn:#A3531A; --warn-soft:#F6E8DA; --ok:#2C7A55; --ok-soft:#E1F0E8;
@@ -33,7 +33,7 @@ main section{display:block}
 .top{border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:5}
 .topin{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:10px}
 .logo{font-family:var(--f-display);font-weight:700;font-size:20px;color:var(--ink);text-decoration:none;display:flex;align-items:baseline;gap:8px}
-.logo span{font-family:var(--f-body);font-size:10px;letter-spacing:.14em;color:var(--ink3);font-weight:500}
+.logo span{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.06em;color:var(--ink3);font-weight:500}
 .top nav{display:flex;gap:4px;flex-wrap:wrap}
 .top nav a{text-decoration:none;color:var(--ink2);font-size:14px;padding:4px 10px;border-radius:999px}
 .top nav a:hover{background:var(--paper);color:var(--ink)}

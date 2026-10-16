@@ -2,6 +2,14 @@
   "name": "kurabelle",
   "private": true,
   "description": "クラベル（kurabelle.com）— 成分表から商品をくらべるサイト",
-  "scripts": { "build": "node src/build.js" },
-  "engines": { "node": ">=18" }
+  "scripts": {
+    "build": "node src/build.js",
+    "hand": "node tools/gen-hand.js src/hand.json"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "roughjs": "4.6.6"
+  }
 }

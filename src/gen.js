@@ -17,6 +17,14 @@ const DATA = JSON.parse(fs.readFileSync(SRC, "utf8"));
 const PRODUCTS = DATA.products;
 const UPDATED = DATA.updated || "";
 const SITE_NAME = "クラベル";
+const OPERATOR_OK = false; // 「運営者より」の文章をユーザーが確かめたら true（それまでは見本にだけ出す）
+
+/* 手書き風の絵（src/hand.json。作り直しは npm run hand）。ページで使っているものだけを埋め込む */
+const HAND = JSON.parse(fs.readFileSync(path.join(__dirname, "hand.json"), "utf8"));
+const SYM = new Map([...HAND.symbols.matchAll(/<symbol id="([^"]+)"[\s\S]*?<\/symbol>/g)].map(m => [m[1], m[0]]));
+const sprite = (html, extra = []) => { const ids = [...new Set([...[...html.matchAll(/href="#([a-z][\w-]*)"/g)].map(m => m[1]), ...extra])].filter(id => SYM.has(id));
+  return ids.length ? `<svg class="sprite" aria-hidden="true" focusable="false"><defs>${ids.map(id => SYM.get(id)).join("")}</defs></svg>` : ""; };
+const PH = { shampoo: "ph-bottle", colorrinse: "ph-bottle", skincare: "ph-jar", facewash: "ph-tube" };
 
 /* ---------- 共通 ---------- */
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -112,6 +120,10 @@ function write(p, title, desc, body, opts = {}) {
   const crumbs = opts.crumbs || [];
   const ld = crumbs.length ? `<script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": "BreadcrumbList",
     itemListElement: crumbs.map((c, i) => ({ "@type": "ListItem", position: i + 1, name: c[0], item: SITE ? `${SITE}/${c[1]}` : undefined })) })}</script>` : "";
+  const main = body(r);
+  const root = "../".repeat(p.split("/").filter(Boolean).length) || "./";
+  const head = `<header class="top"><div class="wrap topin"><a class="logo" href="${r("")}"><svg viewBox="0 0 48 48" aria-hidden="true"><use href="#mark"/></svg>クラベル<span>kurabelle</span></a>
+<nav aria-label="サイト内"><a href="${r("concerns/")}">悩みから選ぶ</a><a href="${r("categories/shampoo/")}">シャンプー</a><a href="${r("ingredients/")}">成分</a><a href="${r("about/")}">クラベルとは</a></nav></div></header>`;
   const html = `<!doctype html>
 <html lang="ja"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -120,22 +132,25 @@ function write(p, title, desc, body, opts = {}) {
 ${canon ? `<link rel="canonical" href="${esc(canon)}">` : ""}
 <meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:type" content="${p ? "article" : "website"}"><meta property="og:site_name" content="${SITE_NAME}">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&text=${encodeURIComponent("全成分ここ大事5.0やさしさ")}&display=swap">
 <link rel="stylesheet" href="${r("assets/site.css")}">
 ${ld}
 </head><body>
-<header class="top"><div class="wrap topin"><a class="logo" href="${r("")}">クラベル<span>kurabelle</span></a>
-<nav aria-label="サイト内"><a href="${r("categories/shampoo/")}">シャンプー</a><a href="${r("ingredients/")}">成分</a><a href="${r("concerns/")}">目的から選ぶ</a><a href="${r("brands/")}">ブランド</a></nav></div></header>
+${sprite(head + main, opts.sym || [])}
+${head}
 <main class="wrap">
 ${crumbs.length > 1 ? `<nav class="crumbs" aria-label="現在地">${crumbs.map((c, i) => i < crumbs.length - 1 ? `<a href="${r(c[1])}">${esc(c[0])}</a>` : `<span>${esc(c[0])}</span>`).join("<i>›</i>")}</nav>` : ""}
-${body(r)}
+${main}
 </main>
 <footer class="foot"><div class="wrap">
+<nav aria-label="サイトの案内"><a href="${r("")}">トップ</a><a href="${r("concerns/")}">悩み・目的から選ぶ</a><a href="${r("ingredients/")}">成分の一覧</a><a href="${r("brands/")}">ブランド</a><a href="${r("app/")}">診断つきの比較ツール</a><a href="${r("about/")}">クラベルとは</a><a href="${r("about/scoring/")}">点数のつけ方</a></nav>
 <p>成分表示は、メーカーの製品ページ・販売ページ・パッケージの記載をそのまま写しています。リニューアルで成分が変わることがあるため、商品ごとに出典と確認日を載せています。</p>
 <p>点数は、成分表から読み取れる処方の傾向を、決まったルールで数えたものです。配合量・使い心地・効果を表すものではなく、髪や肌に合うかどうかには個人差があります。医薬部外品の効能は、各商品の表示で確かめてください。</p>
 ${RK_ON || PREVIEW ? `<p class="rk-credit">商品画像と販売ページへのリンクは、楽天ウェブサービスから提供されています。<a href="https://webservice.rakuten.co.jp/" rel="noopener" target="_blank">Supported by Rakuten Developers</a></p>` : ""}
-<p>商品データ ${PRODUCTS.length}件・最終更新 ${esc(UPDATED)}　<a href="${r("about/")}">点数のつけ方</a></p>
+<p>商品データ ${PRODUCTS.length}件・最終更新 ${esc(UPDATED)}</p>
 </div></footer>
+<script>window.KB={root:${JSON.stringify(root)},pv:${PREVIEW}}</script><script src="${r("assets/kb.js")}" defer></script>
 ${RK_ON ? `<script>window.RK={app:${JSON.stringify(RK_APP)},aff:${JSON.stringify(RK_AFF)}}</script><script src="${r("assets/rk.js")}" defer></script>` : ""}
 </body></html>`;
   fs.writeFileSync(path.join(dir, "index.html"), html);
@@ -147,7 +162,7 @@ const chips = x => `<span class="chip">${KIND_N[x.p.kind] || ""}</span>${TARGET_
 const mix = x => { const cnt = {}; x.a.items.forEach(i => { const r = C.compRole(i); cnt[r] = (cnt[r] || 0) + 1; });
   return `<div class="mix" aria-hidden="true">${C.ROLE_ORDER.filter(r => cnt[r]).map(r => `<span style="flex:${cnt[r]};background:var(${ROLE_C(r)})"></span>`).join("")}</div>`; };
 const rkKey = x => x.p.jan || `${x.p.brand || ""} ${x.p.name}`.trim();
-const imgSlot = (x, cls) => RK_ON || PREVIEW ? `<span class="${cls}" data-rk="${esc(rkKey(x))}"${x.p.jan ? ' data-jan="1"' : ""}><i>画像</i></span>` : "";
+const imgSlot = (x, cls) => `<span class="${cls}" data-rk="${esc(rkKey(x))}"${x.p.jan ? ' data-jan="1"' : ""}><svg viewBox="0 0 120 120" aria-hidden="true"><use href="#${PH[x.p.category] || "ph-bottle"}"/></svg></span>`;
 const scoreBadge = x => x.match == null ? "" : `<span class="score"><b class="mono">${x.match}</b><i class="g g-${x.grade}">${x.grade}</i></span>`;
 function productCard(x, r, extra, opt = {}) {
   const ms = x.sc && x.sc.mainSurf ? `主洗浄成分 ${esc(x.sc.mainSurf.name)}・` : "";
@@ -212,7 +227,7 @@ function typeBlock(x, r) {
     <li><span>平均より上</span><b class="mono">${ty.above}</b><i>${ty.total}つの観点のうち</i></li>
     <li><span>いちばん控えめ</span><b>${esc(ty.low.n)}</b><i>${ty.low.v.toFixed(1)}点</i></li>
   </ul>
-  <p class="small muted">成分表に何が入っているかを、決まったルールで5点満点に数えたものです。効果や使い心地を表すものではありません。数え方は<a href="${r("about/")}">点数のつけ方</a>に、自分の髪や頭皮に合わせた順位は<a href="${r("app/")}">診断つきの比較ツール</a>にあります。</p>
+  <p class="small muted">成分表に何が入っているかを、決まったルールで5点満点に数えたものです。効果や使い心地を表すものではありません。数え方は<a href="${r("about/scoring/")}">点数のつけ方</a>に、自分の髪や頭皮に合わせた順位は<a href="${r("app/")}">診断つきの比較ツール</a>にあります。</p>
 </section>`;
 }
 function leadText(x) {
@@ -263,7 +278,7 @@ P.forEach(x => {
   <div class="phead">${imgSlot(x, "pimg")}<div>
   <h1>${esc(p.name)} の成分</h1>
   <div class="row">${chips(x)}</div>
-  ${RK_ON || PREVIEW ? `<a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : ""}
+  <div class="acts"><button class="fav-btn" type="button" hidden aria-pressed="false" data-fav="${esc(JSON.stringify({ id: p.id, name: p.name, brand: p.brand || "", url: x.url, match: x.match, grade: x.grade, type: x.sc ? typeOf(x).title : "", ph: PH[p.category] || "ph-bottle" }))}">お気に入りに追加</button>${RK_ON || PREVIEW ? `<a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : ""}</div>
   </div></div>
   <p class="lead">${esc(leadText(x))}</p>
   ${p.desc || p.scent ? `<div class="maker"><span class="lbl">メーカーの説明</span>${p.desc ? `<p>${esc(p.desc)}</p>` : ""}${p.scent ? `<p class="mk-scent"><b>香り</b>${esc(p.scent)}</p>` : ""}${p.infoSource && p.infoSource.url ? `<p class="small muted">出典：<a href="${esc(p.infoSource.url)}" rel="nofollow noopener" target="_blank">${esc((p.infoSource.url.split("/")[2] || "").replace(/^www\./, ""))}</a>（${esc(p.infoSource.date || "")}確認）。メーカーの説明を短くまとめたもので、効果を保証するものではありません。</p>` : ""}</div>` : ""}
@@ -333,21 +348,64 @@ write("brands/", "ブランドの一覧", `クラベルに登録した商品の�
 <div class="tags">${[...BR.entries()].sort((a, b) => b[1].length - a[1].length).map(([b, l]) => brandUrl.has(b) ? `<a class="tagl" href="${r(brandUrl.get(b))}">${esc(b)}<span class="mono">${l.length}</span></a>` : `<span class="tagl plain">${esc(b)}<span class="mono">${l.length}</span></span>`).join("")}</div>`,
   { crumbs: [["トップ", ""], ["ブランド", "brands/"]] });
 
-/* ---------- 目的別 ---------- */
+/* ---------- 悩みから選ぶ（メーカーの説明の言葉で集める） ---------- */
+const descHas = (x, re) => re.test(x.p.desc || "");
+const dandruff = CONCERNS.find(c => c.id === "dandruff");
+const WORRIES = [
+  { id: "smell", icon: "i-smell", short: "頭皮のにおい", hint: "汗臭・ニオイの表示", n: "頭皮のにおいが気になるときのシャンプー",
+    lead: "メーカーが、においへの配慮を説明に書いているシャンプーです。医薬部外品（薬用）には「汗臭を防ぐ」などの効能が認められたものがあります。",
+    rule: "メーカーの説明に「汗臭」「ニオイ」などの言葉があるシャンプー。効能は各商品の表示で確かめてください。点数はにおいへの効果を表すものではありません。",
+    pick: x => x.p.category === "shampoo" && descHas(x, /臭|ニオイ|におい/) },
+  { id: "volume", icon: "i-volume", short: "髪のボリューム", hint: "ハリ・コシ・ふんわり", n: "髪のボリュームが気になるときのシャンプー",
+    lead: "メーカーが「ハリ・コシ」「ふんわり」「ボリューム」などを説明に書いているシャンプーです。",
+    rule: "メーカーの説明に「ボリューム」「ハリ」「コシ」「ふんわり」の言葉があるシャンプー。化粧品の「ハリ・コシを与える」は髪の手ざわりについての表現で、髪が増えることを意味するものではありません。",
+    pick: x => x.p.category === "shampoo" && descHas(x, /ボリューム|ハリ|コシ|ふんわり/) },
+  dandruff ? { id: "dandruff", icon: "i-flake", short: "フケ・かゆみ", hint: "医薬部外品が中心", n: dandruff.n, existing: true, list: dandruff.list } : null,
+  { id: "oily", icon: "i-oil", short: "ベタつき・テカリ", hint: "皮脂に向けた商品", n: "皮脂のベタつき・テカリが気になるときの商品",
+    lead: "メーカーが、皮脂やベタつきに向けた商品だと説明しているシャンプー・洗顔料・スキンケアです。",
+    rule: "メーカーの説明に「皮脂」「ベタつき」「アブラ」「テカリ」の言葉がある商品。",
+    pick: x => descHas(x, /皮脂|ベタつ|アブラ|テカリ/) },
+  { id: "spot", icon: "i-spot", short: "シミ・ソバカス", hint: "防ぐと表示のある商品", n: "シミ・ソバカスを防ぐと表示のあるスキンケア",
+    lead: "医薬部外品（薬用）で、「メラニンの生成を抑え、シミ・ソバカスを防ぐ」などの効能が表示されているスキンケアです。",
+    rule: "メーカーの説明に「シミ」「ソバカス」「メラニン」の言葉がある、保湿クリーム・乳液・洗顔料。この効能は、できてしまったシミを消すという意味ではありません。",
+    pick: x => (x.p.category === "skincare" || x.p.category === "facewash") && descHas(x, /シミ|メラニン|ソバカス|そばかす/) },
+  { id: "dry", icon: "i-dry", short: "乾燥・小じわ", hint: "保湿クリーム・乳液", n: "乾燥・小じわが気になるときの保湿クリーム・乳液",
+    lead: "メーカーが、乾燥やうるおいに向けた商品だと説明している保湿クリーム・乳液・ジェルです。",
+    rule: "保湿クリーム・乳液のうち、メーカーの説明に「乾燥」「小じわ」「うるおい」「潤い」の言葉があるもの。化粧品で「乾燥による小じわを目立たなくする」と表示するには、決められた試験で確かめる必要があります。",
+    pick: x => x.p.category === "skincare" && descHas(x, /乾燥|小じわ|うるお|潤い/) }
+].filter(Boolean).map(w => w.existing ? w : { ...w, list: P.filter(w.pick) }).filter(w => w.list.length >= 2);
+
+WORRIES.filter(w => !w.existing).forEach(w => {
+  const u = `concerns/${w.id}/`;
+  const sorted = w.list.slice().sort((a, b) => (b.match == null) - (a.match == null) || (b.match || 0) - (a.match || 0));
+  write(u, w.n, `${w.lead} 登録している商品のうち${w.list.length}件。全成分を役割つきで比べられます。`, r => `
+<div class="row" style="margin:0"><svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true"><use href="#${w.icon}"/></svg></div>
+<h1>${esc(w.n)}</h1><p class="lead">${esc(w.lead)}</p>
+<div class="rule"><b>この一覧に入る条件</b><p>${esc(w.rule)}</p><p class="small muted">登録している商品${P.length}件のうち、${w.list.length}件が当てはまります。並び順は成分の傾向スコアの高い順です（点数のない種類は後ろ）。</p></div>
+<div class="plist">${sorted.map(x => productCard(x, r, CAT_N[x.p.category])).join("")}</div>`,
+    { crumbs: [["トップ", ""], ["悩み・目的から選ぶ", "concerns/"], [w.short, u]] });
+});
+const worryUrl = w => `concerns/${w.id}/`;
+
+/* ---------- 目的別（成分の条件） ---------- */
 CONCERNS.forEach(c => {
   const u = concernUrl(c);
   const sorted = c.list.slice().sort((a, b) => (c.sort === "match" ? b.match - a.match : (b.sc.v[c.sort] - a.sc.v[c.sort]) || (b.match - a.match)));
   const T = C.CATS.shampoo.themes.find(t => t.k === c.sort);
+  const W = WORRIES.find(w => w.id === c.id);
   write(u, c.n, `${c.lead} 登録している${SH.length}件のうち${c.list.length}件が当てはまります。成分の役割つきで比べられます。`, r => `
+${W ? `<div class="row" style="margin:0"><svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true"><use href="#${W.icon}"/></svg></div>` : ""}
 <h1>${esc(c.n)}</h1><p class="lead">${esc(c.lead)}</p>
 <div class="rule"><b>この一覧に入る条件</b><p>${esc(c.rule)}</p><p class="small muted">登録しているシャンプー${SH.length}件のうち、${c.list.length}件が当てはまります。${T ? `並び順は「${esc(T.n)}」の点数が高い順です。` : "並び順は成分の傾向スコアの高い順です。"}</p></div>
 <div class="plist">${sorted.map(x => productCard(x, r, T ? `${T.s} ${x.sc.v[T.k].toFixed(1)}` : "")).join("")}</div>`,
-    { crumbs: [["トップ", ""], ["目的から選ぶ", "concerns/"], [c.short, u]] });
+    { crumbs: [["トップ", ""], ["悩み・目的から選ぶ", "concerns/"], [c.short, u]] });
 });
-write("concerns/", "目的からシャンプーを選ぶ", "やさしい洗浄成分・硫酸系なし・ノンシリコン・香料なし・フケかゆみ・補修成分など、目的ごとにシャンプーを成分から選べます。", r => `
-<h1>目的から選ぶ</h1><p class="lead">成分表から決まった条件で選んだ一覧です。条件はそれぞれのページに書いています。</p>
-<div class="clist">${CONCERNS.map(c => `<a class="cl" href="${r(concernUrl(c))}"><b>${esc(c.short)}</b><span>${esc(c.n)}</span><i class="mono">${c.list.length}件</i></a>`).join("")}</div>`,
-  { crumbs: [["トップ", ""], ["目的から選ぶ", "concerns/"]] });
+const worryTiles = r => `<div class="worries">${WORRIES.map(w => `<a class="worry" href="${r(worryUrl(w))}"><svg viewBox="0 0 48 48" aria-hidden="true"><use href="#${w.icon}"/></svg><b>${esc(w.short)}</b><i>${w.list.length}件</i></a>`).join("")}</div>`;
+write("concerns/", "悩み・目的から選ぶ", "頭皮のにおい・髪のボリューム・フケかゆみ・ベタつき・シミ・乾燥などの悩みや、硫酸系なし・ノンシリコンなどの条件から、商品を成分で選べます。", r => `
+<h1><span class="mk">悩み</span>・目的から選ぶ</h1><p class="lead">悩みの一覧は、メーカーの説明や表示に出てくる言葉で集めています。成分の条件の一覧は、成分表から決まったルールで選んでいます。どちらも効果を約束するものではありません。</p>
+<section><h2>悩みから選ぶ</h2>${worryTiles(r)}</section>
+<section><h2>成分の条件から選ぶ（シャンプー）</h2><div class="clist">${CONCERNS.filter(c => c.id !== "dandruff").map(c => `<a class="cl" href="${r(concernUrl(c))}"><b>${esc(c.short)}</b><span>${esc(c.n)}</span><i>${c.list.length}件</i></a>`).join("")}</div></section>`,
+  { crumbs: [["トップ", ""], ["悩み・目的から選ぶ", "concerns/"]] });
 
 /* ---------- カテゴリ ---------- */
 CAT_ORDER.forEach(cat => {
@@ -355,31 +413,103 @@ CAT_ORDER.forEach(cat => {
   const u = `categories/${cat}/`;
   write(u, `${CAT_N[cat]}の成分を比べる`, `${CAT_N[cat]}${list.length}件の全成分を、役割つきで比べられます。`, r => `
 <h1>${esc(CAT_N[cat])}</h1><p class="lead">登録している${esc(CAT_N[cat])}は${list.length}件です。${C.CATS[cat] && C.CATS[cat].scored ? "成分の傾向スコアが高い順に並べています。" : "このカテゴリはまだ点数をつけていません。"}</p>
-${cat === "shampoo" ? `<div class="clist">${CONCERNS.map(c => `<a class="cl" href="${r(concernUrl(c))}"><b>${esc(c.short)}</b><i class="mono">${c.list.length}件</i></a>`).join("")}</div>` : ""}
+${cat === "shampoo" ? `<div class="clist">${CONCERNS.map(c => `<a class="cl" href="${r(concernUrl(c))}"><b>${esc(c.short)}</b><i>${c.list.length}件</i></a>`).join("")}</div>` : ""}
 <div class="plist">${list.slice().sort((a, b) => (b.match || 0) - (a.match || 0)).map(x => productCard(x, r)).join("")}</div>`,
     { crumbs: [["トップ", ""], [CAT_N[cat], u]] });
 });
 
 /* ---------- 点数のつけ方 ---------- */
 const appHtml = fs.existsSync(path.join(__dirname, "rules.html")) ? fs.readFileSync(path.join(__dirname, "rules.html"), "utf8") : "";
-write("about/", "点数のつけ方", "クラベルの点数は、成分表から読み取れる処方の傾向を、決まったルールで数えたものです。", r => `
+write("about/scoring/", "点数のつけ方", "クラベルの点数は、成分表から読み取れる処方の傾向を、決まったルールで数えたものです。", r => `
 <h1>点数のつけ方</h1><p class="lead">成分表に書かれた成分を辞書で役割ごとに分け、決まったルールで数えています。配合量・使い心地・効果は点数に入っていません。</p>${appHtml}`,
-  { crumbs: [["トップ", ""], ["点数のつけ方", "about/"]] });
+  { crumbs: [["トップ", ""], ["クラベルとは", "about/"], ["点数のつけ方", "about/scoring/"]] });
+
+/* ---------- クラベルとは ---------- */
+const TRUST = [
+  ["1:1", "メーカー表示のとおりに載せる", "全成分は一字一句そのまま写し、出典と確認日を載せています。"],
+  ["=", "どの商品も同じルールで採点", "特定の商品を売り込みません。紹介料で点数や順番を変えることもしません。"],
+  ["0", "不安をあおらない", "「危険」とは書きません。海外の規制は、一次資料の条文と日付を添えて書きます。"]
+];
+const showOperator = OPERATOR_OK || PREVIEW;
+write("about/", "クラベルとは", "クラベルは、シャンプーやスキンケアの全成分を決まったルールで読み解き、商品どうしを比べられるようにしたサイトです。大切にしている3つのことと、広告についての考え方。", r => `
+<article class="ab">
+  <section><h1>クラベルとは</h1>
+    <p class="lead">シャンプーやスキンケアの、パッケージの裏にある「全成分」。読み方が分かれば、商品選びのいちばん確かな手がかりになります。クラベルは、その全成分を決まったルールで読み解き、商品どうしを比べられるようにしたサイトです。</p></section>
+  <div class="stats"><div><b class="mono">${PRODUCTS.length}</b><span>登録商品</span></div><div><b class="mono">${ING_PAGES.length}</b><span>成分のページ</span></div><div><b class="mono">${PRODUCTS.filter(p => p.source && (p.source.url || p.source.label)).length}</b><span>出典つきの成分表</span></div></div>
+  <section class="ab-sec"><h2><b>1</b><span class="mk">メーカー表示のとおり</span>に載せる</h2><ul>
+    <li>全成分は、メーカーの公式ページ・販売店のページ・パッケージの表示を、一字一句そのまま写しています。</li>
+    <li>同じページを2回読み込み、写した内容が完全に一致したものだけを載せています。</li>
+    <li>商品ごとに出典と確認日を載せています。リニューアルで成分が変わることがあるためです。</li>
+    <li>成分の解析サイトや口コミを、成分表の出典には使いません。</li></ul></section>
+  <section class="ab-sec"><h2><b>2</b>どの商品も<span class="mk">同じルール</span>で採点</h2><ul>
+    <li>点数は、6つの観点（シャンプーなら、やさしい洗浄・洗浄力・頭皮ケア・髪の補修・指通り・低刺激）を、誰が数えても同じになる決まりで数えたものです。</li>
+    <li>数え方はすべて公開しています。<a href="${r("about/scoring/")}">点数のつけ方</a></li>
+    <li>特定の商品を売り込みません。メーカーから依頼を受けて載せることも、紹介料で点数や並び順を変えることもしません。</li>
+    <li>点数は成分表に何が入っているかを数えたもので、効果や使い心地を表すものではありません。</li></ul></section>
+  <section class="ab-sec"><h2><b>3</b>不安を<span class="mk">あおらない</span></h2><ul>
+    <li>成分を「危険」「有害」とは書きません。入っていること自体を、良い・悪いと決めつけません。</li>
+    <li>海外での規制に触れるときは、EUの化粧品規則や米国FDAなどの一次資料を確かめ、条文や日付を添えます。</li>
+    <li>医薬部外品の効能は、パッケージやメーカーの表示どおりの言葉だけを使います。</li></ul></section>
+  ${showOperator ? `<section class="ab-sec"><h2>運営者より${OPERATOR_OK ? "" : ' <span class="draft">下書き</span>'}</h2><div class="ab-box">
+    <p>年齢を重ねるにつれて、それまで気にしていなかった頭皮のにおいや髪のボリューム、肌のシミが気になり始めました。そのとき初めてシャンプーの成分を調べ、情報によって言うことがまるで違うことに戸惑ったのが、クラベルを作ったきっかけです。</p>
+    <p>同じように悩み始めた人が、落ち着いて、自分で選べるように。そのための材料をそろえていきます。</p>
+    ${OPERATOR_OK ? "" : "<small>運営者自身の言葉に書き直していただく前提の下書きです。本番には、確かめてもらうまで出しません。</small>"}</div></section>` : ""}
+  <section class="ab-sec"><h2>広告について</h2><div class="ab-box">
+    <p>商品ページの「楽天市場で見る」は、楽天アフィリエイトのリンクです。ここから購入されると、運営者が紹介料を受け取ることがあります。紹介料の有無は、点数や並び順には一切影響しません。</p>
+    <small>商品画像と販売ページへのリンクは、楽天ウェブサービスから提供されています。</small></div></section>
+  <a class="btn wide back" href="${r("")}">トップに戻る</a>
+</article>`, { crumbs: [["トップ", ""], ["クラベルとは", "about/"]] });
 
 /* ---------- トップ ---------- */
-const topIngs = ING_PAGES.slice(0, 24);
-write("", "クラベル｜成分でくらべるシャンプー・スキンケア", `シャンプーやスキンケアの全成分を、洗浄・保湿・指通りなどの役割に分けて比べられます。商品${PRODUCTS.length}件・成分${ING_PAGES.length}種類。`, r => `
-<section class="hero"><p class="eyebrow">クラベル ─ 成分でくらべる</p><h1>シャンプーの全成分を、<br>役割つきで比べる。</h1>
-<p class="lead">パッケージの裏の「全成分」は、読み方さえ分かれば商品選びのいちばん確かな手がかりです。クラベルは、成分を洗浄・保湿・指通りなどの役割に分け、商品どうしを比べられるようにしました。</p>
-<div class="stats"><div><b class="mono">${PRODUCTS.length}</b><span>商品</span></div><div><b class="mono">${ING_PAGES.length}</b><span>成分のページ</span></div><div><b class="mono">${BR.size}</b><span>ブランド</span></div></div></section>
-<section><h2>目的から選ぶ</h2><div class="clist">${CONCERNS.map(c => `<a class="cl" href="${r(concernUrl(c))}"><b>${esc(c.short)}</b><span>${esc(c.n)}</span><i class="mono">${c.list.length}件</i></a>`).join("")}</div></section>
-<section><h2>よく使われている成分</h2><div class="tags">${topIngs.map(g => `<a class="tagl" href="${r(ingUrl.get(g.name))}"><i class="dot" style="background:var(${ROLE_C(g.role)})"></i>${esc(g.name)}<span class="mono">${g.uses.length}</span></a>`).join("")}</div><p><a href="${r("ingredients/")}">成分の一覧を見る ›</a></p></section>
-<section><h2>カテゴリ</h2><div class="clist">${CAT_ORDER.filter(c => P.some(x => x.p.category === c)).map(c => `<a class="cl" href="${r(`categories/${c}/`)}"><b>${esc(CAT_N[c])}</b><i class="mono">${P.filter(x => x.p.category === c).length}件</i></a>`).join("")}</div></section>
-<section><h2>ブランド</h2><div class="tags">${BRAND_PAGES.map(([b, l]) => `<a class="tagl" href="${r(brandUrl.get(b))}">${esc(b)}<span class="mono">${l.length}</span></a>`).join("")}</div></section>`, {});
+const searchIndex = [
+  ...P.map(x => [x.p.name, x.p.brand || "", CAT_N[x.p.category] || "", x.url]),
+  ...ING_PAGES.map(g => [g.name, [...g.aliases].filter(a => C.key(a) !== C.key(g.name)).join(" "), "成分", ingUrl.get(g.name)])
+];
+const latestDate = PRODUCTS.map(p => (p.source && p.source.date) || "").sort().pop() || "";
+const latest = P.filter(x => ((x.p.source && x.p.source.date) || "") === latestDate).slice(0, 6);
+write("", "クラベル｜成分でくらべるシャンプー・スキンケア", `気になり始めたら、まず裏ラベルから。シャンプーやスキンケアの全成分を、決まったルールで読み解いて比べられます。商品${PRODUCTS.length}件・成分${ING_PAGES.length}種類。`, r => `
+<section class="home-hero">
+  <svg viewBox="0 0 340 210" role="img" aria-label="ノートに描いたボトルの裏の全成分に、蛍光ペンで線を引き、ここ大事とメモした絵"><use href="#hero"/></svg>
+  <h1>気になり始めたら、<br>まず<span class="mk">裏ラベル</span>から。</h1>
+  <p>シャンプーやスキンケアの全成分を、決まったルールで読み解いて比べます。煽らず、出典つきで。</p>
+</section>
+<section class="search-w" aria-label="調べる">
+  <p class="memo">いま使っている商品の名前でも<svg viewBox="0 0 26 16" aria-hidden="true"><path d="M2 3 C8 12 15 13 22 10 M17 6 L23 10 L18 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></p>
+  <form class="search" role="search" id="sf"><svg viewBox="0 0 48 48" aria-hidden="true"><use href="#i-search"/></svg><input id="q" type="search" placeholder="商品名・成分名を入れる" autocomplete="off" aria-label="商品名・成分名で調べる"><button type="submit">調べる</button></form>
+  <div class="hints"><small>例</small><button class="hint" type="button" data-q="メリット">メリット</button><button class="hint" type="button" data-q="キュレル">キュレル</button><button class="hint" type="button" data-q="ラウレス硫酸Na">ラウレス硫酸Na</button></div>
+  <ul class="sugg" id="sugg" hidden></ul>
+  <script type="application/json" id="kb-index">${JSON.stringify(searchIndex).replace(/</g, "\\u003c")}</script>
+</section>
+<section aria-labelledby="h-worry">
+  <div class="sec-h"><h2 id="h-worry"><span class="mk">悩み</span>から選ぶ</h2><span>件数は登録している商品</span></div>
+  ${worryTiles(r)}
+  <p class="note">ボタンの言葉は、メーカーの表示に出てくる言葉に合わせています。効果を約束するものではありません。<a href="${r("concerns/")}">成分の条件から選ぶ（硫酸系なし・ノンシリコンなど）</a></p>
+</section>
+<section class="sticky" aria-labelledby="h-quiz">
+  <h2 id="h-quiz">迷ったら、<br>3つの質問で。</h2>
+  <p>頭皮のタイプ、気になること、仕上がりの好みを選ぶと、成分表から合いそうな順に並べます。</p>
+  <a href="${r("app/")}">診断をはじめる</a>
+</section>
+<section aria-labelledby="h-fav">
+  <div class="sec-h"><h2 id="h-fav">お気に入り</h2><span>このブラウザにだけ保存</span></div>
+  <div class="favs" id="favs"><p class="fav-empty">商品ページの「お気に入りに追加」を押すと、ここに並びます。次に開いたときも、ここから見られます。</p></div>
+</section>
+<section aria-labelledby="h-about">
+  <div class="sec-h"><h2 id="h-about">クラベルとは</h2></div>
+  <p class="intro">シャンプーやスキンケアの全成分を、決まったルールで読み解いて比べるサイトです。大切にしていることは3つです。</p>
+  <div class="trust">${TRUST.map(([b, t, d]) => `<div><b>${esc(b)}</b><strong>${esc(t)}</strong><span>${esc(d)}</span></div>`).join("")}</div>
+  <p style="margin-top:12px"><a class="btn wide more" href="${r("about/")}">クラベルについて詳しく見る</a></p>
+</section>
+${latest.length ? `<section aria-labelledby="h-new"><div class="sec-h"><h2 id="h-new">最近追加した商品</h2><span class="mono">${esc(latestDate)}</span></div><div class="plist">${latest.map(x => productCard(x, r)).join("")}</div></section>` : ""}
+<section aria-labelledby="h-more"><h2 id="h-more">ほかの探し方</h2>
+  <div class="clist">${CAT_ORDER.filter(c => P.some(x => x.p.category === c)).map(c => `<a class="cl" href="${r(`categories/${c}/`)}"><b>${esc(CAT_N[c])}</b><i>${P.filter(x => x.p.category === c).length}件</i></a>`).join("")}
+  <a class="cl" href="${r("ingredients/")}"><b>成分の一覧</b><i>${ING_PAGES.length}種類</i></a><a class="cl" href="${r("brands/")}"><b>ブランドの一覧</b><i>${BR.size}ブランド</i></a></div>
+</section>`, { sym: ["ph-bottle", "ph-jar", "ph-tube", "ring"] });
 
 /* ---------- CSS・sitemap・robots ---------- */
 fs.mkdirSync(path.join(OUT, "assets"), { recursive: true });
-fs.copyFileSync(path.join(__dirname, "site.css"), path.join(OUT, "assets/site.css"));
+fs.writeFileSync(path.join(OUT, "assets/site.css"), fs.readFileSync(path.join(__dirname, "site.css"), "utf8").split("__MKL__").join(HAND.markerLight).split("__MKD__").join(HAND.markerDark));
+fs.copyFileSync(path.join(__dirname, "kb.js"), path.join(OUT, "assets/kb.js"));
 if (RK_ON) fs.copyFileSync(path.join(__dirname, "rk.js"), path.join(OUT, "assets/rk.js"));
 if (SITE) {
   fs.writeFileSync(path.join(OUT, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${PAGES.map(p => `  <url><loc>${SITE}/${encodeURI(p)}</loc>${UPDATED ? `<lastmod>${UPDATED}</lastmod>` : ""}</url>`).join("\n")}\n</urlset>\n`);

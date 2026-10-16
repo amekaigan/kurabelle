@@ -33,7 +33,7 @@
   }
   function paint(k, d) {
     document.querySelectorAll('[data-rk="' + CSS.escape(k) + '"]').forEach(function (el) {
-      if (!d || !d.img) { el.classList.add("none"); return; }
+      if (!d || !d.img) return; // 見つからないときは種類別の絵のまま
       el.innerHTML = '<img src="' + d.img + '" alt="" loading="lazy" decoding="async">';
       el.classList.add("on");
     });

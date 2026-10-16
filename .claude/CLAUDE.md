@@ -2,9 +2,11 @@
 
 Claude Codeが起動時に自動で読むファイル。`.claude/` に置くのは、ビルド結果（`dist/`）に入らず公開されないようにするため。
 
+**サイトの方針と、ユーザーと決めたこと（読者・見た目・トップの作り・商品ページ・点数と診断・カテゴリ・未決事項）は `.claude/spec.md`。作業を始める前に必ず読む。** 新しく決めたことは、その日のうちに spec.md へ追記する。
+
 ## このサイト
 - シャンプー・保湿クリームなどの**成分表を、決まったルールで読み解いて比べる**サイト。サイト名は「クラベル」（ロゴの横に小さく kurabelle。検索結果のタイトルは「クラベル｜成分でくらべるシャンプー・スキンケア」）、ドメインは kurabelle.com。
-- 本番は Cloudflare Pages（アカウント Ishimonzukan、プロジェクト kurabelle）が `npm run build`（`src/build.js`）を実行し、`dist/` を公開する。`dist/` はリポジトリに入れない。GitHub は amekaigan/kurabelle（非公開）。
+- 本番は Cloudflare Pages（アカウント Ishimonzukan、プロジェクト kurabelle）が `npm run build`（`src/build.js`）を実行し、`dist/` を公開する。`dist/` はリポジトリに入れない。GitHub は amekaigan/kurabelle（2026年10月17日時点で**公開**のまま。非公開にするかはユーザーの返事待ち）。
 - ドメイン kurabelle.com はお名前.comで取得（2026年10月）、ネームサーバーを Cloudflare（joselyn / achiel）に切り替え済み。kurabelle.com・www.kurabelle.com とも Pages のカスタムドメインで有効。
 - 反映の確認：`https://kurabelle.com/version.txt` にビルドした日時とコミットが出る。GitHub のコミットに「Cloudflare Pages」のチェックが付けばビルドが動いている。
 - 自動の反映が止まったとき（2026年10月16日に一度あった）：GitHub の Settings → Applications →「Cloudflare Workers and Pages」→ Configure で、kurabelle を外して保存し、もう一度追加して保存すると直った。Cloudflare の「切断」は押さない。

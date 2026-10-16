@@ -148,7 +148,7 @@ function chrome(r, cur) {
   const on = u => (u === "" ? cur === "" : cur.startsWith(u)) ? ' aria-current="page"' : "";
   const logo = `<a class="kb-logo" href="${r("")}"><svg viewBox="0 0 48 48" aria-hidden="true"><use href="#mark"/></svg>クラベル<span>kurabelle</span></a>`;
   const cats = CAT_ORDER.filter(c => P.some(x => x.p.category === c));
-  const menu = `<details class="kb-menu"><summary>メニュー</summary><div class="panel">
+  const menu = `<details class="kb-menu"><summary aria-label="メニュー"><span class="vh">メニュー</span></summary><div class="panel">
 <a class="mi" href="${r("")}"${on("")}>トップ</a>
 <p class="mh">悩みから選ぶ</p><div class="mg">${WORRIES.map(w => `<a href="${r(worryUrl(w))}"${on(worryUrl(w))}><svg viewBox="0 0 48 48" aria-hidden="true"><use href="#${w.icon}"/></svg>${esc(MENU_SHORT[w.id] || w.short)}</a>`).join("")}</div>
 <a class="mi quiz" href="${r("app/")}"${on("app/")}><b>迷ったら診断</b><span>${QUIZ_N}問・1分ほど</span></a>
@@ -210,7 +210,7 @@ ${ld}
 ${sprite(head + main, opts.sym || [])}
 ${head}
 <main class="wrap">
-${crumbs.length > 1 ? `<nav class="crumbs" aria-label="現在地">${crumbs.map((c, i) => i < crumbs.length - 1 ? `<a href="${r(c[1])}">${esc(c[0])}</a>` : `<span>${esc(c[0])}</span>`).join("<i>›</i>")}</nav>` : ""}
+${crumbs.length > 1 ? `<nav class="crumbs" aria-label="現在地">${(opts.cat ? crumbs.slice(0, -1) : crumbs).map((c, i, L) => i < L.length - 1 || opts.cat ? `<a href="${r(c[1])}">${esc(c[0])}</a>` : `<span>${esc(c[0])}</span>`).join("<i>›</i>")}</nav>` : ""}
 ${main}
 ${p && !opts.noQuiz ? quizCta(r, opts.cat) : ""}
 </main>
@@ -233,7 +233,7 @@ function productCard(x, r, extra, opt = {}) {
   const ms = x.sc && x.sc.mainSurf ? `主洗浄成分 ${esc(x.sc.mainSurf.name)}・` : "";
   const meta = opt.posOnly ? extra : `${ms}${x.a.items.length}成分${extra ? "・" + extra : ""}`;
   return `<a class="pcard" href="${r(x.url)}"><div class="pc-top">${imgSlot(x, "thumb")}<div class="pc-name"><span class="brand">${esc(x.p.brand || "")}</span><b>${esc(x.p.name)}</b></div>${scoreBadge(x)}</div>
-  ${mix(x)}<div class="pc-meta">${chips(x)}<span class="small muted">${meta}</span></div></a>`;
+  ${mix(x)}<div class="pc-meta">${chips(x)}<span class="small muted">${meta}</span>${RK_ON || PREVIEW ? `<span class="rk-price sm" data-rk-price="${esc(rkKey(x))}" hidden></span>` : ""}</div></a>`;
 }
 function themesBlock(x) {
   if (!x.sc) return "";
@@ -339,11 +339,11 @@ P.forEach(x => {
   const desc = `${p.name}の全成分${x.a.items.length}種類を、成分ごとの役割つきで一覧にしました。${x.sc && x.sc.mainSurf ? `主洗浄成分は${x.sc.mainSurf.name}。` : ""}香料・シリコーンなどの有無と、似た成分の商品も。`;
   write(x.url, `${p.name}の成分`, desc, r => `
 <article class="prod">
-  <p class="eyebrow">${esc(p.brand || "")}・${esc(catN)}</p>
   <div class="phead">${imgSlot(x, "pimg")}<div>
   <h1>${esc(p.name)} の成分</h1>
   <div class="row">${chips(x)}</div>
   <div class="acts"><button class="fav-btn" type="button" hidden aria-pressed="false" data-fav="${esc(JSON.stringify({ id: p.id, name: p.name, brand: p.brand || "", url: x.url, match: x.match, grade: x.grade, type: x.sc ? typeOf(x).title : "", ph: PH[p.category] || "ph-bottle" }))}">お気に入りに追加</button>${RK_ON || PREVIEW ? `<a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : ""}</div>
+  ${RK_ON || PREVIEW ? `<p class="rk-price" data-rk-price="${esc(rkKey(x))}" hidden></p>` : ""}
   </div></div>
   <p class="lead">${esc(leadText(x))}</p>
   ${p.desc || p.scent ? `<div class="maker"><span class="lbl">メーカーの説明</span>${p.desc ? `<p>${esc(p.desc)}</p>` : ""}${p.scent ? `<p class="mk-scent"><b>香り</b>${esc(p.scent)}</p>` : ""}${p.infoSource && p.infoSource.url ? `<p class="small muted">出典：<a href="${esc(p.infoSource.url)}" rel="nofollow noopener" target="_blank">${esc((p.infoSource.url.split("/")[2] || "").replace(/^www\./, ""))}</a>（${esc(p.infoSource.date || "")}確認）。メーカーの説明を短くまとめたもので、効果を保証するものではありません。</p>` : ""}</div>` : ""}

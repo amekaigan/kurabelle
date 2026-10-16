@@ -39,7 +39,8 @@ main section{display:block}
 :focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .sprite{position:absolute;width:0;height:0;overflow:hidden}
 
-.crumbs{font-size:13.5px;color:var(--ink3);display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;margin-bottom:-18px}
+.crumbs{font-size:13px;line-height:1.5;color:var(--ink3);display:flex;flex-wrap:nowrap;gap:6px;align-items:center;margin-bottom:-22px;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+.crumbs::-webkit-scrollbar{display:none}
 .crumbs a{color:var(--ink2);text-decoration:none}.crumbs i{font-style:normal;color:var(--line2)}
 
 /* 小さな部品 */
@@ -90,7 +91,7 @@ main section{display:block}
 /* 商品ページの頭：スマホは画像を上に大きく、その下に商品名。広い画面では横並び */
 .phead{display:flex;flex-direction:column;gap:16px;align-items:stretch}
 .phead>div{min-width:0;flex:1}
-.prod .phead h1{font-size:clamp(22px,5.6vw,30px);line-height:1.45}
+.prod .phead h1{font-size:clamp(22px,5.6vw,30px);line-height:1.45;text-wrap:pretty}
 .thumb,.pimg{flex:none;display:grid;place-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .thumb{width:88px;height:88px}
 .pimg{width:min(100%,340px);height:auto;aspect-ratio:1/1;border-radius:20px;align-self:center;background:#fff}
@@ -237,3 +238,12 @@ table.ings tr:last-child td{border-bottom:0}
 .quiz-cta{margin-top:8px}
 .quiz-cta .sticky{transform:rotate(-.6deg)}
 .quiz-cta .sticky h2{font-size:23px}
+
+/* 楽天市場の価格（その時点のもの。小さく出す） */
+.rk-price{margin:10px 0 0;font-size:14px;color:var(--ink2);line-height:1.6}
+.rk-price b{font-family:var(--f-mono);font-size:19px;font-weight:600;color:var(--ink);margin-right:4px}
+.rk-price small{display:block;font-size:12.5px;color:var(--ink3)}
+.rk-price.sm{margin:0;font-size:13px}
+.rk-price.sm b{font-size:15px}
+.rk-price[hidden]{display:none}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}

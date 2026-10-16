@@ -5,8 +5,9 @@
   var C = window.RK || {};
   if (!C.api) return;
   var DAY = 864e5, GAP = 1100; // 楽天の決まり（1秒に1回まで）に合わせて間をあける
-  function get(k) { try { var v = JSON.parse(localStorage.getItem("rk:" + k)); if (v && Date.now() - v.t < DAY) return v.d; } catch (e) {} return undefined; }
-  function put(k, d) { try { localStorage.setItem("rk:" + k, JSON.stringify({ t: Date.now(), d: d })); } catch (e) {} }
+  function get(k) { try { var v = JSON.parse(localStorage.getItem("rk2:" + k)); if (v && Date.now() - v.t < DAY) return v.d; } catch (e) {} return undefined; }
+  function esc(v) { return String(v).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function put(k, d) { try { localStorage.setItem("rk2:" + k, JSON.stringify({ t: Date.now(), d: d })); } catch (e) {} }
   function fetchOne(k, isJan) {
     return fetch(C.api + "?k=" + encodeURIComponent(k) + (isJan ? "&jan=1" : ""), { cache: "no-store" })
       .then(function (r) { return r.status === 429 ? { retry: true } : r.ok ? r.json() : null; })
@@ -20,6 +21,17 @@
       img.src = d.img.replace(/\?_ex=\d+x\d+/, "") + (el.classList.contains("pimg") ? "?_ex=500x500" : "?_ex=240x240"); // 商品ページは大きく、一覧は中くらい
     });
     document.querySelectorAll('[data-rk-link="' + CSS.escape(k) + '"]').forEach(function (a) { if (d && d.url) { a.href = d.url; a.hidden = false; } });
+    document.querySelectorAll('[data-rk-price="' + CSS.escape(k) + '"]').forEach(function (p) {
+      if (!d || !d.price) return;
+      var yen = "¥" + Number(d.price).toLocaleString("ja-JP");
+      if (p.classList.contains("sm")) { p.innerHTML = "<b>" + yen + "</b>楽天市場"; }
+      else {
+        var t = d.at ? new Date(d.at) : new Date();
+        p.innerHTML = "<b>" + yen + "</b>" + (d.postage ? "（" + esc(d.postage) + "）" : "") + "楽天市場" + (d.shop ? "・" + esc(d.shop) : "") +
+          "<small>" + (t.getMonth() + 1) + "月" + t.getDate() + "日 " + t.getHours() + "時" + ("0" + t.getMinutes()).slice(-2) + "分時点の一例です。価格や在庫は変わることがあります。</small>";
+      }
+      p.hidden = false;
+    });
   }
   var queue = [], seen = {}, busy = false;
   function pump() {

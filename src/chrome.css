@@ -12,11 +12,12 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .kb-nav a{white-space:nowrap;text-decoration:none;color:var(--ink);font-size:15.5px;font-weight:500;padding:0 12px;border-radius:10px;min-height:44px;display:inline-flex;align-items:center}
 .kb-nav a:hover,.kb-nav a[aria-current="page"]{background:var(--hl-soft)}
 .kb-menu{position:relative}
-.kb-menu summary{list-style:none;min-height:48px;padding:0 16px;border:2px solid var(--ink);border-radius:12px;display:flex;align-items:center;gap:8px;font-family:var(--f-body);font-weight:700;font-size:16px;cursor:pointer;background:var(--card);color:var(--ink);user-select:none}
+.kb-menu summary{list-style:none;width:48px;height:48px;padding:0;border:0;border-radius:12px;display:grid;place-items:center;cursor:pointer;background:transparent;color:var(--ink);user-select:none}
+.kb-menu summary:hover{background:var(--hl-soft)}
+.kb-menu .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .kb-menu summary::-webkit-details-marker{display:none}
-.kb-menu summary::before{content:"";width:18px;height:12px;background:linear-gradient(var(--ink) 0 0) top/100% 2px no-repeat,linear-gradient(var(--ink) 0 0) center/100% 2px no-repeat,linear-gradient(var(--ink) 0 0) bottom/100% 2px no-repeat}
-.kb-menu[open] summary{background:var(--ink);color:var(--card)}
-.kb-menu[open] summary::before{background:linear-gradient(var(--card) 0 0) top/100% 2px no-repeat,linear-gradient(var(--card) 0 0) center/100% 2px no-repeat,linear-gradient(var(--card) 0 0) bottom/100% 2px no-repeat}
+.kb-menu summary::before{content:"";width:24px;height:17px;background:linear-gradient(var(--ink) 0 0) top/100% 2.5px no-repeat,linear-gradient(var(--ink) 0 0) center/100% 2.5px no-repeat,linear-gradient(var(--ink) 0 0) bottom/100% 2.5px no-repeat}
+.kb-menu[open] summary{background:var(--hl-soft)}
 .kb-menu .panel{position:absolute;right:0;top:calc(100% + 8px);width:min(360px,calc(100vw - 32px));max-height:calc(100vh - 96px);max-height:calc(100dvh - 96px);overflow-y:auto;overscroll-behavior:contain;background:var(--card);border:1.5px solid var(--line);border-radius:16px;box-shadow:0 18px 36px -18px rgba(0,0,0,.45);padding:8px;display:grid;gap:2px}
 .kb-menu .panel a{min-height:54px;display:flex;align-items:center;padding:0 14px;border-radius:10px;text-decoration:none;color:var(--ink);font-family:var(--f-body);font-size:17px;font-weight:500}
 .kb-menu .panel a:hover,.kb-menu .panel a[aria-current="page"]{background:var(--hl-soft)}

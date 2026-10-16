@@ -1,9 +1,14 @@
 /* クラベル：楽天市場の商品検索を取り次ぐ（Cloudflare Pages Functions、/api/rk）
    アクセスキーはページに出さず、Cloudflare の環境変数（RAKUTEN_APP_ID・RAKUTEN_ACCESS_KEY）だけで使う。
    楽天の規約に合わせ、取得した情報はここでは保存しない（Cache-Control: no-store）。
-   返すのは、商品画像のURLと販売ページへのリンクだけ。 */
+   返すのは、商品画像のURL・販売ページへのリンク・その時点の価格（送料の扱い・お店の名前）だけ。 */
 const API = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701";
 const AFF = "588643c2.b560f3b3.588643c3.4dd69634";
+
+function firstImg(it) {
+  let img = (it.mediumImageUrls || [])[0];
+  return typeof img === "string" ? img : img && (img.imageUrl || img.url) || "";
+}
 
 export async function onRequestGet({ request, env }) {
   const u = new URL(request.url);
@@ -16,7 +21,7 @@ export async function onRequestGet({ request, env }) {
   q.searchParams.set("applicationId", env.RAKUTEN_APP_ID);
   q.searchParams.set("affiliateId", env.RAKUTEN_AFFILIATE_ID || AFF);
   q.searchParams.set("keyword", k);
-  q.searchParams.set("hits", "3");
+  q.searchParams.set("hits", "10");
   q.searchParams.set("imageFlag", "1");
   q.searchParams.set("availability", "1");
   q.searchParams.set("formatVersion", "2");
@@ -26,16 +31,21 @@ export async function onRequestGet({ request, env }) {
   } catch (e) { return json({ error: "fetch failed" }, 502); }
   if (!r.ok) return json({ error: "rakuten " + r.status }, r.status === 429 ? 429 : 502);
   const j = await r.json().catch(() => null);
-  const list = (j && (j.items || j.Items)) || [];
+  const list = ((j && (j.items || j.Items)) || []).map(it => it && (it.item || it.Item || it)).filter(Boolean);
   const head = k.replace(/\s+/g, "").slice(0, 6);
-  for (let it of list) {
-    it = it && (it.item || it.Item || it);
-    if (!it) continue;
-    if (!isJan && (it.itemName || "").replace(/\s+/g, "").indexOf(head) < 0) continue; // 商品名で探したときは、名前が合うものだけ
-    let img = (it.mediumImageUrls || [])[0];
-    img = typeof img === "string" ? img : img && (img.imageUrl || img.url) || "";
-    if (!img) continue;
-    return json({ img: img.replace(/\?_ex=\d+x\d+/, "?_ex=300x300"), url: it.affiliateUrl || it.itemUrl || "" });
+  // まとめ売り・セット・ケースは、画像も価格も1個の商品と違うので後回しにする
+  const SET = /[×xX✕]\s*\d|\d+\s*(個|本|袋|点|箱)\s*(セット|組)|セット|ケース|まとめ買い|まとめ売り|お得用|\d+個入/;
+  const ok = it => (isJan || (it.itemName || "").replace(/\s+/g, "").indexOf(head) >= 0) && firstImg(it);
+  const pick = list.find(it => ok(it) && !SET.test(it.itemName || "")) || list.find(ok);
+  if (pick) {
+    return json({
+      img: firstImg(pick).replace(/\?_ex=\d+x\d+/, ""),
+      url: pick.affiliateUrl || pick.itemUrl || "",
+      price: Number(pick.itemPrice) || null,
+      postage: pick.postageFlag === 0 ? "送料込" : pick.postageFlag === 1 ? "送料別" : "",
+      shop: pick.shopName || "",
+      at: new Date().toISOString()
+    });
   }
   return json({ img: "", url: "" });
 }

@@ -470,23 +470,25 @@ function scoreShampoo(items){
 function adjShampoo(a){
   const out=[];
   if(!a) return out;
-  if(a.gender==='men') out.push(['メンズ', {clean:0.5, scalp:0.5}, {}]);
+  if(a.gender==='men') out.push(['メンズ', {clean:0.25, scalp:0.25}, {}]);
   const age = {teen:['10代',{clean:0.5},{}], '30s':['30代',{scalp:0.25},{}], '40s':['40代',{scalp:0.5,repair:0.25},{}], '50s':['50代以上',{scalp:0.5,mild:0.5,repair:0.5},{}]}[a.age];
   if(age) out.push(age);
   return out;
 }
 function weightsShampoo(w, a){
-  if(a.scalp==='dry'){w.mild+=1.5;w.gentle+=0.5;w.clean*=0.5;}
-  else if(a.scalp==='oily'){w.clean+=1.5;w.scalp+=0.5;w.mild*=0.7;}
+  /* 2026-10-17 見直し：頭皮のタイプや洗い上がりの好みより、選んだ悩みが強く効くようにした（保湿クリーム・コンディショナーと同じ考え方）
+     （「脂っぽい」「さっぱり」を選ぶと、ボリュームやフケの悩みより「洗浄力」が重くなっていたため） */
+  if(a.scalp==='dry'){w.mild+=1;w.gentle+=0.5;w.clean*=0.6;}
+  else if(a.scalp==='oily'){w.clean+=1;w.mild*=0.8;}
   const c=a.concerns||[];
-  if(c.includes('dandruff')) w.scalp+=2;
-  if(c.includes('oily')){w.clean+=1;w.scalp+=0.5;}
-  if(c.includes('damage')){w.repair+=1.5;w.smooth+=1;}
-  if(c.includes('volume')) w.scalp+=1;
-  if(c.includes('dry')){w.mild+=1;w.gentle+=0.5;}
-  if(c.includes('sensitive')){w.gentle+=2;w.mild+=1;}
-  if(a.texture==='rich'){w.smooth+=1;w.clean*=0.6;}
-  else if(a.texture==='light'){w.clean+=1;w.smooth*=0.6;}
+  if(c.includes('dandruff')) w.scalp+=2.5;
+  if(c.includes('oily')){w.clean+=1.5;w.scalp+=1;}
+  if(c.includes('damage')){w.repair+=2.5;w.smooth+=1;}
+  if(c.includes('volume')) w.scalp+=2.5;
+  if(c.includes('dry')){w.mild+=2;w.gentle+=0.5;w.clean*=0.7;}
+  if(c.includes('sensitive')){w.gentle+=2.5;w.mild+=1;}
+  if(a.texture==='rich'){w.smooth+=0.75;w.clean*=0.7;}
+  else if(a.texture==='light'){w.clean+=0.75;w.smooth*=0.7;}
   if(a.color==='yes'){w.repair+=1;w.mild+=0.5;}
 }
 

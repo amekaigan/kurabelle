@@ -776,9 +776,13 @@ const CATS = {
     ng:{fragrance:'香料', alcohol:'アルコール', uvabs:'紫外線吸収剤', silicone:'シリコーン', paraben:'パラベン', mineral:'鉱物油'},
     score:scoreSkincare, adjust:adjSkincare, weigh:weightsSkincare},
   facewash:{n:'洗顔料', scored:false, unit:'g'},
+  conditioner:{n:'コンディショナー・トリートメント', scored:false, unit:'g'},
+  scalp:{n:'育毛剤・頭皮用エッセンス', scored:false, unit:'ml'},
+  serum:{n:'美容液', scored:false, unit:'ml'},
+  handsoap:{n:'ハンドソープ', scored:false, unit:'ml'},
   colorrinse:{n:'カラーリンス・白髪染め', scored:false, unit:'g'}
 };
-const CAT_ORDER = ['shampoo','skincare','facewash','colorrinse'];
+const CAT_ORDER = ['shampoo','conditioner','scalp','skincare','serum','facewash','handsoap','colorrinse'];
 function weights(cat, a){
   const C = CATS[cat], w = {};
   C.themes.forEach(t=>w[t.k]=1);
@@ -1102,7 +1106,7 @@ function renderRank(cur){
   if(S.flash){ const el=document.querySelector(`[data-pid="${CSS.escape(S.flash)}"]`); if(el){ el.classList.add('flash'); el.scrollIntoView({behavior:'smooth',block:'center'}); } S.flash=null; }
 }
 /* サイトの商品ページ・楽天の画像と価格（共通データの商品だけ。自分で追加した商品は対象外） */
-const PH = {shampoo:'ph-bottle', colorrinse:'ph-bottle', skincare:'ph-jar', facewash:'ph-tube'};
+const PH = {shampoo:'ph-bottle', conditioner:'ph-bottle', scalp:'ph-bottle', serum:'ph-bottle', handsoap:'ph-bottle', colorrinse:'ph-bottle', skincare:'ph-jar', facewash:'ph-tube'};
 const isShared = p => !String(p.id).startsWith('u-');
 const pageUrl = p => isShared(p) ? `../products/${String(p.id).replace(/[^A-Za-z0-9_-]/g,'-')}/` : '';
 const rkKey = p => isShared(p) && window.RK ? (p.jan || `${p.brand||''} ${p.name}`.trim()) : '';

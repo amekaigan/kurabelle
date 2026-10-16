@@ -24,14 +24,14 @@ const HAND = JSON.parse(fs.readFileSync(path.join(__dirname, "hand.json"), "utf8
 const SYM = new Map([...HAND.symbols.matchAll(/<symbol id="([^"]+)"[\s\S]*?<\/symbol>/g)].map(m => [m[1], m[0]]));
 const sprite = (html, extra = []) => { const ids = [...new Set([...[...html.matchAll(/href="#([a-z][\w-]*)"/g)].map(m => m[1]), ...extra])].filter(id => SYM.has(id));
   return ids.length ? `<svg class="sprite kb-sprite" aria-hidden="true" focusable="false"><defs>${ids.map(id => SYM.get(id)).join("")}</defs></svg>` : ""; };
-const PH = { shampoo: "ph-bottle", colorrinse: "ph-bottle", skincare: "ph-jar", facewash: "ph-tube" };
+const PH = { shampoo: "ph-bottle", conditioner: "ph-bottle", scalp: "ph-bottle", serum: "ph-bottle", handsoap: "ph-bottle", colorrinse: "ph-bottle", skincare: "ph-jar", facewash: "ph-tube" };
 
 /* ---------- 共通 ---------- */
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const hid = (pre, s) => pre + crypto.createHash("sha1").update(C.norm(s)).digest("hex").slice(0, 8); // 名前から決まる短いID（毎回同じ）
 const slug = s => String(s).replace(/[^A-Za-z0-9_-]/g, "-");
-const CAT_N = { shampoo: "シャンプー", skincare: "保湿クリーム・乳液", facewash: "洗顔料", colorrinse: "カラーリンス・白髪染め" };
-const CAT_ORDER = ["shampoo", "skincare", "facewash", "colorrinse"];
+const CAT_N = { shampoo: "シャンプー", conditioner: "コンディショナー・トリートメント", scalp: "育毛剤・頭皮用エッセンス", skincare: "保湿クリーム・乳液", serum: "美容液", facewash: "洗顔料", handsoap: "ハンドソープ", colorrinse: "カラーリンス・白髪染め" };
+const CAT_ORDER = ["shampoo", "conditioner", "scalp", "skincare", "serum", "facewash", "handsoap", "colorrinse"];
 const KIND_N = { quasi: "医薬部外品", cosme: "化粧品" };
 const TARGET_N = { men: "メンズ向け", women: "レディース向け", all: "" };
 const ROLE_N = r => (C.ROLES[r] || C.ROLES.unk).n;

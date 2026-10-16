@@ -433,9 +433,13 @@ const CATS = {
     ng:{fragrance:'香料', alcohol:'アルコール', uvabs:'紫外線吸収剤', silicone:'シリコーン', paraben:'パラベン', mineral:'鉱物油'},
     score:scoreSkincare, adjust:adjSkincare, weigh:weightsSkincare},
   facewash:{n:'洗顔料', scored:false, unit:'g'},
+  conditioner:{n:'コンディショナー・トリートメント', scored:false, unit:'g'},
+  scalp:{n:'育毛剤・頭皮用エッセンス', scored:false, unit:'ml'},
+  serum:{n:'美容液', scored:false, unit:'ml'},
+  handsoap:{n:'ハンドソープ', scored:false, unit:'ml'},
   colorrinse:{n:'カラーリンス・白髪染め', scored:false, unit:'g'}
 };
-const CAT_ORDER = ['shampoo','skincare','facewash','colorrinse'];
+const CAT_ORDER = ['shampoo','conditioner','scalp','skincare','serum','facewash','handsoap','colorrinse'];
 function weights(cat, a){
   const C = CATS[cat], w = {};
   C.themes.forEach(t=>w[t.k]=1);

@@ -1972,6 +1972,25 @@
     "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4903301176817",
     "date": "2026-10-17"
    }
+  },
+  {
+   "id": "jan-4901301281715",
+   "jan": "4901301281715",
+   "category": "serum",
+   "brand": "キュレル",
+   "name": "花王 キュレル 潤浸保湿 ジェル美容液",
+   "kind": "quasi",
+   "target": "all",
+   "volume": 40,
+   "unit": "g",
+   "price": null,
+   "ingredients": "有効成分：アラントイン　その他の成分：水、グリセリン、PEG1540、ヘキサデシロキシPGヒドロキシエチルヘキサデカナミド、ジメチコン、水溶性ショウキョウエキス(K)、ユーカリエキス、フィトスフィンゴシン、セタノール、グリセリン脂肪酸エステル、BG、N,N-ジメチルアミノエチルメタクリル酸ジエチル硫酸塩・N,N-ジメチルアクリルアミド・ジメタクリル酸ポリエチレングリコール共重合体/PEG混合物、L-グルタミン酸、パラベン",
+   "source": {
+    "type": "brand",
+    "label": "花王 製品カタログ",
+    "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301281715/",
+    "date": "2026-10-17"
+   }
   }
  ]
 }

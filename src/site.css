@@ -238,6 +238,8 @@ table.ings tr:last-child td{border-bottom:0}
 .quiz-cta{margin-top:8px}
 .quiz-cta .sticky{transform:rotate(-.6deg)}
 .quiz-cta .sticky h2{font-size:23px}
+.quiz-cta .two{display:grid;gap:10px}
+.quiz-cta .two a+a{background:transparent;color:var(--note-ink);border:2px solid var(--note-ink);min-height:52px;font-size:16px}
 
 /* 楽天市場の価格（その時点のもの。小さく出す） */
 .rk-price{margin:10px 0 0;font-size:14px;color:var(--ink2);line-height:1.6}

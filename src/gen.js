@@ -178,12 +178,24 @@ ${RK_ON || PREVIEW ? `<p>商品画像と販売ページへのリンクは、楽�
 </div></footer>`;
   return { head, foot };
 }
-/* 各ページの下に置く「迷ったら診断」 */
-const quizCta = (r, cat) => `<aside class="quiz-cta" aria-label="診断の案内"><div class="sticky">
+/* 各ページの下に置く「迷ったら診断」
+   診断があるのはシャンプーと保湿クリームだけ（QUIZ_CATS）。それ以外のカテゴリでは、2つの診断があることを正直に書き、近いほうを先に出す。 */
+const QUIZ_CATS = ["shampoo", "skincare"];
+const HAIR = new Set(["shampoo", "conditioner", "scalp", "colorrinse"]);
+const quizCta = (r, cat) => {
+  const hair = `<a href="${r("app/")}">シャンプーの診断をはじめる</a>`, skin = `<a href="${r("app/")}#skincare">保湿クリームの診断をはじめる</a>`;
+  if (QUIZ_CATS.includes(cat)) return `<aside class="quiz-cta" aria-label="診断の案内"><div class="sticky">
   <h2>迷ったら、<br>${QUIZ_N}つの質問で。</h2>
   <p>年代や${cat === "skincare" ? "肌" : "頭皮"}のタイプ、気になること、仕上がりの好みなどを選ぶと、成分表から合いそうな順に並べます。1分ほどで終わります。</p>
-  <a href="${r("app/")}${cat === "skincare" ? "#skincare" : ""}">${cat === "skincare" ? "保湿クリームの" : "シャンプーの"}診断をはじめる</a>
+  ${cat === "skincare" ? skin : hair}
 </div></aside>`;
+  const isHair = !cat || HAIR.has(cat), name = cat ? CAT_N[cat] : "";
+  return `<aside class="quiz-cta" aria-label="診断の案内"><div class="sticky">
+  <h2>迷ったら、<br>診断で。</h2>
+  <p>診断は、いまはシャンプーと保湿クリームの2つです。${name ? `${esc(name)}の診断は準備中です。` : ""}${QUIZ_N}つの質問に答えると、成分表から合いそうな順に並べます。</p>
+  <div class="two">${isHair ? hair + skin : skin + hair}</div>
+</div></aside>`;
+};
 function write(p, title, desc, body, opts = {}) {
   const dir = path.join(OUT, p); fs.mkdirSync(dir, { recursive: true });
   const r = to => rel(p, to);

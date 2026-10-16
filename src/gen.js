@@ -255,7 +255,8 @@ function themesBlock(x) {
 /* ---------- 成分から見たタイプ（レーダーグラフ） ---------- */
 const AX_LABEL = {
   shampoo: { mild: "やさしい洗浄", clean: "洗浄力", scalp: "頭皮ケア", repair: "髪の補修", smooth: "指通り", gentle: "低刺激" },
-  skincare: { moist: "うるおい", barrier: "保護（フタ）", light: "軽さ", beauty: "美容成分", concern: "悩み対応", gentle: "低刺激" }
+  skincare: { moist: "うるおい", barrier: "保護（フタ）", light: "軽さ", beauty: "美容成分", concern: "悩み対応", gentle: "低刺激" },
+  conditioner: { smooth: "指通り", repair: "髪の補修", moist: "うるおい", light: "軽さ", gentle: "低刺激" }
 };
 const CAT_AVG = {}, CAT_RANK = {};
 Object.keys(C.CATS).filter(k => C.CATS[k].scored).forEach(cat => {
@@ -304,7 +305,7 @@ function typeBlock(x, r) {
     <li><span>平均より上</span><b class="mono">${ty.above}</b><i>${ty.total}つの観点のうち</i></li>
     <li><span>いちばん控えめ</span><b>${esc(ty.low.n)}</b><i>${ty.low.v.toFixed(1)}点</i></li>
   </ul>
-  <p class="small muted">成分表に何が入っているかを、決まったルールで5点満点に数えたものです。効果や使い心地を表すものではありません。数え方は<a href="${r("about/scoring/")}">点数のつけ方</a>に、自分の髪や頭皮に合わせた順位は<a href="${r("app/")}">診断つきの比較ツール</a>にあります。</p>
+  <p class="small muted">成分表に何が入っているかを、決まったルールで5点満点に数えたものです。効果や使い心地を表すものではありません。数え方は<a href="${r("about/scoring/")}">点数のつけ方</a>に${QUIZ_CATS.includes(x.p.category) ? `、自分の${x.p.category === "skincare" ? "肌" : "髪や頭皮"}に合わせた順位は<a href="${r("app/")}${x.p.category === "skincare" ? "#skincare" : ""}">診断つきの比較ツール</a>に` : ""}あります。${QUIZ_CATS.includes(x.p.category) ? "" : `${esc(CAT_N[x.p.category])}の診断は準備中です。`}</p>
 </section>`;
 }
 function leadText(x) {
@@ -569,6 +570,10 @@ if (APP && fs.existsSync(APP)) {
   const ap = "app/", r = to => rel(ap, to);
   const { head, foot } = chrome(r, ap);
   let h = fs.readFileSync(APP, "utf8");
+  const core = fs.readFileSync(path.join(__dirname, "core.js"), "utf8").replace(/\nmodule\.exports = SKCore;\s*$/, "\n");
+  const cs = h.indexOf("var SKCore = (function(){"), ce = h.indexOf("\n})();", cs);
+  if (cs < 0 || ce < 0) throw new Error("app/index.html に採点ロジックの位置が見つかりません");
+  h = h.slice(0, cs) + core.trim() + h.slice(ce + "\n})();".length);
   const rk = RK_ON ? `<script>window.RK={api:${JSON.stringify(r("api/rk"))}}</script><script src="${r("assets/rk.js")}" defer></script>` : "";
   const inject = `<link rel="stylesheet" href="${r("assets/chrome.css")}">${rk}${sprite(head + foot, Object.values(PH))}${head}`;
   h = h.replace(/<!--KB:HEAD-->[\s\S]*?<!--\/KB:HEAD-->/, `<!--KB:HEAD-->${inject}<!--/KB:HEAD-->`).replace(/<!--KB:FOOT-->[\s\S]*?<!--\/KB:FOOT-->/, `<!--KB:FOOT-->${foot}<!--/KB:FOOT-->`);

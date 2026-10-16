@@ -96,6 +96,22 @@ section{padding-top:30px;display:grid;gap:14px;scroll-margin-top:56px}
 .opt .tick{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line2);flex:none;display:grid;place-items:center;font-size:11px}
 .opt[aria-pressed="true"] .tick{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
 .wbars{display:grid;gap:6px}
+/* 診断の結果（掛け率は出さず、タイプ・重視していること・上位に来やすい成分で見せる） */
+.dres{display:grid;gap:16px}
+.dres .type{display:grid;gap:4px}
+.dres .type small{font-size:13px;color:var(--ink3)}
+.dres .type b{font-family:var(--f-display);font-size:26px;line-height:1.35;background:linear-gradient(transparent 62%,var(--hl) 62%,var(--hl) 92%,transparent 92%);justify-self:start}
+.dres .type p{font-size:15px;color:var(--ink2);margin-top:4px}
+.dres h3{font-size:16px;margin:0 0 6px}
+.dres .radar{display:block;width:min(100%,340px);margin:0 auto}
+.dres .radar text{font-size:16px;fill:var(--ink2)}
+.dres .pts{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.dres .pts li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+.dres .pts .no{display:grid;place-items:center;width:28px;height:28px;border-radius:14px;background:var(--ink);color:var(--paper);font-weight:700;font-size:14px}
+.dres .pts b{font-size:16px}
+.dres .pts span{display:block;font-size:14px;color:var(--ink2);margin-top:2px}
+.dres .pts .fv{color:var(--ink);margin-top:6px}
+.dres .low{font-size:14px;color:var(--ink2)}
 .wbar{display:grid;grid-template-columns:7.5em minmax(0,1fr) 2.8em;align-items:center;gap:8px;font-size:13px}
 .wbar .track{height:6px;border-radius:3px;background:var(--line)}
 .wbar .fill{display:block;height:100%;border-radius:3px;background:var(--accent)}
@@ -1155,14 +1171,12 @@ function renderDiag(){
       </div></div>`;
     return;
   }
-  const a = ans(), w=weights(S.cat, a), max=Math.max(...Object.values(w));
-  const wb = `<div class="wbars">${themes().map(t=>`<div class="wbar"><span>${t.n}</span><span class="track"><span class="fill" style="width:${Math.round(w[t.k]/max*100)}%"></span></span><span class="mono xs muted" style="text-align:right">×${+w[t.k].toFixed(2)}</span></div>`).join('')}</div>`;
+  const a = ans(), w=weights(S.cat, a);
   if(!a){
     meta.textContent='未診断';
     body.innerHTML = `<div style="display:grid;gap:14px">
-      <p>${CATS[S.cat].n}の診断はまだです。いまは6つのテーマを<b>同じ重み</b>で採点しています。</p>
-      <div class="row"><button type="button" class="btn" data-act="q-start">${CATS[S.cat].n}の診断をする（${QS.length}問・1分）</button></div>
-      <details class="more"><summary>いまの重みを見る</summary>${wb}</details></div>`;
+      <p>${CATS[S.cat].n}の診断はまだです。いまは${themes().length}つの観点を<b>同じだけ</b>重視して並べています。</p>
+      <div class="row"><button type="button" class="btn" data-act="q-start">${CATS[S.cat].n}の診断をする（${QS.length}問・1分）</button></div></div>`;
     return;
   }
   const chips=[];
@@ -1173,15 +1187,73 @@ function renderDiag(){
     else { const o=Q.opts.find(o=>o[0]===v); if(o && !['none','unknown','any'].includes(v)) chips.push(o[1]); }
   });
   const ngMap = CATS[S.cat].ng;
-  const tn = Object.fromEntries(themes().map(t=>[t.k,t.s]));
-  const adj = CATS[S.cat].adjust(a);
-  const adjTxt = adj.map(([lab,add,mul])=>`${lab}（${Object.entries(add).map(([k,v])=>`${tn[k]}＋${v}`).concat(Object.entries(mul).map(([k,v])=>`${tn[k]}×${v}`)).join('・')}）`).join('、');
   meta.textContent='診断済み';
-  body.innerHTML = `<div style="display:grid;gap:14px">
+  body.innerHTML = `<div class="dres">${diagResult(a, w, QS)}
     <div class="row">${chips.map(c=>`<span class="chip acc">${esc(c)}</span>`).join('')}${(a.ng||[]).filter(n=>ngMap[n]).map(n=>`<span class="chip warn">避けたい：${esc(ngMap[n])}</span>`).join('')}</div>
-    <div style="display:grid;gap:6px"><p class="small muted">あなたの重視度（相性スコアの計算に使う重み）</p>${wb}</div>
-    ${adjTxt?`<p class="adj">性別・年代の補正：${esc(adjTxt)}。ほかの回答による加減のほうが大きく効きます。</p>`:''}
     <div class="row"><button type="button" class="btn ghost sm" data-act="q-start">診断をやり直す</button><button type="button" class="btn ghost sm" data-act="q-clear">診断を消す</button></div></div>`;
+}
+/* ---------- 診断の結果の見せ方 ----------
+   重みの数字は出さない。いちばん重視している観点からタイプ名を作り、
+   「なぜ重視したか（どの回答から）」と「上位に来やすい商品の特徴（成分）」を言葉で示す。 */
+const TYPE_N = {
+  shampoo:{mild:'やさしい洗浄', clean:'洗浄力', scalp:'頭皮ケア', repair:'髪の補修', smooth:'指通り', gentle:'低刺激'},
+  conditioner:{smooth:'指通り', repair:'髪の補修', moist:'うるおい', light:'軽い仕上がり', gentle:'低刺激'},
+  skincare:{moist:'うるおい', barrier:'保護', light:'軽い使い心地', beauty:'美容成分', concern:'悩みケア', gentle:'低刺激'}
+};
+const FAVOR = {
+  shampoo:{mild:'アミノ酸系・ベタイン系など、マイルドな洗浄成分が主体の商品', clean:'硫酸系など、洗浄力の高い洗浄成分が主体の商品', scalp:'グリチルリチン酸2K・ピロクトンオラミンなど、頭皮ケア成分が入った商品', repair:'ケラチン・セラミド・加水分解タンパクなど、補修成分が多い商品', smooth:'カチオン成分・シリコーン・油分が入った商品', gentle:'香料・アルコール・メントールなどが入っていない商品'},
+  conditioner:{smooth:'カチオン成分・シリコーンが多い商品', repair:'ケラチン・セラミド・加水分解タンパクなど、補修成分が多い商品', moist:'アミノ酸・ヒアルロン酸・PCA-Naなど、保湿成分が多い商品', light:'油分やシリコーンが少なめの商品', gentle:'香料・アルコールなどが入っていない商品'},
+  skincare:{moist:'ヒアルロン酸・セラミドなど、保湿成分が多い商品', barrier:'ワセリン・シア脂など、フタをする油分が入った商品', light:'油分が少なめの商品', beauty:'ナイアシンアミド・ビタミン類など、美容成分が多い商品', concern:'選んだ悩みに関係する成分が入った商品', gentle:'香料・アルコール・紫外線吸収剤などが入っていない商品'}
+};
+function reasonsFor(a, QS){
+  /* 回答を1つずつ入れたときに、どの観点がどれだけ上がるか（下がるか）を調べる */
+  const base = weights(S.cat, null), out = {};
+  themes().forEach(t=>out[t.k]={up:[], down:[]});
+  QS.forEach(Q=>{
+    if(Q.id==='ng') return;
+    const vals = Q.type==='multi' ? (a[Q.id]||[]) : (a[Q.id] ? [a[Q.id]] : []);
+    vals.forEach(v=>{
+      const o = Q.opts.find(o=>o[0]===v); if(!o || ['none','unknown','any'].includes(v)) return;
+      const w1 = weights(S.cat, {[Q.id]: Q.type==='multi' ? [v] : v});
+      themes().forEach(t=>{ const d=w1[t.k]-base[t.k]; if(d>0.01) out[t.k].up.push([o[1],d]); else if(d<-0.01) out[t.k].down.push([o[1],d]); });
+    });
+  });
+  for(const k in out){ out[k].up.sort((x,y)=>y[1]-x[1]); out[k].down.sort((x,y)=>x[1]-y[1]); }
+  return out;
+}
+function weightRadar(w){
+  const T = themes(), n = T.length, max = Math.max(...T.map(t=>w[t.k])), cx=150, cy=128, R=88;
+  const pt = (i,r)=>{ const a=-Math.PI/2+i*2*Math.PI/n; return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; };
+  const ring = f => T.map((_,i)=>pt(i,R*f).map(v=>v.toFixed(1)).join(',')).join(' ');
+  const poly = T.map((t,i)=>pt(i,R*Math.max(0.15,Math.sqrt(w[t.k]/max))).map(v=>v.toFixed(1)).join(',')).join(' ');
+  const lab = T.map((t,i)=>{ const [x,y]=pt(i,R+22); const anc = Math.abs(x-cx)<8?'middle':x>cx?'start':'end'; return `<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="${anc}">${esc(t.s)}</text>`; }).join('');
+  return `<svg class="radar" viewBox="-30 0 360 256" role="img" aria-label="重視していることのグラフ">
+    ${[1,0.66,0.33].map(f=>`<polygon points="${ring(f)}" fill="none" stroke="var(--line)" stroke-width="1"/>`).join('')}
+    <polygon points="${poly}" fill="var(--hl)" fill-opacity=".55" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>${lab}</svg>`;
+}
+function diagResult(a, w, QS){
+  const T = themes(), N = TYPE_N[S.cat]||{}, F = FAVOR[S.cat]||{};
+  const order = T.slice().sort((x,y)=>w[y.k]-w[x.k]);
+  const max = w[order[0].k], min = w[order[order.length-1].k];
+  const R = reasonsFor(a, QS);
+  let type, lead;
+  if(max-min < 0.3){ type='バランスタイプ'; lead='どれか1つに偏らず、すべての観点を同じくらい重視して並べています。'; }
+  else {
+    const t2 = order[1] && w[order[1].k] >= max-0.5 && w[order[1].k] >= 1.4 ? order[1] : null;
+    type = t2 ? `${N[order[0].k]} × ${N[t2.k]}タイプ` : `${N[order[0].k]}重視タイプ`;
+    lead = `答えから、${t2 ? `「${N[order[0].k]}」と「${N[t2.k]}」` : `「${N[order[0].k]}」`}をとくに重視して並べています。`;
+  }
+  const top = order.filter((t,i)=>i===0 ? max-min>=0.3 : w[t.k]>=1.4).slice(0,3); /* 年代などの小さな補正だけで上がった観点は挙げない */
+  const pts = top.map((t,i)=>{
+    const why = R[t.k].up.slice(0,2).map(x=>`「${x[0]}」`).join('と');
+    return `<li><span class="no">${i+1}</span><div><b>${esc(t.n)}</b>${why?`<span>${esc(why)}を選んだため</span>`:''}<span class="fv">${esc(F[t.k]||'')}が上位に来やすくなります</span></div></li>`;
+  }).join('');
+  const lowT = order.filter(t=>w[t.k]<=0.8).slice(-1)[0];
+  const low = lowT ? `<p class="low">「${esc(lowT.n)}」は控えめにしています${R[lowT.k].down[0]?`（「${esc(R[lowT.k].down[0][0])}」を選んだため）`:''}。</p>` : '';
+  return `<div class="type"><small>あなたの診断結果</small><b>${esc(type)}</b><p>${esc(lead)}</p></div>
+    <div><h3>重視していること</h3>${weightRadar(w)}</div>
+    ${pts?`<div><h3>この診断で上位に来やすい商品</h3><ol class="pts">${pts}</ol></div>`:''}${low}
+    <p class="xs muted">成分表に何が入っているかを数えた傾向です。効果や使い心地を約束するものではありません。</p>`;
 }
 function quizStart(){
   const a = ans() || {};

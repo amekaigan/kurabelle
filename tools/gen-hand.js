@@ -87,6 +87,6 @@ function markerBg(color) {
   return `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 26" preserveAspectRatio="none"><path d="${shrink(p.d)}" fill="none" stroke="${color}" stroke-width="14" stroke-linecap="round" opacity=".92"/></svg>`)}`;
 }
 
-const out = { symbols: Object.entries(S).map(([id, [vb, body]]) => `<symbol id="${id}" viewBox="${vb}">${body}</symbol>`).join("\n"), markerLight: markerBg("#F3D54E"), markerDark: markerBg("#8C7A1E") };
+const out = { symbols: Object.entries(S).map(([id, [vb, body]]) => `<symbol id="${id}" viewBox="${vb}">${body}</symbol>`).join("\n"), markerLight: markerBg("#F5DF7E"), markerDark: markerBg("#8C7A1E") };
 require("fs").writeFileSync(process.argv[2] || "hand.json", JSON.stringify(out));
 console.log("symbols:", Object.keys(S).length, "bytes:", out.symbols.length);

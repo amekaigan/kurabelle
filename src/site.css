@@ -2,8 +2,8 @@
    老眼でも読みやすいよう、本文17px・小さい文字でも13px以上・押せるところは高さ48px以上。 */
 :root{
   --paper:#F7F7F2; --grid:#EDEFE8; --card:#FFFFFF; --ink:#1B2230; --ink2:#545C66; --ink3:#767D86; --line:#DCDFD8; --line2:#C3C8C0;
-  --accent:#1B2230; --accent-ink:#F7F7F2; --accent-soft:#FBF3CF; --hl:#F3D54E; --hl-soft:#FBF3CF; --note:#FBE77A; --note-ink:#2A2610;
-  --c:#FFFFFF; --ic:#1B2230; --soft:#FBF3CF;
+  --accent:#1B2230; --accent-ink:#F7F7F2; --accent-soft:#FCF6DE; --hl:#F5DF7E; --hl-soft:#FCF6DE; --note:#FCF2C2; --note-ink:#2A2610;
+  --c:#FFFFFF; --ic:#1B2230; --soft:#FCF6DE;
   --r-base:#C9CDD0; --r-active:#2D5BC9; --r-hum:#1C9884; --r-beauty:#BF8618; --r-oil:#D96E34; --r-cond:#6F8F22;
   --r-emul:#8A70C8; --r-uv:#CC5585; --r-pres:#6C7B83; --r-clean:#3A97BF; --r-other:#A7A196;
   --f-body:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
@@ -119,7 +119,7 @@ main section{display:block}
 .radar .rg.out{stroke:var(--line2)}
 .radar .sp{stroke:var(--line);stroke-width:1}
 .radar .avg{fill:none;stroke:var(--ink3);stroke-width:1.5;stroke-dasharray:4 4}
-.radar .me{fill:var(--hl);fill-opacity:.55;stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
+.radar .me{fill:var(--hl);fill-opacity:.45;stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
 .radar .dt{fill:var(--ink)}
 .radar .ln{font-size:13.5px;fill:var(--ink2);font-family:var(--f-body)}
 .radar .lv{font-size:15.5px;font-weight:600;fill:var(--ink);font-family:var(--f-mono)}
@@ -191,7 +191,7 @@ table.ings tr:last-child td{border-bottom:0}
 .worry b{font-size:17px;line-height:1.4}
 .worry i{font-style:normal;font-family:var(--f-mono);font-size:14px;color:var(--ink2)}
 .note{font-size:14px;color:var(--ink3);margin-top:10px}
-.sticky{background:var(--note);color:var(--note-ink);border-radius:5px 5px 22px 5px;padding:22px 20px 18px;display:grid;gap:12px;transform:rotate(-1deg);box-shadow:0 12px 20px -16px rgba(0,0,0,.55);position:relative;margin-top:10px}
+.sticky{background:var(--note);color:var(--note-ink);border:1px solid color-mix(in srgb,var(--hl) 60%,transparent);border-radius:5px 5px 22px 5px;padding:22px 20px 18px;display:grid;gap:12px;transform:rotate(-1deg);box-shadow:0 12px 20px -16px rgba(0,0,0,.55);position:relative;margin-top:10px}
 .sticky::before{content:"";position:absolute;top:-11px;left:50%;width:92px;height:22px;transform:translateX(-50%) rotate(2deg);background:color-mix(in srgb,var(--card) 70%,transparent);border:1px solid color-mix(in srgb,var(--ink) 12%,transparent)}
 .sticky h2{font-size:26px;margin:0}
 .sticky p{margin:0;font-size:16px}
@@ -229,3 +229,8 @@ table.ings tr:last-child td{border-bottom:0}
 .stats b{font-size:28px;font-weight:600;line-height:1.2}.stats span{font-size:13.5px;color:var(--ink2)}
 .draft{font-size:12.5px;color:#9A3B2E;border:1px solid #9A3B2E;border-radius:4px;padding:0 6px;font-weight:500}
 @media (prefers-reduced-motion:no-preference){.worry,.pcard,.cl,.tagl,.btn,.fav{transition:border-color .15s,transform .15s}.worry:active,.btn:active,.sticky a:active{transform:scale(.98)}}
+
+/* 各ページ下の「迷ったら診断」 */
+.quiz-cta{margin-top:8px}
+.quiz-cta .sticky{transform:rotate(-.6deg)}
+.quiz-cta .sticky h2{font-size:23px}

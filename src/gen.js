@@ -106,6 +106,34 @@ const CONCERNS = [
 ].map(c => ({ ...c, list: SH.filter(c.pick) })).filter(c => c.list.length >= 2);
 const concernUrl = c => `concerns/${c.id}/`;
 
+/* ---------- 悩みから選ぶ（メーカーの説明の言葉で集める） ---------- */
+const descHas = (x, re) => re.test(x.p.desc || "");
+const dandruff = CONCERNS.find(c => c.id === "dandruff");
+const WORRIES = [
+  { id: "smell", icon: "i-smell", short: "頭皮のにおい", hint: "汗臭・ニオイの表示", n: "頭皮のにおいが気になるときのシャンプー",
+    lead: "メーカーが、においへの配慮を説明に書いているシャンプーです。医薬部外品（薬用）には「汗臭を防ぐ」などの効能が認められたものがあります。",
+    rule: "メーカーの説明に「汗臭」「ニオイ」などの言葉があるシャンプー。効能は各商品の表示で確かめてください。点数はにおいへの効果を表すものではありません。",
+    pick: x => x.p.category === "shampoo" && descHas(x, /臭|ニオイ|におい/) },
+  { id: "volume", icon: "i-volume", short: "髪のボリューム", hint: "ハリ・コシ・ふんわり", n: "髪のボリュームが気になるときのシャンプー",
+    lead: "メーカーが「ハリ・コシ」「ふんわり」「ボリューム」などを説明に書いているシャンプーです。",
+    rule: "メーカーの説明に「ボリューム」「ハリ」「コシ」「ふんわり」の言葉があるシャンプー。化粧品の「ハリ・コシを与える」は髪の手ざわりについての表現で、髪が増えることを意味するものではありません。",
+    pick: x => x.p.category === "shampoo" && descHas(x, /ボリューム|ハリ|コシ|ふんわり/) },
+  dandruff ? { id: "dandruff", icon: "i-flake", short: "フケ・かゆみ", hint: "医薬部外品が中心", n: dandruff.n, existing: true, list: dandruff.list } : null,
+  { id: "oily", icon: "i-oil", short: "ベタつき・テカリ", hint: "皮脂に向けた商品", n: "皮脂のベタつき・テカリが気になるときの商品",
+    lead: "メーカーが、皮脂やベタつきに向けた商品だと説明しているシャンプー・洗顔料・スキンケアです。",
+    rule: "メーカーの説明に「皮脂」「ベタつき」「アブラ」「テカリ」の言葉がある商品。",
+    pick: x => descHas(x, /皮脂|ベタつ|アブラ|テカリ/) },
+  { id: "spot", icon: "i-spot", short: "シミ・ソバカス", hint: "防ぐと表示のある商品", n: "シミ・ソバカスを防ぐと表示のあるスキンケア",
+    lead: "医薬部外品（薬用）で、「メラニンの生成を抑え、シミ・ソバカスを防ぐ」などの効能が表示されているスキンケアです。",
+    rule: "メーカーの説明に「シミ」「ソバカス」「メラニン」の言葉がある、保湿クリーム・乳液・洗顔料。この効能は、できてしまったシミを消すという意味ではありません。",
+    pick: x => (x.p.category === "skincare" || x.p.category === "facewash") && descHas(x, /シミ|メラニン|ソバカス|そばかす/) },
+  { id: "dry", icon: "i-dry", short: "乾燥・小じわ", hint: "保湿クリーム・乳液", n: "乾燥・小じわが気になるときの保湿クリーム・乳液",
+    lead: "メーカーが、乾燥やうるおいに向けた商品だと説明している保湿クリーム・乳液・ジェルです。",
+    rule: "保湿クリーム・乳液のうち、メーカーの説明に「乾燥」「小じわ」「うるおい」「潤い」の言葉があるもの。化粧品で「乾燥による小じわを目立たなくする」と表示するには、決められた試験で確かめる必要があります。",
+    pick: x => x.p.category === "skincare" && descHas(x, /乾燥|小じわ|うるお|潤い/) }
+].filter(Boolean).map(w => w.existing ? w : { ...w, list: P.filter(w.pick) }).filter(w => w.list.length >= 2);
+const worryUrl = w => `concerns/${w.id}/`;
+
 /* ---------- 書き出し ---------- */
 const PAGES = [];
 function rel(from, to) { // from, to: サイトのルートからのパス（"products/x/" など）
@@ -114,17 +142,35 @@ function rel(from, to) { // from, to: サイトのルートからのパス（"pr
   return "../".repeat(depth) + t;
 }
 /* 全ページ共通のヘッダー・フッター（比較ツールにも同じものを差し込む） */
-const NAV = [["concerns/", "悩み・目的から選ぶ"], ["app/", "診断つきの比較ツール"], ["categories/shampoo/", "シャンプー"], ["ingredients/", "成分の一覧"], ["about/", "クラベルとは"]];
+const MENU_SHORT = { volume: "ボリューム", oily: "ベタつき", spot: "シミ" }; // メニューの狭い枠に入る短い名前
+const QUIZ_N = 7; // 比較ツールの診断の質問数（シャンプー・保湿クリームとも7問）
 function chrome(r, cur) {
   const on = u => (u === "" ? cur === "" : cur.startsWith(u)) ? ' aria-current="page"' : "";
   const logo = `<a class="kb-logo" href="${r("")}"><svg viewBox="0 0 48 48" aria-hidden="true"><use href="#mark"/></svg>クラベル<span>kurabelle</span></a>`;
+  const cats = CAT_ORDER.filter(c => P.some(x => x.p.category === c));
+  const menu = `<details class="kb-menu"><summary>メニュー</summary><div class="panel">
+<a class="mi" href="${r("")}"${on("")}>トップ</a>
+<p class="mh">悩みから選ぶ</p><div class="mg">${WORRIES.map(w => `<a href="${r(worryUrl(w))}"${on(worryUrl(w))}><svg viewBox="0 0 48 48" aria-hidden="true"><use href="#${w.icon}"/></svg>${esc(MENU_SHORT[w.id] || w.short)}</a>`).join("")}</div>
+<a class="mi quiz" href="${r("app/")}"${on("app/")}><b>迷ったら診断</b><span>${QUIZ_N}問・1分ほど</span></a>
+<p class="mh">種類から選ぶ</p>${cats.map(c => `<a class="mi" href="${r(`categories/${c}/`)}"${on(`categories/${c}/`)}>${esc(CAT_N[c])}<i>${P.filter(x => x.p.category === c).length}件</i></a>`).join("")}
+<p class="mh">ほかの探し方</p>
+<a class="mi" href="${r("")}#q">商品名・成分名で調べる</a>
+<a class="mi" href="${r("concerns/")}"${cur === "concerns/" ? ' aria-current="page"' : ""}>成分の条件から選ぶ<i>硫酸系なしなど</i></a>
+<a class="mi" href="${r("ingredients/")}"${on("ingredients/")}>成分の一覧<i>${ING_PAGES.length}種類</i></a>
+<a class="mi" href="${r("brands/")}"${on("brands/")}>ブランドの一覧<i>${BR.size}ブランド</i></a>
+<a class="mi" href="${r("")}#favs">お気に入り</a>
+<p class="mh">クラベルについて</p>
+<a class="mi" href="${r("about/")}"${cur === "about/" ? ' aria-current="page"' : ""}>クラベルとは</a>
+<a class="mi" href="${r("about/scoring/")}"${on("about/scoring/")}>点数のつけ方</a>
+<a class="mi" href="${r("about/")}#ad">広告について</a>
+</div></details>`;
   const head = `<header class="kb-top"><div class="in">${logo}
-<nav class="kb-nav" aria-label="サイト内">${NAV.filter(([u]) => u !== "categories/shampoo/").map(([u, n]) => `<a href="${r(u)}"${on(u)}>${n.replace("診断つきの比較ツール", "診断")}</a>`).join("")}</nav>
-<details class="kb-menu"><summary>メニュー</summary><nav class="panel" aria-label="サイト内">${[["", "トップ"], ...NAV].map(([u, n]) => `<a href="${r(u)}"${on(u)}>${n}</a>`).join("")}</nav></details>
+<nav class="kb-nav" aria-label="おもなページ"><a href="${r("concerns/")}"${on("concerns/")}>悩みから選ぶ</a><a href="${r("app/")}"${on("app/")}>診断</a><a href="${r("ingredients/")}"${on("ingredients/")}>成分</a><a href="${r("about/")}"${on("about/")}>クラベルとは</a></nav>
+${menu}
 </div></header>`;
   const foot = `<footer class="kb-foot"><div class="in">
 ${logo}
-<nav aria-label="サイトの案内"><a href="${r("")}">トップ</a>${NAV.map(([u, n]) => `<a href="${r(u)}">${n}</a>`).join("")}<a href="${r("brands/")}">ブランド</a><a href="${r("about/scoring/")}">点数のつけ方</a></nav>
+<nav aria-label="サイトの案内"><a href="${r("")}">トップ</a><a href="${r("concerns/")}">悩み・目的から選ぶ</a><a href="${r("app/")}">診断つきの比較ツール</a>${cats.map(c => `<a href="${r(`categories/${c}/`)}">${esc(CAT_N[c])}</a>`).join("")}<a href="${r("ingredients/")}">成分の一覧</a><a href="${r("brands/")}">ブランド</a><a href="${r("about/")}">クラベルとは</a><a href="${r("about/scoring/")}">点数のつけ方</a></nav>
 <p>成分表示は、メーカーの製品ページ・販売ページ・パッケージの記載をそのまま写しています。リニューアルで成分が変わることがあるため、商品ごとに出典と確認日を載せています。</p>
 <p>点数は、成分表から読み取れる処方の傾向を、決まったルールで数えたものです。配合量・使い心地・効果を表すものではなく、髪や肌に合うかどうかには個人差があります。医薬部外品の効能は、各商品の表示で確かめてください。</p>
 ${RK_ON || PREVIEW ? `<p>商品画像と販売ページへのリンクは、楽天ウェブサービスから提供されています。<a href="https://webservice.rakuten.co.jp/" rel="noopener" target="_blank">Supported by Rakuten Developers</a></p>` : ""}
@@ -132,6 +178,12 @@ ${RK_ON || PREVIEW ? `<p>商品画像と販売ページへのリンクは、楽�
 </div></footer>`;
   return { head, foot };
 }
+/* 各ページの下に置く「迷ったら診断」 */
+const quizCta = (r, cat) => `<aside class="quiz-cta" aria-label="診断の案内"><div class="sticky">
+  <h2>迷ったら、<br>${QUIZ_N}つの質問で。</h2>
+  <p>年代や${cat === "skincare" ? "肌" : "頭皮"}のタイプ、気になること、仕上がりの好みなどを選ぶと、成分表から合いそうな順に並べます。1分ほどで終わります。</p>
+  <a href="${r("app/")}${cat === "skincare" ? "#skincare" : ""}">${cat === "skincare" ? "保湿クリームの" : "シャンプーの"}診断をはじめる</a>
+</div></aside>`;
 function write(p, title, desc, body, opts = {}) {
   const dir = path.join(OUT, p); fs.mkdirSync(dir, { recursive: true });
   const r = to => rel(p, to);
@@ -160,6 +212,7 @@ ${head}
 <main class="wrap">
 ${crumbs.length > 1 ? `<nav class="crumbs" aria-label="現在地">${crumbs.map((c, i) => i < crumbs.length - 1 ? `<a href="${r(c[1])}">${esc(c[0])}</a>` : `<span>${esc(c[0])}</span>`).join("<i>›</i>")}</nav>` : ""}
 ${main}
+${p && !opts.noQuiz ? quizCta(r, opts.cat) : ""}
 </main>
 ${foot}
 <script>window.KB={root:${JSON.stringify(root)},pv:${PREVIEW}}</script><script src="${r("assets/kb.js")}" defer></script>
@@ -312,7 +365,7 @@ P.forEach(x => {
   </section>
   <section><h2>成分が似ている${esc(catN)}</h2><div class="plist">${similar(x, 4).map(({ y, s }) => productCard(y, r, `共通の成分 ${Math.round(s * 100)}%`)).join("")}</div></section>
   <p class="src">出典：${s.url ? `<a href="${esc(s.url)}" rel="nofollow noopener" target="_blank">${esc(s.label || s.url)}</a>` : esc(s.label || "")}${s.date ? `（${esc(s.date)}確認）` : ""}${p.jan ? `　JAN ${esc(p.jan)}` : ""}${p.note ? `<br>${esc(p.note)}` : ""}</p>
-</article>`, { crumbs });
+</article>`, { crumbs, cat: p.category });
 });
 
 /* ---------- 成分ページ ---------- */
@@ -360,32 +413,7 @@ write("brands/", "ブランドの一覧", `クラベルに登録した商品の�
 <div class="tags">${[...BR.entries()].sort((a, b) => b[1].length - a[1].length).map(([b, l]) => brandUrl.has(b) ? `<a class="tagl" href="${r(brandUrl.get(b))}">${esc(b)}<span class="mono">${l.length}</span></a>` : `<span class="tagl plain">${esc(b)}<span class="mono">${l.length}</span></span>`).join("")}</div>`,
   { crumbs: [["トップ", ""], ["ブランド", "brands/"]] });
 
-/* ---------- 悩みから選ぶ（メーカーの説明の言葉で集める） ---------- */
-const descHas = (x, re) => re.test(x.p.desc || "");
-const dandruff = CONCERNS.find(c => c.id === "dandruff");
-const WORRIES = [
-  { id: "smell", icon: "i-smell", short: "頭皮のにおい", hint: "汗臭・ニオイの表示", n: "頭皮のにおいが気になるときのシャンプー",
-    lead: "メーカーが、においへの配慮を説明に書いているシャンプーです。医薬部外品（薬用）には「汗臭を防ぐ」などの効能が認められたものがあります。",
-    rule: "メーカーの説明に「汗臭」「ニオイ」などの言葉があるシャンプー。効能は各商品の表示で確かめてください。点数はにおいへの効果を表すものではありません。",
-    pick: x => x.p.category === "shampoo" && descHas(x, /臭|ニオイ|におい/) },
-  { id: "volume", icon: "i-volume", short: "髪のボリューム", hint: "ハリ・コシ・ふんわり", n: "髪のボリュームが気になるときのシャンプー",
-    lead: "メーカーが「ハリ・コシ」「ふんわり」「ボリューム」などを説明に書いているシャンプーです。",
-    rule: "メーカーの説明に「ボリューム」「ハリ」「コシ」「ふんわり」の言葉があるシャンプー。化粧品の「ハリ・コシを与える」は髪の手ざわりについての表現で、髪が増えることを意味するものではありません。",
-    pick: x => x.p.category === "shampoo" && descHas(x, /ボリューム|ハリ|コシ|ふんわり/) },
-  dandruff ? { id: "dandruff", icon: "i-flake", short: "フケ・かゆみ", hint: "医薬部外品が中心", n: dandruff.n, existing: true, list: dandruff.list } : null,
-  { id: "oily", icon: "i-oil", short: "ベタつき・テカリ", hint: "皮脂に向けた商品", n: "皮脂のベタつき・テカリが気になるときの商品",
-    lead: "メーカーが、皮脂やベタつきに向けた商品だと説明しているシャンプー・洗顔料・スキンケアです。",
-    rule: "メーカーの説明に「皮脂」「ベタつき」「アブラ」「テカリ」の言葉がある商品。",
-    pick: x => descHas(x, /皮脂|ベタつ|アブラ|テカリ/) },
-  { id: "spot", icon: "i-spot", short: "シミ・ソバカス", hint: "防ぐと表示のある商品", n: "シミ・ソバカスを防ぐと表示のあるスキンケア",
-    lead: "医薬部外品（薬用）で、「メラニンの生成を抑え、シミ・ソバカスを防ぐ」などの効能が表示されているスキンケアです。",
-    rule: "メーカーの説明に「シミ」「ソバカス」「メラニン」の言葉がある、保湿クリーム・乳液・洗顔料。この効能は、できてしまったシミを消すという意味ではありません。",
-    pick: x => (x.p.category === "skincare" || x.p.category === "facewash") && descHas(x, /シミ|メラニン|ソバカス|そばかす/) },
-  { id: "dry", icon: "i-dry", short: "乾燥・小じわ", hint: "保湿クリーム・乳液", n: "乾燥・小じわが気になるときの保湿クリーム・乳液",
-    lead: "メーカーが、乾燥やうるおいに向けた商品だと説明している保湿クリーム・乳液・ジェルです。",
-    rule: "保湿クリーム・乳液のうち、メーカーの説明に「乾燥」「小じわ」「うるおい」「潤い」の言葉があるもの。化粧品で「乾燥による小じわを目立たなくする」と表示するには、決められた試験で確かめる必要があります。",
-    pick: x => x.p.category === "skincare" && descHas(x, /乾燥|小じわ|うるお|潤い/) }
-].filter(Boolean).map(w => w.existing ? w : { ...w, list: P.filter(w.pick) }).filter(w => w.list.length >= 2);
+
 
 WORRIES.filter(w => !w.existing).forEach(w => {
   const u = `concerns/${w.id}/`;
@@ -397,7 +425,6 @@ WORRIES.filter(w => !w.existing).forEach(w => {
 <div class="plist">${sorted.map(x => productCard(x, r, CAT_N[x.p.category])).join("")}</div>`,
     { crumbs: [["トップ", ""], ["悩み・目的から選ぶ", "concerns/"], [w.short, u]] });
 });
-const worryUrl = w => `concerns/${w.id}/`;
 
 /* ---------- 目的別（成分の条件） ---------- */
 CONCERNS.forEach(c => {
@@ -427,7 +454,7 @@ CAT_ORDER.forEach(cat => {
 <h1>${esc(CAT_N[cat])}</h1><p class="lead">登録している${esc(CAT_N[cat])}は${list.length}件です。${C.CATS[cat] && C.CATS[cat].scored ? "成分の傾向スコアが高い順に並べています。" : "このカテゴリはまだ点数をつけていません。"}</p>
 ${cat === "shampoo" ? `<div class="clist">${CONCERNS.map(c => `<a class="cl" href="${r(concernUrl(c))}"><b>${esc(c.short)}</b><i>${c.list.length}件</i></a>`).join("")}</div>` : ""}
 <div class="plist">${list.slice().sort((a, b) => (b.match || 0) - (a.match || 0)).map(x => productCard(x, r)).join("")}</div>`,
-    { crumbs: [["トップ", ""], [CAT_N[cat], u]] });
+    { crumbs: [["トップ", ""], [CAT_N[cat], u]], cat });
 });
 
 /* ---------- 点数のつけ方 ---------- */
@@ -466,7 +493,7 @@ write("about/", "クラベルとは", "クラベルは、シャンプーやス�
     <p>年齢を重ねるにつれて、それまで気にしていなかった頭皮のにおいや髪のボリューム、肌のシミが気になり始めました。そのとき初めてシャンプーの成分を調べ、情報によって言うことがまるで違うことに戸惑ったのが、クラベルを作ったきっかけです。</p>
     <p>同じように悩み始めた人が、落ち着いて、自分で選べるように。そのための材料をそろえていきます。</p>
     ${OPERATOR_OK ? "" : "<small>運営者自身の言葉に書き直していただく前提の下書きです。本番には、確かめてもらうまで出しません。</small>"}</div></section>` : ""}
-  <section class="ab-sec"><h2>広告について</h2><div class="ab-box">
+  <section class="ab-sec" id="ad"><h2>広告について</h2><div class="ab-box">
     <p>商品ページの「楽天市場で見る」は、楽天アフィリエイトのリンクです。ここから購入されると、運営者が紹介料を受け取ることがあります。紹介料の有無は、点数や並び順には一切影響しません。</p>
     <small>商品画像と販売ページへのリンクは、楽天ウェブサービスから提供されています。</small></div></section>
   <a class="btn wide back" href="${r("")}">トップに戻る</a>
@@ -498,8 +525,8 @@ write("", "クラベル｜成分でくらべるシャンプー・スキンケア
   <p class="note">ボタンの言葉は、メーカーの表示に出てくる言葉に合わせています。効果を約束するものではありません。<a href="${r("concerns/")}">成分の条件から選ぶ（硫酸系なし・ノンシリコンなど）</a></p>
 </section>
 <section class="sticky" aria-labelledby="h-quiz">
-  <h2 id="h-quiz">迷ったら、<br>3つの質問で。</h2>
-  <p>頭皮のタイプ、気になること、仕上がりの好みを選ぶと、成分表から合いそうな順に並べます。</p>
+  <h2 id="h-quiz">迷ったら、<br>${QUIZ_N}つの質問で。</h2>
+  <p>年代や頭皮・肌のタイプ、気になること、仕上がりの好みなどを選ぶと、成分表から合いそうな順に並べます。1分ほどで終わります。</p>
   <a href="${r("app/")}">診断をはじめる</a>
 </section>
 <section aria-labelledby="h-fav">

@@ -9,8 +9,8 @@
 :root{
   --paper:#F7F7F2; --card:#FFFFFF; --ink:#1B2230; --ink2:#545C66; --ink3:#767D86;
   --line:#DCDFD8; --line2:#C3C8C0;
-  --accent:#1B2230; --accent-ink:#F7F7F2; --accent-soft:#FBF3CF;
-  --grid:#EDEFE8; --hl:#F3D54E; --hl-soft:#FBF3CF; --c:#FFFFFF; --soft:#FBF3CF; --ic:#1B2230; --note:#FBE77A; --note-ink:#2A2610;
+  --accent:#1B2230; --accent-ink:#F7F7F2; --accent-soft:#FCF6DE;
+  --grid:#EDEFE8; --hl:#F5DF7E; --hl-soft:#FCF6DE; --c:#FFFFFF; --soft:#FCF6DE; --ic:#1B2230; --note:#FCF2C2; --note-ink:#2A2610;
   --warn:#A3531A; --warn-soft:#F6E8DA; --bad:#A33838;
   --r-base:#C9CDD0; --r-active:#2D5BC9; --r-hum:#1C9884; --r-beauty:#BF8618; --r-oil:#D96E34; --r-cond:#6F8F22;
   --r-emul:#8A70C8; --r-uv:#CC5585; --r-pres:#6C7B83; --r-clean:#3A97BF; --r-other:#A7A196;
@@ -1432,6 +1432,8 @@ $('#reset-btn').addEventListener('click', ()=>{
 });
 
 load();
+/* サイトの各ページから「#skincare」「#shampoo」付きで来たら、そのカテゴリを開く */
+(function(){ const h = location.hash.slice(1); if (h === 'skincare' || h === 'shampoo') S.cat = h; })();
 render();
 loadCatalog();
 initClaude();

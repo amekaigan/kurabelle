@@ -1,6 +1,6 @@
 {
  "version": 1,
- "updated": "2026-10-15",
+ "updated": "2026-10-16",
  "products": [
   {
    "id": "jan-4580688635023",
@@ -18,6 +18,11 @@
     "type": "photo",
     "label": "パッケージ写真から",
     "date": "2026-10-14"
+   },
+   "desc": "すっきり洗浄で頭皮や毛髪の汚れを落とし、頭皮環境をすこやかに保つ薬用シャンプー。つめかえ用パックをホルダーに付けて使える設計。",
+   "infoSource": {
+    "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4580688635023",
+    "date": "2026-10-16"
    }
   },
   {
@@ -37,6 +42,12 @@
     "type": "photo",
     "label": "パッケージ写真から（サンプル品）",
     "date": "2026-10-14"
+   },
+   "desc": "40才からの男性の頭皮の脂臭対策をうたう薬用シャンプー。殺菌成分がニオイ菌を殺菌し、頭皮のアブラっぽい汗のニオイを防ぐ。ノンシリコン処方。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://netshop.create-sd.co.jp/shop/g/g4902806437348/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -74,6 +85,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/khg/merit/4901301448705/",
     "date": "2026-10-14"
+   },
+   "desc": "きめ細かな泡立ちで髪と地肌を洗う弱酸性の薬用シャンプー。ノンシリコーン処方で、フケ・かゆみを防ぐ（医薬部外品）。",
+   "scent": "ナチュラルフローラルのやさしい香り",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/khg/merit/4901301448705/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -93,6 +110,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/khg/merit/4901301448729/",
     "date": "2026-10-14"
+   },
+   "desc": "1本で地肌をすこやかに保ち、髪をさらさらに仕上げるリンス不要の弱酸性薬用シャンプー。フケ・かゆみを防ぐ（医薬部外品）。",
+   "scent": "ナチュラルフローラルのやさしい香り",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/khg/merit/4901301448729/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -113,6 +136,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301367938/",
     "date": "2026-10-14"
+   },
+   "desc": "乾燥性敏感肌を考えたキュレルの薬用シャンプー。指どおりなめらかな髪に仕上げ、フケ・かゆみを防ぐ（医薬部外品）。赤ちゃんにも使える。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301367938/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -132,6 +161,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/khg/success/4901301379009/",
     "date": "2026-10-14"
+   },
+   "desc": "細かな泡で毛穴まわりの皮脂を洗い、アブラの広がりを抑える男性向け薬用シャンプー。汗臭・フケ・かゆみを防ぐ（医薬部外品）。",
+   "scent": "アクアシトラスの香り",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/khg/success/4901301379009/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -152,6 +187,12 @@
     "label": "クリエイトSD 商品ページ",
     "url": "https://netshop.create-sd.co.jp/shop/g/g4987176100269/",
     "date": "2026-10-14"
+   },
+   "desc": "髪の広がり・パサつきに向けたシャンプー。浸透性保湿成分パンテノールを配合し、しっとりなめらかな髪に仕上げる。",
+   "scent": "フレッシュでフルーティーなブルーベリー・ラズベリー・洋なしの香り",
+   "infoSource": {
+    "url": "https://netshop.create-sd.co.jp/shop/g/g4987176100269/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -208,6 +249,11 @@
     "label": "楽天24 商品ページ",
     "url": "https://item.rakuten.co.jp/rakuten24/16201/",
     "date": "2026-10-14"
+   },
+   "desc": "健康でしっとりした素肌を保つスキンケアクリーム。スクワラン・ホホバオイル配合で、顔にも体にも家族みんなで使える。",
+   "infoSource": {
+    "url": "https://www.nivea.co.jp/products/nivea-creme-49013010084800052.html",
+    "date": "2026-10-16"
    }
   },
   {
@@ -227,6 +273,12 @@
     "label": "マツキヨココカラオンライン 商品ページ",
     "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4901301450555",
     "date": "2026-10-14"
+   },
+   "desc": "角層まで潤いを届けるフェイスクリーム。とてもしっとりするのに軽い使い心地で、肌荒れを防ぐ（医薬部外品）。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301450555/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -246,6 +298,12 @@
     "label": "クリエイトSD 商品ページ",
     "url": "https://netshop.create-sd.co.jp/shop/g/g4550516495266/",
     "date": "2026-10-14"
+   },
+   "desc": "洗顔後これ1つで化粧水・乳液・美容液・クリーム・マスクの5役をこなす男性向けオールインワンジェルクリーム。テカリとカサつきの両方に向け、ベタつかない。",
+   "scent": "シトラスグリーンの香り（微香性）",
+   "infoSource": {
+    "url": "https://netshop.create-sd.co.jp/shop/g/g4550516495266/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -266,6 +324,11 @@
     "label": "@cosme 商品情報",
     "url": "https://www.cosme.net/variations/1121598/",
     "date": "2026-10-14"
+   },
+   "desc": "モロッコ溶岩クレイとアミノ酸系洗浄成分を配合した、濃密な泡で毛穴の汚れや不要な角層を落とす洗顔料。初期エイジングケア向けのシリーズ。",
+   "infoSource": {
+    "url": "https://www.cosme.net/variations/1121598/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -284,6 +347,12 @@
     "type": "photo",
     "label": "パッケージ写真から",
     "date": "2026-10-14"
+   },
+   "desc": "40才からの男性の皮脂やベタつきに向けた洗顔フォーム。皮脂溶解成分配合で毛穴の皮脂を浮かし出す、さっぱりしたノンスクラブタイプ。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://netshop.create-sd.co.jp/shop/g/g4902806100570/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -303,6 +372,12 @@
     "type": "photo",
     "label": "パッケージ写真から",
     "date": "2026-10-14"
+   },
+   "desc": "毎日のシャンプーのついでに使う白髪用のカラーリンス。放置時間は5分で、使うたびに少しずつ白髪を目立たなくする。トリートメント成分配合。",
+   "scent": "爽やかなシトラスマリンの香り",
+   "infoSource": {
+    "url": "https://netshop.create-sd.co.jp/shop/g/g4987205110054/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -323,6 +398,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/khg/segreta/4901301446664/",
     "date": "2026-10-15"
+   },
+   "desc": "大人の髪に向けたノンシリコーン処方のシャンプー。髪内部を補修してハリを与え、根元からふんわり仕上げる。",
+   "scent": "気分華やぐアロマティックローズの香り",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/khg/segreta/4901301446664/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -343,6 +424,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/khg/segreta/4901301446640/",
     "date": "2026-10-15"
+   },
+   "desc": "大人の髪に向けたシャンプー。髪の内側からハリを与え、うねる髪もまとまりやすく仕上げる。",
+   "scent": "気分やすらぐハーバルブーケの香り",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/khg/segreta/4901301446640/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -363,6 +450,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/khg/segreta/4901301312723/",
     "date": "2026-10-15"
+   },
+   "desc": "ペタンとしやすい短めの髪に向けたシャンプー。ドライヤーで乾かすだけでトップはふっくら、毛先はまとまるスタイルを目指す。",
+   "scent": "アロマティックローズの香り",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/khg/segreta/4901301312723/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -383,6 +476,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/khg/essential/4901301428059/",
     "date": "2026-10-15"
+   },
+   "desc": "パサつくダメージ髪に向けたシャンプー。毛流れを整え、うるおいとサラサラ感のある髪に仕上げる。",
+   "scent": "ガーデニア＆ジャスミン咲きわたる フローラルリュクスの香り",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/khg/essential/4901301428059/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -403,6 +502,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/khg/essential/4901301436504/",
     "date": "2026-10-15"
+   },
+   "desc": "パサつき、広がる髪に向けたシャンプー。傷んだ毛先までさらさらでツヤのある、翌朝もまとまる髪をめざす。",
+   "scent": "ふわりときめくフローラルブーケの香り",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/khg/essential/4901301436504/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -423,6 +528,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/khg/success/4901301379061/",
     "date": "2026-10-15"
+   },
+   "desc": "すばやく泡立ち、頭皮のアブラやワックスを洗い流すリンス不要の男性向け薬用シャンプー。フケ・かゆみ・汗臭を防ぐ（医薬部外品）。",
+   "scent": "アクアシトラスの香り",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/khg/success/4901301379061/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -443,6 +554,12 @@
     "label": "ツルハグループ通販 商品ページ",
     "url": "https://shop.tsuruha.co.jp/10003034.html",
     "date": "2026-10-15"
+   },
+   "desc": "清潔な地肌に洗い上げる薬用シャンプー。豊かな泡で髪がきしまずに洗える。地肌すっきり、フケ・かゆみを防ぐ（医薬部外品）。",
+   "scent": "マイルドフローラルの香り",
+   "infoSource": {
+    "url": "https://shop.tsuruha.co.jp/10003034.html",
+    "date": "2026-10-16"
    }
   },
   {
@@ -463,6 +580,12 @@
     "label": "ツルハグループ通販 商品ページ",
     "url": "https://shop.tsuruha.co.jp/10062905.html",
     "date": "2026-10-15"
+   },
+   "desc": "1本で洗髪となめらかな仕上がりができるコンディショナーインシャンプー。クリーミィな泡で洗い、フケ・かゆみ・ニオイ（汗臭）を防ぐ（医薬部外品）。",
+   "scent": "清涼感のあるシトラスフローラルの香り",
+   "infoSource": {
+    "url": "https://shop.tsuruha.co.jp/10062905.html",
+    "date": "2026-10-16"
    }
   },
   {
@@ -482,6 +605,12 @@
     "label": "ツルハグループ通販 商品ページ",
     "url": "https://shop.tsuruha.co.jp/10102898.html",
     "date": "2026-10-15"
+   },
+   "desc": "うるおい成分を配合し、髪の内側と外側をうるおいケアするシャンプー。なめらかな髪に仕上げる。",
+   "scent": "上品な花々とフレッシュな果実の香り",
+   "infoSource": {
+    "url": "https://shop.tsuruha.co.jp/10102898.html",
+    "date": "2026-10-16"
    }
   },
   {
@@ -501,6 +630,12 @@
     "label": "ツルハグループ通販 商品ページ",
     "url": "https://shop.tsuruha.co.jp/10131827.html",
     "date": "2026-10-15"
+   },
+   "desc": "フレンチスパ発想のノンシリコンシャンプー。天然エッセンシャルオイル配合で、指どおりさらさらの軽やかな髪に仕上げる。",
+   "scent": "気分を変える!幸せを感じる香り",
+   "infoSource": {
+    "url": "https://shop.tsuruha.co.jp/10131827.html",
+    "date": "2026-10-16"
    }
   },
   {
@@ -521,6 +656,12 @@
     "label": "ツルハグループ通販 商品ページ",
     "url": "https://shop.tsuruha.co.jp/10174280.html",
     "date": "2026-10-15"
+   },
+   "desc": "細くやわらかな髪の根元までうるおいを届け、ハリ・コシのあるふんわりボリュームのある髪に仕上げるシャンプー。",
+   "scent": "心ときめくフローラルカメリアの香り",
+   "infoSource": {
+    "url": "https://shop.tsuruha.co.jp/10174280.html",
+    "date": "2026-10-16"
    }
   },
   {
@@ -541,6 +682,12 @@
     "label": "ツルハグループ通販 商品ページ",
     "url": "https://shop.tsuruha.co.jp/10163549.html",
     "date": "2026-10-15"
+   },
+   "desc": "切れ毛・枝毛などのダメージ髪に向けたシャンプー。補修成分が髪の内部まで浸透し、くり返すダメージを防ぐ。",
+   "scent": "フレッシュでフルーティーなブルーベリー・ラズベリー・洋なしの香り",
+   "infoSource": {
+    "url": "https://shop.tsuruha.co.jp/10163549.html",
+    "date": "2026-10-16"
    }
   },
   {
@@ -560,6 +707,12 @@
     "label": "クリエイトSD 商品ページ",
     "url": "https://netshop.create-sd.co.jp/shop/g/g4582521686056/",
     "date": "2026-10-15"
+   },
+   "desc": "「髪を自然で満たしきる」をうたうボタニストのシャンプー。まとまりのある、しっとりとした髪に仕上げる。",
+   "scent": "華やかで優雅なアプリコットとジャスミンの香り",
+   "infoSource": {
+    "url": "https://netshop.create-sd.co.jp/shop/g/g4582521686056/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -580,6 +733,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/khg/mensbiore/4901301258489/",
     "date": "2026-10-15"
+   },
+   "desc": "泡で出てくる男性向けの洗顔料。洗顔からシェービングまで一度にでき、洗い上がりは肌がつっぱらない。",
+   "scent": "マイルドシトラスの香り",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/khg/mensbiore/4901301258489/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -600,6 +759,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301458964/",
     "date": "2026-10-15"
+   },
+   "desc": "泡ジェルタイプの洗顔料。肌のにごり・くすみ（汚れ）を落とし、洗うたびに潤いのある素肌をめざす。肌荒れを防ぐ（医薬部外品）。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301458964/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -620,6 +785,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301236173/",
     "date": "2026-10-15"
+   },
+   "desc": "角層まで潤いを届ける乳液。しっとりするのにベタつかない使い心地で、肌荒れを防ぐ（医薬部外品）。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301236173/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -640,6 +811,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301264350/",
     "date": "2026-10-15"
+   },
+   "desc": "乾燥と過剰な皮脂で肌荒れをくり返す敏感な肌に向けた、水ベースでさっぱりしたノンオイリーの保湿ジェル。にきび・肌荒れを防ぐ（医薬部外品）。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301264350/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -660,6 +837,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301238795/",
     "date": "2026-10-15"
+   },
+   "desc": "透明感のある潤い肌に保つ乳液。メラニンの生成を抑え、シミ・ソバカスを防ぐ（医薬部外品）。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301238795/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -680,6 +863,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301238818/",
     "date": "2026-10-15"
+   },
+   "desc": "透明感のある潤い肌に保つフェイスクリーム。メラニンの生成を抑え、シミ・ソバカスを防ぐ（医薬部外品）。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301238818/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -700,6 +889,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301334527/",
     "date": "2026-10-15"
+   },
+   "desc": "乾燥性敏感肌を考えた低刺激設計の、しっとりタイプのジェルクリーム。乾燥による小じわを目立たなくし、肌荒れを防ぐ（医薬部外品）。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301334527/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -720,6 +915,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301334534/",
     "date": "2026-10-15"
+   },
+   "desc": "潤いを閉じこめ、ハリのある肌に保つ「とてもしっとり」タイプのクリーム。乾燥による小じわを目立たなくし、肌荒れを防ぐ（医薬部外品）。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301334534/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -740,6 +941,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301269348/",
     "date": "2026-10-15"
+   },
+   "desc": "きめ細かな泡で出てくる洗顔料。洗顔で流れ出がちなセラミドを守りながら洗う。肌荒れを防ぐ（医薬部外品）。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301269348/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -760,6 +967,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301264336/",
     "date": "2026-10-15"
+   },
+   "desc": "皮脂でベタつくのにカサつく乾燥性敏感肌に向けた泡洗顔料。セラミドを守りながら毛穴の汚れや過剰な皮脂を落とす。にきび・肌荒れを防ぐ（医薬部外品）。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/kbb/curel/4901301264336/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -780,6 +993,12 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/khg/success/4901301379030/",
     "date": "2026-10-15"
+   },
+   "desc": "細かな泡で毛穴まわりの皮脂を洗い、アブラの広がりを抑える男性向け薬用シャンプー。汗臭・フケ・かゆみを防ぐ（医薬部外品）。",
+   "scent": "アクアシトラスの香り",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/khg/success/4901301379030/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -799,6 +1018,12 @@
     "label": "ツルハグループ通販 商品ページ",
     "url": "https://shop.tsuruha.co.jp/10056281.html",
     "date": "2026-10-15"
+   },
+   "desc": "頭皮が脂っぽい方に向けた低刺激性の薬用シャンプー。抗真菌成分ミコナゾールなどを配合し、フケ・かゆみを防ぐ（医薬部外品）。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://shop.tsuruha.co.jp/10056281.html",
+    "date": "2026-10-16"
    }
   },
   {
@@ -818,6 +1043,12 @@
     "label": "ツルハグループ通販 商品ページ",
     "url": "https://shop.tsuruha.co.jp/10056282.html",
     "date": "2026-10-15"
+   },
+   "desc": "頭皮が乾燥しやすい方に向けた低刺激性の薬用シャンプー。抗真菌成分ミコナゾール硝酸塩などを配合し、フケ・かゆみを防ぐ（医薬部外品）。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://shop.tsuruha.co.jp/10056282.html",
+    "date": "2026-10-16"
    }
   },
   {
@@ -838,6 +1069,12 @@
     "label": "ツルハグループ通販 商品ページ",
     "url": "https://shop.tsuruha.co.jp/10087466.html",
     "date": "2026-10-15"
+   },
+   "desc": "ベタつきやすい頭皮に向けた弱酸性の薬用シャンプー。清涼成分配合でスーッとした使い心地。フケ・かゆみ・汗臭を防ぐ（医薬部外品）。",
+   "scent": "リフレッシュシトラスの香り",
+   "infoSource": {
+    "url": "https://shop.tsuruha.co.jp/10087466.html",
+    "date": "2026-10-16"
    }
   },
   {
@@ -858,6 +1095,12 @@
     "label": "マツキヨココカラオンライン 商品ページ",
     "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4987107617361",
     "date": "2026-10-15"
+   },
+   "desc": "デリケートな頭皮や乾燥しがちな頭皮に向けた、アミノ酸系洗浄成分配合の低刺激性薬用シャンプー。ふけ・かゆみ・汗臭を防ぐ（医薬部外品）。",
+   "scent": "微香性",
+   "infoSource": {
+    "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4987107617361",
+    "date": "2026-10-16"
    }
   },
   {
@@ -878,6 +1121,12 @@
     "label": "マツキヨココカラオンライン 商品ページ",
     "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4902806127478",
     "date": "2026-10-15"
+   },
+   "desc": "40才からのニオイケアをうたう薬用スカルプシャンプー。洗浄・防臭・頭皮ケアで、ニオイの気にならない頭皮をめざす。",
+   "scent": "ハーバルシトラスの香り",
+   "infoSource": {
+    "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4902806127478",
+    "date": "2026-10-16"
    }
   },
   {
@@ -898,6 +1147,12 @@
     "label": "マツキヨココカラオンライン 商品ページ",
     "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4902430744997",
     "date": "2026-10-15"
+   },
+   "desc": "男性向けの地肌ケア薬用シャンプー。必要なうるおいを残して皮脂や汚れを洗い流し、髪にハリとボリュームを持たせる。",
+   "scent": "さわやかなサニーシトラスの香り",
+   "infoSource": {
+    "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4902430744997",
+    "date": "2026-10-16"
    }
   },
   {
@@ -918,6 +1173,11 @@
     "label": "花王 製品カタログ",
     "url": "https://www.kao-kirei.com/ja/item/khg/niveaformen/4901301395207/",
     "date": "2026-10-15"
+   },
+   "desc": "朝のスキンケアを1本で済ませる男性向けオールインワンジェル。すばやくなじみ、クールでさわやかな使い心地。",
+   "infoSource": {
+    "url": "https://www.kao-kirei.com/ja/item/khg/niveaformen/4901301395207/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -938,6 +1198,12 @@
     "label": "マツキヨココカラオンライン 商品ページ",
     "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4987241171323",
     "date": "2026-10-15"
+   },
+   "desc": "洗顔後これ1つで化粧水・美容液・乳液・クリーム・パックの5役をこなす濃厚なオールインワンゲル。シワを改善し、シミ・そばかすを防ぐ（医薬部外品）。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4987241171323",
+    "date": "2026-10-16"
    }
   },
   {
@@ -958,6 +1224,12 @@
     "label": "マツキヨココカラオンライン 商品ページ",
     "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4987241127054",
     "date": "2026-10-15"
+   },
+   "desc": "複数のヒアルロン酸を配合した弱酸性・低刺激性のミルクタイプ乳液。つけた瞬間からうるおい、もちもちの肌に整える。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4987241127054",
+    "date": "2026-10-16"
    }
   },
   {
@@ -978,6 +1250,12 @@
     "label": "マツキヨココカラオンライン 商品ページ",
     "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4987241203031",
     "date": "2026-10-15"
+   },
+   "desc": "5種のヒアルロン酸とスクワラン・セラミドなどを配合した高保湿のオールインワンゲル。濃厚なのにべたつかずうるおう使用感。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://netshop.create-sd.co.jp/shop/g/g4987241203031/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -998,6 +1276,12 @@
     "label": "マツキヨココカラオンライン 商品ページ",
     "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4987241155729",
     "date": "2026-10-15"
+   },
+   "desc": "3種のヒアルロン酸を配合した化粧水。吸いつくようなもちもち肌に整える、顔・体・髪にも使える。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://netshop.create-sd.co.jp/shop/g/g4987241155729/",
+    "date": "2026-10-16"
    }
   },
   {
@@ -1018,6 +1302,11 @@
     "label": "マツキヨココカラオンライン 商品ページ",
     "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4580688635047",
     "date": "2026-10-15"
+   },
+   "desc": "しっかり洗浄で頭皮や毛髪の汚れを落とし、頭皮環境をすこやかに保つ薬用シャンプー。つめかえ用パックをホルダーに付けて使える設計。",
+   "infoSource": {
+    "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4580688635047",
+    "date": "2026-10-16"
    }
   },
   {
@@ -1038,6 +1327,11 @@
     "label": "マツキヨココカラオンライン 商品ページ",
     "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4580688635061",
     "date": "2026-10-15"
+   },
+   "desc": "うるおいを保ちながら頭皮や毛髪の汚れを落とし、頭皮環境をすこやかに保つ薬用シャンプー。つめかえ用パックをホルダーに付けて使える設計。",
+   "infoSource": {
+    "url": "https://www.matsukiyococokara-online.com/store/catalog/product/view/id/4580688635061",
+    "date": "2026-10-16"
    }
   },
   {
@@ -1057,6 +1351,12 @@
     "label": "ツルハグループ通販 商品ページ",
     "url": "https://shop.tsuruha.co.jp/10151820.html",
     "date": "2026-10-15"
+   },
+   "desc": "ダメージヘア用のシャンプー。海藻エキスなどを配合し、頭皮と髪をやさしく洗い、しっとりまとまる髪に仕上げる。",
+   "scent": "ローズヒップの甘ずっぱい、さわやかな香り",
+   "infoSource": {
+    "url": "https://shop.tsuruha.co.jp/10151820.html",
+    "date": "2026-10-16"
    }
   },
   {
@@ -1076,6 +1376,12 @@
     "label": "ツルハグループ通販 商品ページ",
     "url": "https://shop.tsuruha.co.jp/10170978.html",
     "date": "2026-10-15"
+   },
+   "desc": "40才からのエイジングケアに向けた1品6役のオールインワンクリーム。ベタつかない高保湿タイプ。シワを改善し、メラニンの生成を抑えシミを防ぐ（医薬部外品）。",
+   "scent": "無香料",
+   "infoSource": {
+    "url": "https://shop.tsuruha.co.jp/10170978.html",
+    "date": "2026-10-16"
    }
   },
   {
@@ -1096,6 +1402,12 @@
     "label": "ツルハグループ通販 商品ページ",
     "url": "https://shop.tsuruha.co.jp/10138963.html",
     "date": "2026-10-15"
+   },
+   "desc": "和漢植物エキスと美白有効成分を配合した薬用美白乳液。コクのあるリッチな感触で、しっとりしつつべたつかない。",
+   "scent": "ローズとジャスミンを基調にカモミールをブレンドした、モダンフローラルのやさしく、さわやかな香り",
+   "infoSource": {
+    "url": "https://shop.tsuruha.co.jp/10138963.html",
+    "date": "2026-10-16"
    }
   },
   {
@@ -1116,6 +1428,11 @@
     "label": "アイナチュラ 商品ページ",
     "url": "https://inatura-premium.com/c/all/amway/a36/a14/126452J",
     "date": "2026-10-15"
+   },
+   "desc": "傷んだ髪を毛先まで補修し、ツヤやかでしなやかな髪に洗い上げる、ダメージヘア・カラーリングヘア用のシャンプー。",
+   "infoSource": {
+    "url": "https://inatura-premium.com/c/all/amway/a36/a14/126452J",
+    "date": "2026-10-16"
    }
   },
   {
@@ -1136,6 +1453,11 @@
     "label": "アイナチュラ 商品ページ",
     "url": "https://inatura-premium.com/c/all/amway/a36/a14/126449J",
     "date": "2026-10-15"
+   },
+   "desc": "ドライヘア用のシャンプー。毛髪補修成分を配合し、汚れを落としつつ髪をやさしくしっとり洗い上げる。パサつきやクシ通りが気になる方向け。",
+   "infoSource": {
+    "url": "https://inatura-premium.com/c/all/amway/a36/a14/126449J",
+    "date": "2026-10-16"
    }
   },
   {
@@ -1165,7 +1487,12 @@
      "scent": "これまで使った中でいちばん好きな香り",
      "period": "2023年に使用（前の商品のスカルプ シャンプー）"
     }
-   ]
+   ],
+   "desc": "髪のボリュームがない、ハリ・コシがほしい方に向けた地肌ケアのシャンプー。地肌をいたわり、ふんわり洗い上げる。",
+   "infoSource": {
+    "url": "https://inatura-premium.com/c/all/amway/a36/a14/126457J",
+    "date": "2026-10-16"
+   }
   }
  ]
 }

@@ -236,7 +236,7 @@ function scentBlock(x) {
   const fr = x.tags.has("fragrance");
   const fromLabel = fr && ess.length ? `香料と精油（${ess.map(esc).join("、")}）で香りをつけています。`
     : fr ? "香料で香りをつけています。" : ess.length ? `香料は入っていません。精油（${ess.map(esc).join("、")}）が入っています。` : "香料も精油も入っていません（無香料）。";
-  const maker = x.p.scent ? `<p><b>メーカーの説明：</b>${esc(x.p.scent)}</p>` : "";
+  const maker = x.p.scent ? `<p>メーカーの説明では「${esc(x.p.scent)}」です。</p>` : "";
   return `<p>${fromLabel}</p>${maker}<p class="small muted">香りの好みは人それぞれなので、点数には入れていません。成分表から分かるのは、香料や精油が入っているかどうかまでです。</p>`;
 }
 /* 使った感想：運営者が実際に使ったものだけ（reviews 項目）。点数とは分けて、個人の感想とはっきり書く */
@@ -266,7 +266,7 @@ P.forEach(x => {
   ${RK_ON || PREVIEW ? `<a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : ""}
   </div></div>
   <p class="lead">${esc(leadText(x))}</p>
-  ${p.desc ? `<p><b>メーカーの説明：</b>${esc(p.desc)}</p>` : ""}
+  ${p.desc || p.scent ? `<div class="maker"><span class="lbl">メーカーの説明</span>${p.desc ? `<p>${esc(p.desc)}</p>` : ""}${p.scent ? `<p class="mk-scent"><b>香り</b>${esc(p.scent)}</p>` : ""}${p.infoSource && p.infoSource.url ? `<p class="small muted">出典：<a href="${esc(p.infoSource.url)}" rel="nofollow noopener" target="_blank">${esc((p.infoSource.url.split("/")[2] || "").replace(/^www\./, ""))}</a>（${esc(p.infoSource.date || "")}確認）。メーカーの説明を短くまとめたもので、効果を保証するものではありません。</p>` : ""}</div>` : ""}
   ${typeBlock(x, r)}
   ${reviewBlock(x)}
   <section><h2>全成分と、それぞれの役割</h2>

@@ -113,6 +113,9 @@ section{padding-top:30px;display:grid;gap:14px;scroll-margin-top:56px}
 .dres .pts b{font-size:16px}
 .dres .pts span{display:block;font-size:14px;color:var(--ink2);margin-top:2px}
 .dres .pts .fv{color:var(--ink);margin-top:4px}
+.dres .pts .ings{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.dres .pts .ings small{flex-basis:100%;font-size:12.5px;color:var(--ink3)}
+.dres .pts .ings em{font-style:normal;font-weight:700;font-size:14px;color:var(--ink);background:var(--hl-soft);border:1px solid var(--hl);border-radius:999px;padding:3px 10px}
 .dres .low{font-size:14px;color:var(--ink2)}
 .wbar{display:grid;grid-template-columns:7.5em minmax(0,1fr) 2.8em;align-items:center;gap:8px;font-size:13px}
 .wbar .track{height:6px;border-radius:3px;background:var(--line)}
@@ -1153,7 +1156,7 @@ function renderCats(){
 }
 
 /* ---------- 診断 ---------- */
-function renderDiag(){
+function renderDiag(cur){
   const body=$('#diag-body'), meta=$('#diag-meta');
   const QS = questionsFor(S.cat);
   if(S.quiz){
@@ -1190,7 +1193,7 @@ function renderDiag(){
   });
   const ngMap = CATS[S.cat].ng;
   meta.textContent='診断済み';
-  body.innerHTML = `<div class="dres">${diagResult(a, w, QS)}
+  body.innerHTML = `<div class="dres">${diagResult(a, w, QS, cur)}
     <div class="row">${chips.map(c=>`<span class="chip acc">${esc(c)}</span>`).join('')}${(a.ng||[]).filter(n=>ngMap[n]).map(n=>`<span class="chip warn">避けたい：${esc(ngMap[n])}</span>`).join('')}</div>
     <div class="row"><button type="button" class="btn ghost sm" data-act="q-start">診断をやり直す</button><button type="button" class="btn ghost sm" data-act="q-clear">診断を消す</button></div></div>`;
 }
@@ -1219,7 +1222,33 @@ function weightRadar(w){
 }
 /* 悩みごとに、成分表で数えている成分（辞書のタグと一致させる） */
 const CONCERN_ING = {dry:'セラミド・ヒアルロン酸・尿素など', oily:'ナイアシンアミド・ビタミンC誘導体など', rough:'グリチルリチン酸2K・アラントイン・パンテノールなど', spot:'ビタミンC誘導体・ナイアシンアミド・トラネキサム酸・アルブチンなど', firm:'ナイアシンアミド・レチノール・コエンザイムQ10・コラーゲンなど', sensitive:'セラミド・グリチルリチン酸2K・アラントインなど'};
-function diagResult(a, w, QS){
+/* 結果に出す成分は、よく知られた呼び名にそろえる（表示名だけ。数え方は変えない） */
+const FAMOUS = [
+  [/ユビキノン|ユビデカレノン|コエンザイムq10/,'コエンザイムQ10'], [/アスコルビ/,'ビタミンC誘導体'], [/ナイアシンアミド|ニコチン酸アミド/,'ナイアシンアミド'],
+  [/トラネキサム/,'トラネキサム酸'], [/アルブチン/,'アルブチン'], [/レチノ/,'レチノール'], [/幹細胞|順化培養/,'ヒト幹細胞培養液'],
+  [/セチルpgヒドロキシエチルパルミタミド/,'擬似セラミド'], [/セラミド/,'セラミド'], [/ヒアルロン/,'ヒアルロン酸'], [/コラーゲン/,'コラーゲン'],
+  [/ケラチン/,'ケラチン'], [/シルク/,'シルク'], [/ペプチド/,'ペプチド'], [/グリチルリチン/,'グリチルリチン酸2K'], [/トコフェロール|ビタミンe/,'ビタミンE'],
+  [/尿素|ウレア/,'尿素'], [/パンテノール/,'パンテノール'], [/アラントイン/,'アラントイン'], [/ピロクトンオラミン/,'ピロクトンオラミン'],
+  [/サリチル酸/,'サリチル酸'], [/硫酸(na|ナトリウム|アンモニウム|tea)/,'硫酸系洗浄成分'], [/オレフィン.*スルホン酸/,'オレフィンスルホン酸Na'], [/^(ココイル|ラウロイル|ミリストイル|ヤシ油脂肪酸アシル|n-ヤシ油脂肪酸アシル).*(na|k|tea|液)$/,'アミノ酸系洗浄成分'], [/ベタイン|スルタイン/,'ベタイン系洗浄成分'], [/グルコシド/,'糖系洗浄成分'], [/ミコナゾール/,'ミコナゾール'], [/ジメチコン|アモジメチコン/,'シリコーン'], [/アミノ酸|グルタミン酸|アラニン|グリシン|タウリン|アスパラギン|アルギニン/,'アミノ酸']
+];
+const famousName = n => { const k=key(n); for(const [re,d] of FAMOUS) if(re.test(k)) return d; return null; };
+const THEME_TAGS = {
+  shampoo:{mild:['mildSurf'], clean:['strongSurf','midSurf','sebum'], scalp:['scalp','scalpA'], repair:['repair'], smooth:['cond','silicone']},
+  conditioner:{smooth:['cond','silicone'], repair:['repair'], moist:['hum2'], light:['light']},
+  skincare:{moist:['hum2'], barrier:['occS'], light:['light'], beauty:['beauty']}
+};
+/* いまの診断で上位3つの商品に、その観点で数えた成分のうち、知られた名前のものを多い順に */
+function topIngredients(themeKey, cur, concerns){
+  if(!cur) return [];
+  let tags = (THEME_TAGS[S.cat]||{})[themeKey];
+  if(S.cat==='skincare' && themeKey==='concern') tags = concerns.length ? concerns : Object.keys(SKCore.SK_CONCERNS);
+  if(!tags) return [];
+  const top = cur.ev.filter(e=>!e.ngHits.length).sort((x,y)=>y.matchRaw-x.matchRaw).slice(0,3);
+  const cnt = new Map();
+  top.forEach(e=>{ const seen=new Set(); e.a.items.forEach(it=>{ if(!it.tags.some(t=>tags.includes(t))) return; const f=famousName(it.name); if(f && !seen.has(f)){ seen.add(f); cnt.set(f,(cnt.get(f)||0)+1); } }); });
+  return [...cnt.entries()].sort((x,y)=>y[1]-x[1]).slice(0,5).map(x=>x[0]);
+}
+function diagResult(a, w, QS, cur){
   const SKC = SKCore.SK_CONCERNS;
   const T = themes(), N = TYPE_N[S.cat]||{}, F = Object.assign({}, FAVOR[S.cat]||{});
   const order = T.slice().sort((x,y)=>w[y.k]-w[x.k]);
@@ -1237,13 +1266,17 @@ function diagResult(a, w, QS){
     lead = `答えから、${t2 ? `「${N[order[0].k]}」と「${N[t2.k]}」` : `「${N[order[0].k]}」`}をとくに重視して並べています。`;
   }
   const top = order.filter((t,i)=>i===0 ? max-min>=0.3 : w[t.k]>=1.4).slice(0,3);
-  const pts = top.map((t,i)=>`<li><span class="no">${i+1}</span><div><b>${esc(t.n)}</b><span class="fv">${esc(F[t.k]||'')}が上位に来やすくなります</span></div></li>`).join('');
+  const pts = top.map((t,i)=>{
+    const ings = topIngredients(t.k, cur, cs);
+    const fav = (S.cat==='skincare' && t.k==='concern' && cs.length) ? (ings.length ? `${cs.map(c=>SKC[c]).join('・')}に関係する成分が入った商品` : F.concern) : (F[t.k]||'');
+    return `<li><span class="no">${i+1}</span><div><b>${esc(t.n)}</b><span class="fv">${esc(fav)}がおすすめです。</span>${ings.length?`<span class="ings"><small>いまの上位の商品に入っている成分</small>${ings.map(n=>`<em>${esc(n)}</em>`).join('')}</span>`:''}</div></li>`;
+  }).join('');
   const lowT = order.filter(t=>w[t.k]<=0.8).slice(-1)[0];
   const low = lowT ? `<p class="low">「${esc(lowT.n)}」は控えめにしています。</p>` : '';
   return `<div class="type"><small>あなたの診断結果</small><b><span class="tmk">${esc(type)}</span><span class="sfx">タイプ</span></b><p>${esc(lead)}</p></div>
     <div><h3>重視していること</h3>${weightRadar(w)}</div>
-    ${pts?`<div><h3>この診断で上位に来やすい商品</h3><ol class="pts">${pts}</ol></div>`:''}${low}
-    <p class="xs muted">成分表に何が入っているかを数えた傾向です。効果や使い心地を約束するものではありません。</p>`;
+    ${pts?`<div><h3>あなたにおすすめの商品</h3><ol class="pts">${pts}</ol></div>`:''}${low}
+    <p class="xs muted">おすすめは、あなたの答えと成分表の中身を、決まったルールで照らし合わせたものです。効果や使い心地を約束するものではありません。</p>`;
 }
 function quizStart(){
   const a = ans() || {};
@@ -1556,7 +1589,7 @@ async function classify(pid){
 /* ---------- 全体描画とイベント ---------- */
 function render(){
   const cur = current();
-  renderCats(); renderDiag(); renderRank(cur); renderCompare(cur); renderPending(); renderForm();
+  renderCats(); renderDiag(cur); renderRank(cur); renderCompare(cur); renderPending(); renderForm();
   $('#reset-btn').textContent = S.resetArm ? 'もう一度押すと、追加した商品と診断を消します' : '追加した商品と診断を消す';
 }
 function setCompare(ids){ S.compare[S.cat]=ids; S.focus=null; save(); }

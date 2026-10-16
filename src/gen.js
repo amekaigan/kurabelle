@@ -40,7 +40,7 @@ const TAG_EXPLAIN = {
   strongSurf: "洗浄力の強い洗浄成分（硫酸系など）", midSurf: "中程度の洗浄成分", mildSurf: "やさしい洗浄成分（アミノ酸系・ベタイン系・糖系など）",
   cond: "髪の指通りをよくする", repair: "髪の補修", scalp: "頭皮をすこやかに保つ", scalpA: "医薬部外品で有効成分になることがある殺菌成分",
   sebum: "皮脂を取り除く", hum1: "基本の保湿剤", hum2: "高機能な保湿成分", occS: "水分の蒸発を防ぐ強い保護油", occM: "一般的な油分", light: "軽い使用感を出す",
-  beauty: "美容成分", extract: "植物などのエキス", fragrance: "香料", essoil: "精油", alcohol: "アルコール（エタノール）", uvabs: "紫外線吸収剤",
+  beauty: "ケア成分（ビタミン類など）", extract: "植物などのエキス", fragrance: "香料", essoil: "精油", alcohol: "アルコール（エタノール）", uvabs: "紫外線吸収剤",
   silicone: "シリコーン", paraben: "パラベン類", mineral: "鉱物油", menthol: "清涼剤", colorant: "着色料・染料", preserv: "防腐剤", strongpres: "少量で効く防腐剤（イソチアゾリノン系）",
   dry: "乾燥", oily: "ベタつき", rough: "肌あれ", spot: "シミ", firm: "ハリ", sensitive: "刺激を感じやすい肌"
 };
@@ -179,21 +179,27 @@ ${RK_ON || PREVIEW ? `<p>商品画像と販売ページへのリンクは、楽�
   return { head, foot };
 }
 /* 各ページの下に置く「迷ったら診断」
-   診断があるのはシャンプーと保湿クリームだけ（QUIZ_CATS）。それ以外のカテゴリでは、2つの診断があることを正直に書き、近いほうを先に出す。 */
-const QUIZ_CATS = ["shampoo", "skincare"];
+   診断があるカテゴリは QUIZ。それ以外のカテゴリでは、準備中と書き、近い診断を2つ出す。 */
+const QUIZ = {
+  shampoo: { n: "シャンプー", hash: "", what: "頭皮のタイプ" },
+  conditioner: { n: "コンディショナー", hash: "#conditioner", what: "髪の長さ" },
+  skincare: { n: "保湿クリーム", hash: "#skincare", what: "肌のタイプ" }
+};
+const QUIZ_CATS = Object.keys(QUIZ);
 const HAIR = new Set(["shampoo", "conditioner", "scalp", "colorrinse"]);
+const quizLink = (r, c) => `<a href="${r("app/")}${QUIZ[c].hash}">${QUIZ[c].n}の診断をはじめる</a>`;
 const quizCta = (r, cat) => {
-  const hair = `<a href="${r("app/")}">シャンプーの診断をはじめる</a>`, skin = `<a href="${r("app/")}#skincare">保湿クリームの診断をはじめる</a>`;
-  if (QUIZ_CATS.includes(cat)) return `<aside class="quiz-cta" aria-label="診断の案内"><div class="sticky">
+  if (QUIZ[cat]) return `<aside class="quiz-cta" aria-label="診断の案内"><div class="sticky">
   <h2>迷ったら、<br>${QUIZ_N}つの質問で。</h2>
-  <p>年代や${cat === "skincare" ? "肌" : "頭皮"}のタイプ、気になること、仕上がりの好みなどを選ぶと、成分表から合いそうな順に並べます。1分ほどで終わります。</p>
-  ${cat === "skincare" ? skin : hair}
+  <p>年代や${QUIZ[cat].what}、気になること、仕上がりの好みなどを選ぶと、成分表から合いそうな順に並べます。1分ほどで終わります。</p>
+  ${quizLink(r, cat)}
 </div></aside>`;
   const isHair = !cat || HAIR.has(cat), name = cat ? CAT_N[cat] : "";
+  const pick = isHair ? ["shampoo", "conditioner"] : ["skincare", "shampoo"];
   return `<aside class="quiz-cta" aria-label="診断の案内"><div class="sticky">
   <h2>迷ったら、<br>診断で。</h2>
-  <p>診断は、いまはシャンプーと保湿クリームの2つです。${name ? `${esc(name)}の診断は準備中です。` : ""}${QUIZ_N}つの質問に答えると、成分表から合いそうな順に並べます。</p>
-  <div class="two">${isHair ? hair + skin : skin + hair}</div>
+  <p>診断は、いまは${QUIZ_CATS.map(c => QUIZ[c].n).join("・")}の${QUIZ_CATS.length}つです。${name ? `${esc(name)}の診断は準備中です。` : ""}${QUIZ_N}つの質問に答えると、成分表から合いそうな順に並べます。</p>
+  <div class="two">${pick.map(c => quizLink(r, c)).join("")}</div>
 </div></aside>`;
 };
 function write(p, title, desc, body, opts = {}) {
@@ -255,7 +261,7 @@ function themesBlock(x) {
 /* ---------- 成分から見たタイプ（レーダーグラフ） ---------- */
 const AX_LABEL = {
   shampoo: { mild: "やさしい洗浄", clean: "洗浄力", scalp: "頭皮ケア", repair: "髪の補修", smooth: "指通り", gentle: "低刺激" },
-  skincare: { moist: "うるおい", barrier: "保護（フタ）", light: "軽さ", beauty: "美容成分", concern: "悩み対応", gentle: "低刺激" },
+  skincare: { moist: "うるおい", barrier: "保護（フタ）", light: "軽さ", beauty: "ケア成分", concern: "悩み対応", gentle: "低刺激" },
   conditioner: { smooth: "指通り", repair: "髪の補修", moist: "うるおい", light: "軽さ", gentle: "低刺激" }
 };
 const CAT_AVG = {}, CAT_RANK = {};
@@ -305,7 +311,7 @@ function typeBlock(x, r) {
     <li><span>平均より上</span><b class="mono">${ty.above}</b><i>${ty.total}つの観点のうち</i></li>
     <li><span>いちばん控えめ</span><b>${esc(ty.low.n)}</b><i>${ty.low.v.toFixed(1)}点</i></li>
   </ul>
-  <p class="small muted">成分表に何が入っているかを、決まったルールで5点満点に数えたものです。効果や使い心地を表すものではありません。数え方は<a href="${r("about/scoring/")}">点数のつけ方</a>に${QUIZ_CATS.includes(x.p.category) ? `、自分の${x.p.category === "skincare" ? "肌" : "髪や頭皮"}に合わせた順位は<a href="${r("app/")}${x.p.category === "skincare" ? "#skincare" : ""}">診断つきの比較ツール</a>に` : ""}あります。${QUIZ_CATS.includes(x.p.category) ? "" : `${esc(CAT_N[x.p.category])}の診断は準備中です。`}</p>
+  <p class="small muted">成分表に何が入っているかを、決まったルールで5点満点に数えたものです。効果や使い心地を表すものではありません。数え方は<a href="${r("about/scoring/")}">点数のつけ方</a>に${QUIZ[x.p.category] ? `、自分の${x.p.category === "skincare" ? "肌" : "髪や頭皮"}に合わせた順位は<a href="${r("app/")}${QUIZ[x.p.category].hash}">診断つきの比較ツール</a>に` : ""}あります。${QUIZ_CATS.includes(x.p.category) ? "" : `${esc(CAT_N[x.p.category])}の診断は準備中です。`}</p>
 </section>`;
 }
 function leadText(x) {

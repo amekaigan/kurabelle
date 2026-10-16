@@ -96,6 +96,27 @@ section{padding-top:30px;display:grid;gap:14px;scroll-margin-top:56px}
 .opt .tick{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line2);flex:none;display:grid;place-items:center;font-size:11px}
 .opt[aria-pressed="true"] .tick{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
 .wbars{display:grid;gap:6px}
+/* 診断の結果（掛け率は出さず、タイプ・重視していること・上位に来やすい成分で見せる） */
+.dres{display:grid;gap:16px}
+.dres .type{display:grid;gap:4px}
+.dres .type small{font-size:13px;color:var(--ink3)}
+.dres .type b{font-family:var(--f-display);font-size:26px;line-height:1.45}
+.dres .type .tmk{background:linear-gradient(transparent 62%,var(--hl) 62%,var(--hl) 92%,transparent 92%);-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.dres .type .sfx{white-space:nowrap;font-size:20px;margin-left:2px}
+.dres .type p{font-size:15px;color:var(--ink2);margin-top:4px}
+.dres h3{font-size:16px;margin:0 0 6px}
+.dres .radar{display:block;width:min(100%,340px);margin:0 auto}
+.dres .radar text{font-size:16px;fill:var(--ink2)}
+.dres .pts{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.dres .pts li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+.dres .pts .no{display:grid;place-items:center;width:28px;height:28px;border-radius:14px;background:var(--ink);color:var(--paper);font-weight:700;font-size:14px}
+.dres .pts b{font-size:16px}
+.dres .pts span{display:block;font-size:14px;color:var(--ink2);margin-top:2px}
+.dres .pts .fv{color:var(--ink);margin-top:4px}
+.dres .pts .ings{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.dres .pts .ings small{flex-basis:100%;font-size:12.5px;color:var(--ink3)}
+.dres .pts .ings em{font-style:normal;font-weight:700;font-size:14px;color:var(--ink);background:var(--hl-soft);border:1px solid var(--hl);border-radius:999px;padding:3px 10px}
+.dres .low{font-size:14px;color:var(--ink2)}
 .wbar{display:grid;grid-template-columns:7.5em minmax(0,1fr) 2.8em;align-items:center;gap:8px;font-size:13px}
 .wbar .track{height:6px;border-radius:3px;background:var(--line)}
 .wbar .fill{display:block;height:100%;border-radius:3px;background:var(--accent)}
@@ -948,11 +969,17 @@ const Q_CAT = {
     {id:'texture', q:'洗い上がりの好みは？', type:'one', opts:[['rich','しっとりまとまる',''],['any','こだわらない',''],['light','さっぱり軽い','']]},
     {id:'color', q:'ヘアカラーやパーマをしていますか？', type:'one', opts:[['yes','している',''],['no','していない','']]}
   ],
+  conditioner: [
+    {id:'concerns', q:'髪で気になることは？', note:'いくつでも選べます', type:'multi', opts:[['damage','パサつき・ダメージ'],['tangle','からまり・広がり'],['dry','乾燥してまとまらない'],['volume','ペタッとしてボリュームが出ない'],['sensitive','刺激を感じやすい']]},
+    {id:'texture', q:'仕上がりの好みは？', type:'one', opts:[['rich','しっとりまとまる',''],['any','こだわらない',''],['light','さらさら軽い','']]},
+    {id:'color', q:'ヘアカラーやパーマをしていますか？', type:'one', opts:[['yes','している',''],['no','していない','']]},
+    {id:'length', q:'髪の長さは？', type:'one', opts:[['short','ショート','耳が出るくらい'],['medium','ミディアム','肩につくくらい'],['long','ロング','肩より下']]}
+  ],
   skincare: [
     {id:'skin', q:'肌のタイプは？', type:'one', opts:[['dry','乾燥肌','洗顔後につっぱりやすい'],['normal','普通肌',''],['oily','脂性肌','顔全体がテカりやすい'],['combo','混合肌','Tゾーンだけテカる'],['unknown','わからない','']]},
-    {id:'concerns', q:'気になることは？', note:'いくつでも選べます', type:'multi', opts:[['dry','乾燥・つっぱり'],['oily','ベタつき・テカリ'],['rough','肌あれ・ニキビ'],['spot','シミ・くすみ'],['firm','ハリ・小じわ'],['sensitive','刺激を感じやすい']]},
+    {id:'concerns', q:'気になることは？', note:'いくつでも選べます', type:'multi', opts:[['dry','乾燥・つっぱり'],['oily','ベタつき・テカリ'],['rough','肌あれ・ニキビ'],['spot','シミ・くすみ（顔の明るさ）'],['firm','ハリ・小じわ'],['sensitive','刺激を感じやすい']]},
     {id:'texture', q:'使い心地の好みは？', type:'one', opts:[['rich','しっとり重め',''],['any','こだわらない',''],['light','さっぱり軽め','']]},
-    {id:'beauty', q:'美容成分はどのくらい重視しますか？', type:'one', opts:[['high','たくさん入っていてほしい',''],['mid','ほどほどでいい',''],['low','気にしない','']]}
+    {id:'beauty', q:'ビタミン類やナイアシンアミドなどのケア成分は？', note:'化粧水や乳液によく入っている成分です', type:'one', opts:[['high','多く入っているものがいい',''],['mid','ほどほどでいい',''],['low','こだわらない','']]}
   ]
 };
 const questionsFor = cat => Q_COMMON.concat(Q_CAT[cat], [ngQ(cat)]);
@@ -971,14 +998,22 @@ const RULES = {
     <dt>重み（診断）</dt><dd>全テーマ1.0から始め、回答に応じて加減します。性別・年代の補正は小さく、頭皮タイプや悩みの回答のほうが大きく効きます。メンズ：洗浄力・頭皮ケア＋0.5。10代：洗浄力＋0.5。30代：頭皮ケア＋0.25。40代：頭皮ケア＋0.5・補修＋0.25。50代以上：頭皮ケア・やさしさ・補修＋0.5</dd>
     <dt>相性スコアと順位</dt><dd>各テーマ（0.5刻み・5点満点）に重みを掛けた加重平均を100点に換算。S 85以上 ／ A 70以上 ／ B 55以上 ／ C 55未満。同じ点数は同じ順位</dd>
     <dt>避けたい成分</dt><dd>点数は変えず、該当商品に⚠を付けて分けて表示します（順位は付けません）</dd></dl>`,
+  conditioner: `<p>点数は成分表から読み取れる「処方の傾向」です。配合量・使用感・効果そのものは反映されません。洗い流すものなので、シャンプーの「洗浄」の観点はありません。診断では、答えに応じて観点の重みを変えます。</p><dl>
+    <dt>指通り</dt><dd>0.5 ＋ カチオン界面活性剤・カチオン性ポリマー・アミドアミン系の成分1種につき0.75 ＋ シリコーン1種につき0.5 ＋ 油分1種につき0.25（上限1.0）。ほとんどの商品にカチオン成分が入っているため、シャンプーより1種あたりの重みを小さくしています</dd>
+    <dt>髪の補修</dt><dd>0.5 ＋ 補修成分（ケラチン・シルク・セラミド・加水分解タンパク・アミノ酸など）1種につき0.75（シャンプーと同じ）</dd>
+    <dt>うるおい</dt><dd>0.5 ＋ 基本の保湿剤（グリセリン・BG・アミノ酸など）1種につき0.5（上限2.0）＋ 高機能保湿成分（ヒアルロン酸・セラミド類・PCA-Naなど）1種につき0.75（保湿クリームと同じ）</dd>
+    <dt>仕上がりの軽さ</dt><dd>5.0 − 強い保護油1種につき0.75 − 油分とシリコーン（高級アルコールを含む）の4種目から1種につき0.5 ＋ 軽さを出す成分1種につき0.5（上限1.0）。油分が少ないほど高くなります。しっとり重めが好きな人には、低いほうが合うこともあります</dd>
+    <dt>刺激の少なさ</dt><dd>シャンプーと同じ計算です</dd>
+    <dt>重み（診断）</dt><dd>全観点1.0から始めます。いちばん強く効くのは「気になること」です。パサつき・ダメージ：補修＋2.5・指通り＋0.5。からまり・広がり：指通り＋2.5。乾燥してまとまらない：うるおい＋2.5。ボリュームが出ない：軽さ＋2.5・指通り×0.7。刺激を感じやすい：刺激の少なさ＋2.5。仕上がりの好み（しっとり：うるおい＋0.75・指通り＋0.25・軽さ×0.6、さらさら：軽さ＋1）と髪の長さ（ロング：指通り＋0.75・補修＋0.25、ショート：軽さ＋0.25）は、それより小さく効きます。カラー・パーマ：補修＋1・刺激の少なさ＋0.5。メンズ：軽さ＋0.25。40代：補修・うるおい＋0.25。50代以上：補修・うるおい＋0.5</dd>
+    <dt>相性スコアと順位</dt><dd>シャンプーと同じ計算です（診断をしていないときは、5つの観点の平均）</dd></dl>`,
   skincare: `<p>点数は成分表から読み取れる「処方の傾向」です。配合量・使用感・効果そのものは反映されません。</p><dl>
     <dt>うるおい補給</dt><dd>0.5 ＋ 基本の保湿剤（グリセリン・BGなど）1種につき0.5（上限2.0）＋ 高機能保湿成分（ヒアルロン酸・セラミド類・尿素系など）1種につき0.75</dd>
     <dt>保護力（フタ）</dt><dd>0.5 ＋ 強い保護油（ワセリン・ミツロウ・鉱物油など）1種につき1.25 ＋ 一般的な油分・シリコーン・高級アルコール1種につき0.5</dd>
     <dt>軽さ</dt><dd>3.5 − 強い保護油1種につき0.75 − 3種目以降の油分1種につき0.25 ＋ 軽さを出す成分1種につき0.5（上限1.5）</dd>
-    <dt>美容成分</dt><dd>0.5 ＋ 美容成分（ナイアシンアミド・ビタミン類・Q10など）1種につき0.75 ＋ エキス1種につき0.25（上限1.0）</dd>
+    <dt>ケア成分（ビタミン類など）</dt><dd>0.5 ＋ ケア成分（ナイアシンアミド・ビタミン類・Q10など）1種につき0.75 ＋ エキス1種につき0.25（上限1.0）</dd>
     <dt>悩みへの対応</dt><dd>選んだ悩みごとに 0.5 ＋ 関連成分1種につき1.25（有効成分なら＋0.5）を計算して平均。悩みを選んでいなければ6つの悩みの平均</dd>
     <dt>刺激の少なさ</dt><dd>5.0 − 香料1.0 − アルコール1.0 − 紫外線吸収剤0.75 − メントール0.75 − 精油0.5 − 着色料0.5 − イソチアゾリノン系1.0 − 強い洗浄成分0.75 − 2種目以降の防腐剤1種につき0.5</dd>
-    <dt>重み（診断）</dt><dd>メンズ：うるおい・軽さ＋0.5。10代：軽さ・刺激の少なさ＋0.5。30代：うるおい＋0.5・美容＋0.25。40代：うるおい＋1・保護＋0.5・美容＋0.5。50代以上：うるおい＋1・保護＋1・美容＋0.5・軽さ×0.8</dd>
+    <dt>重み（診断）</dt><dd>全観点1.0から始めます。いちばん強く効くのは「気になること」です。シミ・くすみ、ハリ・小じわ、肌あれ：悩みへの対応＋2（シミとハリはケア成分＋0.5）。乾燥：うるおい＋1.5・保護＋0.5・悩み＋1。ベタつき：軽さ＋1・悩み＋1。刺激を感じやすい：刺激の少なさ＋2・悩み＋1。肌のタイプ（乾燥肌：うるおい・保護＋1、脂性肌：軽さ＋1.25、混合肌：軽さ・うるおい＋0.5）と使い心地の好み（しっとり：保護＋0.75、さっぱり：軽さ＋1）は、それより小さく効きます。メンズ：うるおい・軽さ＋0.5。40代：うるおい＋1・保護＋0.5・ケア成分＋0.5</dd>
     <dt>相性スコアと順位</dt><dd>シャンプーと同じ計算です</dd></dl>`
 };
 
@@ -1121,7 +1156,7 @@ function renderCats(){
 }
 
 /* ---------- 診断 ---------- */
-function renderDiag(){
+function renderDiag(cur){
   const body=$('#diag-body'), meta=$('#diag-meta');
   const QS = questionsFor(S.cat);
   if(S.quiz){
@@ -1141,14 +1176,12 @@ function renderDiag(){
       </div></div>`;
     return;
   }
-  const a = ans(), w=weights(S.cat, a), max=Math.max(...Object.values(w));
-  const wb = `<div class="wbars">${themes().map(t=>`<div class="wbar"><span>${t.n}</span><span class="track"><span class="fill" style="width:${Math.round(w[t.k]/max*100)}%"></span></span><span class="mono xs muted" style="text-align:right">×${+w[t.k].toFixed(2)}</span></div>`).join('')}</div>`;
+  const a = ans(), w=weights(S.cat, a);
   if(!a){
     meta.textContent='未診断';
     body.innerHTML = `<div style="display:grid;gap:14px">
-      <p>${CATS[S.cat].n}の診断はまだです。いまは6つのテーマを<b>同じ重み</b>で採点しています。</p>
-      <div class="row"><button type="button" class="btn" data-act="q-start">${CATS[S.cat].n}の診断をする（${QS.length}問・1分）</button></div>
-      <details class="more"><summary>いまの重みを見る</summary>${wb}</details></div>`;
+      <p>${CATS[S.cat].n}の診断はまだです。いまは${themes().length}つの観点を<b>同じだけ</b>重視して並べています。</p>
+      <div class="row"><button type="button" class="btn" data-act="q-start">${CATS[S.cat].n}の診断をする（${QS.length}問・1分）</button></div></div>`;
     return;
   }
   const chips=[];
@@ -1159,15 +1192,102 @@ function renderDiag(){
     else { const o=Q.opts.find(o=>o[0]===v); if(o && !['none','unknown','any'].includes(v)) chips.push(o[1]); }
   });
   const ngMap = CATS[S.cat].ng;
-  const tn = Object.fromEntries(themes().map(t=>[t.k,t.s]));
-  const adj = CATS[S.cat].adjust(a);
-  const adjTxt = adj.map(([lab,add,mul])=>`${lab}（${Object.entries(add).map(([k,v])=>`${tn[k]}＋${v}`).concat(Object.entries(mul).map(([k,v])=>`${tn[k]}×${v}`)).join('・')}）`).join('、');
   meta.textContent='診断済み';
-  body.innerHTML = `<div style="display:grid;gap:14px">
+  body.innerHTML = `<div class="dres">${diagResult(a, w, QS, cur)}
     <div class="row">${chips.map(c=>`<span class="chip acc">${esc(c)}</span>`).join('')}${(a.ng||[]).filter(n=>ngMap[n]).map(n=>`<span class="chip warn">避けたい：${esc(ngMap[n])}</span>`).join('')}</div>
-    <div style="display:grid;gap:6px"><p class="small muted">あなたの重視度（相性スコアの計算に使う重み）</p>${wb}</div>
-    ${adjTxt?`<p class="adj">性別・年代の補正：${esc(adjTxt)}。ほかの回答による加減のほうが大きく効きます。</p>`:''}
     <div class="row"><button type="button" class="btn ghost sm" data-act="q-start">診断をやり直す</button><button type="button" class="btn ghost sm" data-act="q-clear">診断を消す</button></div></div>`;
+}
+/* ---------- 診断の結果の見せ方 ----------
+   重みの数字は出さない。いちばん重視している観点からタイプ名を作り、
+   「なぜ重視したか（どの回答から）」と「上位に来やすい商品の特徴（成分）」を言葉で示す。 */
+const TYPE_N = {
+  shampoo:{mild:'やさしい洗浄', clean:'洗浄力', scalp:'頭皮ケア', repair:'髪の補修', smooth:'指通り', gentle:'低刺激'},
+  conditioner:{smooth:'指通り', repair:'髪の補修', moist:'うるおい', light:'軽い仕上がり', gentle:'低刺激'},
+  skincare:{moist:'うるおい', barrier:'保護', light:'軽い使い心地', beauty:'ケア成分', concern:'悩みケア', gentle:'低刺激'}
+};
+const FAVOR = {
+  shampoo:{mild:'アミノ酸系・ベタイン系など、マイルドな洗浄成分が主体の商品', clean:'硫酸系など、洗浄力の高い洗浄成分が主体の商品', scalp:'グリチルリチン酸2K・ピロクトンオラミンなど、頭皮ケア成分が入った商品', repair:'ケラチン・セラミド・加水分解タンパクなど、補修成分が多い商品', smooth:'カチオン成分・シリコーン・油分が入った商品', gentle:'香料・アルコール・メントールなどが入っていない商品'},
+  conditioner:{smooth:'カチオン成分・シリコーンが多い商品', repair:'ケラチン・セラミド・加水分解タンパクなど、補修成分が多い商品', moist:'アミノ酸・ヒアルロン酸・PCA-Naなど、保湿成分が多い商品', light:'油分やシリコーンが少なめの商品', gentle:'香料・アルコールなどが入っていない商品'},
+  skincare:{moist:'ヒアルロン酸・セラミドなど、保湿成分が多い商品', barrier:'ワセリン・シア脂など、フタをする油分が入った商品', light:'油分が少なめの商品', beauty:'ナイアシンアミド・ビタミン類など、ケア成分が多い商品', concern:'選んだ悩みに関係する成分が入った商品', gentle:'香料・アルコール・紫外線吸収剤などが入っていない商品'}
+};
+function weightRadar(w){
+  const T = themes(), n = T.length, max = Math.max(...T.map(t=>w[t.k])), cx=150, cy=128, R=88;
+  const pt = (i,r)=>{ const a=-Math.PI/2+i*2*Math.PI/n; return [cx+r*Math.cos(a), cy+r*Math.sin(a)]; };
+  const ring = f => T.map((_,i)=>pt(i,R*f).map(v=>v.toFixed(1)).join(',')).join(' ');
+  const poly = T.map((t,i)=>pt(i,R*Math.max(0.15,Math.sqrt(w[t.k]/max))).map(v=>v.toFixed(1)).join(',')).join(' ');
+  const lab = T.map((t,i)=>{ const [x,y]=pt(i,R+22); const anc = Math.abs(x-cx)<8?'middle':x>cx?'start':'end'; return `<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="${anc}">${esc(t.s)}</text>`; }).join('');
+  return `<svg class="radar" viewBox="-30 0 360 256" role="img" aria-label="重視していることのグラフ">
+    ${[1,0.66,0.33].map(f=>`<polygon points="${ring(f)}" fill="none" stroke="var(--line)" stroke-width="1"/>`).join('')}
+    <polygon points="${poly}" fill="var(--hl)" fill-opacity=".55" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>${lab}</svg>`;
+}
+/* 悩みごとに、成分表で数えている成分（辞書のタグと一致させる） */
+const CONCERN_ING = {dry:'セラミド・ヒアルロン酸・尿素など', oily:'ナイアシンアミド・ビタミンC誘導体など', rough:'グリチルリチン酸2K・アラントイン・パンテノールなど', spot:'ビタミンC誘導体・ナイアシンアミド・トラネキサム酸・アルブチンなど', firm:'ナイアシンアミド・レチノール・コエンザイムQ10・コラーゲンなど', sensitive:'セラミド・グリチルリチン酸2K・アラントインなど'};
+/* 結果に出す成分は、よく知られた呼び名にそろえる（表示名だけ。数え方は変えない） */
+const FAMOUS = [
+  [/ユビキノン|ユビデカレノン|コエンザイムq10/,'コエンザイムQ10'], [/アスコルビ/,'ビタミンC誘導体'], [/ナイアシンアミド|ニコチン酸アミド/,'ナイアシンアミド'],
+  [/トラネキサム/,'トラネキサム酸'], [/アルブチン/,'アルブチン'], [/レチノ/,'レチノール'], [/幹細胞|順化培養/,'ヒト幹細胞培養液'],
+  [/セチルpgヒドロキシエチルパルミタミド/,'擬似セラミド'], [/セラミド/,'セラミド'], [/ヒアルロン/,'ヒアルロン酸'], [/コラーゲン/,'コラーゲン'],
+  [/ケラチン/,'ケラチン'], [/シルク/,'シルク'], [/ペプチド/,'ペプチド'], [/グリチルリチン/,'グリチルリチン酸2K'], [/トコフェロール|ビタミンe/,'ビタミンE'],
+  [/尿素|ウレア/,'尿素'], [/パンテノール/,'パンテノール'], [/アラントイン/,'アラントイン'], [/ピロクトンオラミン/,'ピロクトンオラミン'],
+  [/サリチル酸/,'サリチル酸'], [/硫酸(na|ナトリウム|アンモニウム|tea)/,'硫酸系洗浄成分'], [/オレフィン.*スルホン酸/,'オレフィンスルホン酸Na'], [/^(ココイル|ラウロイル|ミリストイル|ヤシ油脂肪酸アシル|n-ヤシ油脂肪酸アシル).*(na|k|tea|液)$/,'アミノ酸系洗浄成分'], [/ベタイン|スルタイン/,'ベタイン系洗浄成分'], [/グルコシド/,'糖系洗浄成分'], [/ミコナゾール/,'ミコナゾール'], [/ジメチコン|アモジメチコン/,'シリコーン'], [/アミノ酸|グルタミン酸|アラニン|グリシン|タウリン|アスパラギン|アルギニン/,'アミノ酸']
+];
+const CONCERN_N = {
+  shampoo:{dandruff:'フケ・かゆみ', oily:'ベタつき・ニオイ', damage:'ダメージ', volume:'ボリューム', dry:'頭皮の乾燥', sensitive:'刺激'},
+  conditioner:{damage:'ダメージ', tangle:'からまり', dry:'乾燥', volume:'ボリューム', sensitive:'刺激'}
+};
+const famousName = n => { const k=key(n); for(const [re,d] of FAMOUS) if(re.test(k)) return d; return null; };
+const famousRank = d => FAMOUS.findIndex(x=>x[1]===d); /* 先に並べたものほど、よく知られた名前として前に出す */
+const THEME_TAGS = {
+  shampoo:{mild:['mildSurf'], clean:['strongSurf','midSurf','sebum'], scalp:['scalp','scalpA'], repair:['repair'], smooth:['cond','silicone']},
+  conditioner:{smooth:['cond','silicone'], repair:['repair'], moist:['hum2'], light:['light']},
+  skincare:{moist:['hum2'], barrier:['occS'], light:['light'], beauty:['beauty']}
+};
+/* いまの診断で上位3つの商品に、その観点で数えた成分のうち、知られた名前のものを多い順に */
+function topIngredients(themeKey, cur, concerns){
+  if(!cur) return [];
+  let tags = (THEME_TAGS[S.cat]||{})[themeKey];
+  if(S.cat==='skincare' && themeKey==='concern') tags = concerns.length ? concerns : Object.keys(SKCore.SK_CONCERNS);
+  if(!tags) return [];
+  const top = cur.ev.filter(e=>!e.ngHits.length).sort((x,y)=>y.matchRaw-x.matchRaw).slice(0,3);
+  const cnt = new Map();
+  top.forEach(e=>{ const seen=new Set(); e.a.items.forEach(it=>{ if(!it.tags.some(t=>tags.includes(t))) return; const f=famousName(it.name); if(f && !seen.has(f)){ seen.add(f); cnt.set(f,(cnt.get(f)||0)+1); } }); });
+  return [...cnt.entries()].sort((x,y)=>famousRank(x[0])-famousRank(y[0]) || y[1]-x[1]).slice(0,4).map(x=>x[0]);
+}
+function diagResult(a, w, QS, cur){
+  const SKC = SKCore.SK_CONCERNS;
+  const T = themes(), N = TYPE_N[S.cat]||{}, F = Object.assign({}, FAVOR[S.cat]||{});
+  const order = T.slice().sort((x,y)=>w[y.k]-w[x.k]);
+  const max = w[order[0].k], min = w[order[order.length-1].k];
+  const cs = (a.concerns||[]).filter(c=>SKC[c]);
+  if(S.cat==='skincare' && cs.length) F.concern = `${cs.map(c=>`${SKC[c]}に関係する成分（${CONCERN_ING[c]}）`).join('や、')}が入った商品`;
+  let type, lead;
+  if(max-min < 0.6){ type='バランス'; lead='どれか1つに偏らず、すべての観点を同じくらい重視して並べています。'; }
+  else if(CONCERN_N[S.cat] && (a.concerns||[]).some(c=>CONCERN_N[S.cat][c])){
+    const names = (a.concerns||[]).map(c=>CONCERN_N[S.cat][c]).filter(Boolean).slice(0,3);
+    const t2 = order[1] && w[order[1].k] >= max-0.5 && w[order[1].k] >= 1.4 ? order[1] : null;
+    type = `${names.join('・')}が気になる`;
+    lead = `気になること（${names.join('・')}）に合わせて、${t2 ? `「${N[order[0].k]}」と「${N[t2.k]}」` : `「${N[order[0].k]}」`}をとくに重視して並べています。`;
+  }
+  else if(S.cat==='skincare' && order[0].k==='concern' && cs.length){
+    type = `${cs.map(c=>SKC[c]).join('・')}が気になる`;
+    lead = `気になること（${cs.map(c=>SKC[c]).join('・')}）に関係する成分が入っているかを、いちばん重視して並べています。`;
+  } else {
+    const t2 = order[1] && w[order[1].k] >= max-0.5 && w[order[1].k] >= 1.4 ? order[1] : null;
+    type = t2 ? `${N[order[0].k]} × ${N[t2.k]}` : `${N[order[0].k]}重視`;
+    lead = `答えから、${t2 ? `「${N[order[0].k]}」と「${N[t2.k]}」` : `「${N[order[0].k]}」`}をとくに重視して並べています。`;
+  }
+  const top = order.filter((t,i)=>i===0 ? max-min>=0.6 : w[t.k]>=1.4).slice(0,3);
+  const pts = top.map((t,i)=>{
+    const ings = topIngredients(t.k, cur, cs);
+    const fav = (S.cat==='skincare' && t.k==='concern' && cs.length) ? (ings.length ? `${cs.map(c=>SKC[c]).join('・')}に関係する成分が入った商品` : F.concern) : (F[t.k]||'');
+    return `<li><span class="no">${i+1}</span><div><b>${esc(t.n)}</b><span class="fv">${esc(fav)}がおすすめです。</span>${ings.length?`<span class="ings"><small>いまの上位の商品に入っている成分</small>${ings.map(n=>`<em>${esc(n)}</em>`).join('')}</span>`:''}</div></li>`;
+  }).join('');
+  const lowT = order.filter(t=>w[t.k]<=0.8).slice(-1)[0];
+  const low = lowT ? `<p class="low">「${esc(lowT.n)}」は控えめにしています。</p>` : '';
+  return `<div class="type"><small>あなたの診断結果</small><b><span class="tmk">${esc(type)}</span><span class="sfx">タイプ</span></b><p>${esc(lead)}</p></div>
+    <div><h3>重視していること</h3>${weightRadar(w)}</div>
+    ${pts?`<div><h3>あなたにおすすめの商品</h3><ol class="pts">${pts}</ol></div>`:''}${low}
+    <p class="xs muted">おすすめは、あなたの答えと成分表の中身を、決まったルールで照らし合わせたものです。効果や使い心地を約束するものではありません。</p>`;
 }
 function quizStart(){
   const a = ans() || {};
@@ -1480,7 +1600,7 @@ async function classify(pid){
 /* ---------- 全体描画とイベント ---------- */
 function render(){
   const cur = current();
-  renderCats(); renderDiag(); renderRank(cur); renderCompare(cur); renderPending(); renderForm();
+  renderCats(); renderDiag(cur); renderRank(cur); renderCompare(cur); renderPending(); renderForm();
   $('#reset-btn').textContent = S.resetArm ? 'もう一度押すと、追加した商品と診断を消します' : '追加した商品と診断を消す';
 }
 function setCompare(ids){ S.compare[S.cat]=ids; S.focus=null; save(); }
@@ -1554,8 +1674,8 @@ $('#reset-btn').addEventListener('click', ()=>{
 });
 
 load();
-/* サイトの各ページから「#skincare」「#shampoo」付きで来たら、そのカテゴリを開く */
-(function(){ const h = location.hash.slice(1); if (h === 'skincare' || h === 'shampoo') S.cat = h; })();
+/* サイトの各ページから「#skincare」「#conditioner」などのカテゴリ付きで来たら、そのカテゴリを開く */
+(function(){ const h = location.hash.slice(1); if (CATS[h] && inApp(h)) S.cat = h; })();
 render();
 loadCatalog();
 initClaude();

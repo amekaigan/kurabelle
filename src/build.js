@@ -8,4 +8,6 @@ const SITE = process.env.SITE_URL || "https://kurabelle.com";
 process.env.RAKUTEN_AFFILIATE_ID = process.env.RAKUTEN_AFFILIATE_ID || "588643c2.b560f3b3.588643c3.4dd69634";
 fs.rmSync(DIST, { recursive: true, force: true });
 execFileSync(process.execPath, [path.join(__dirname, "gen.js"), path.join(ROOT, "data/products.json"), DIST, "--site", SITE, "--app", path.join(ROOT, "app/index.html")], { stdio: "inherit", env: process.env });
+// いつ作ったサイトかを記録（自動の反映が動いているかの確認に使う）
+fs.writeFileSync(path.join(DIST, "version.txt"), `built ${new Date().toISOString()} ${process.env.CF_PAGES_COMMIT_SHA || ""}\n`);
 console.log("built:", DIST);

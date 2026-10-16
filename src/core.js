@@ -518,23 +518,24 @@ function scoreConditioner(items){
 function adjConditioner(a){
   const out=[];
   if(!a) return out;
-  if(a.gender==='men') out.push(['メンズ', {light:0.5}, {}]);
-  const age = {teen:['10代',{light:0.5},{}], '30s':['30代',{repair:0.25},{}], '40s':['40代',{repair:0.25,moist:0.25},{}], '50s':['50代以上',{repair:0.5,moist:0.5},{}]}[a.age];
+  if(a.gender==='men') out.push(['メンズ', {light:0.25}, {}]);
+  const age = {teen:['10代',{light:0.25},{}], '30s':['30代',{repair:0.25},{}], '40s':['40代',{repair:0.25,moist:0.25},{}], '50s':['50代以上',{repair:0.5,moist:0.5},{}]}[a.age];
   if(age) out.push(age);
   return out;
 }
 function weightsConditioner(w, a){
+  /* 2026-10-17 見直し：仕上がりの好みや髪の長さより、選んだ悩みが強く効くようにした（保湿クリームと同じ考え方） */
   const c=a.concerns||[];
-  if(c.includes('damage')){w.repair+=1.5;w.smooth+=0.5;}
-  if(c.includes('tangle')) w.smooth+=1.5;
-  if(c.includes('dry')) w.moist+=1.5;
-  if(c.includes('volume')){w.light+=1.5;w.smooth*=0.7;}
-  if(c.includes('sensitive')) w.gentle+=2;
-  if(a.texture==='rich'){w.moist+=1;w.smooth+=0.5;w.light*=0.5;}
-  else if(a.texture==='light') w.light+=1.5;
+  if(c.includes('damage')){w.repair+=2.5;w.smooth+=0.5;}
+  if(c.includes('tangle')) w.smooth+=2.5;
+  if(c.includes('dry')){w.moist+=2.5;w.smooth+=0.25;}
+  if(c.includes('volume')){w.light+=2.5;w.smooth*=0.7;}
+  if(c.includes('sensitive')) w.gentle+=2.5;
+  if(a.texture==='rich'){w.moist+=0.75;w.smooth+=0.25;w.light*=0.6;}
+  else if(a.texture==='light') w.light+=1;
   if(a.color==='yes'){w.repair+=1;w.gentle+=0.5;}
-  if(a.length==='long'){w.smooth+=1;w.repair+=0.5;}
-  else if(a.length==='short') w.light+=0.5;
+  if(a.length==='long'){w.smooth+=0.75;w.repair+=0.25;}
+  else if(a.length==='short') w.light+=0.25;
 }
 
 const CATS = {

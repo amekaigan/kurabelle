@@ -1004,7 +1004,7 @@ const RULES = {
     <dt>うるおい</dt><dd>0.5 ＋ 基本の保湿剤（グリセリン・BG・アミノ酸など）1種につき0.5（上限2.0）＋ 高機能保湿成分（ヒアルロン酸・セラミド類・PCA-Naなど）1種につき0.75（保湿クリームと同じ）</dd>
     <dt>仕上がりの軽さ</dt><dd>5.0 − 強い保護油1種につき0.75 − 油分とシリコーン（高級アルコールを含む）の4種目から1種につき0.5 ＋ 軽さを出す成分1種につき0.5（上限1.0）。油分が少ないほど高くなります。しっとり重めが好きな人には、低いほうが合うこともあります</dd>
     <dt>刺激の少なさ</dt><dd>シャンプーと同じ計算です</dd>
-    <dt>重み（診断）</dt><dd>全観点1.0から始めます。パサつき・ダメージ：補修＋1.5・指通り＋0.5。からまり・広がり：指通り＋1.5。乾燥してまとまらない：うるおい＋1.5。ボリュームが出ない：軽さ＋1.5・指通り×0.7。刺激を感じやすい：刺激の少なさ＋2。しっとり好み：うるおい＋1・指通り＋0.5・軽さ×0.5。さらさら好み：軽さ＋1.5。カラー・パーマ：補修＋1・刺激の少なさ＋0.5。ロング：指通り＋1・補修＋0.5。ショート：軽さ＋0.5。メンズ：軽さ＋0.5。40代：補修・うるおい＋0.25。50代以上：補修・うるおい＋0.5</dd>
+    <dt>重み（診断）</dt><dd>全観点1.0から始めます。いちばん強く効くのは「気になること」です。パサつき・ダメージ：補修＋2.5・指通り＋0.5。からまり・広がり：指通り＋2.5。乾燥してまとまらない：うるおい＋2.5。ボリュームが出ない：軽さ＋2.5・指通り×0.7。刺激を感じやすい：刺激の少なさ＋2.5。仕上がりの好み（しっとり：うるおい＋0.75・指通り＋0.25・軽さ×0.6、さらさら：軽さ＋1）と髪の長さ（ロング：指通り＋0.75・補修＋0.25、ショート：軽さ＋0.25）は、それより小さく効きます。カラー・パーマ：補修＋1・刺激の少なさ＋0.5。メンズ：軽さ＋0.25。40代：補修・うるおい＋0.25。50代以上：補修・うるおい＋0.5</dd>
     <dt>相性スコアと順位</dt><dd>シャンプーと同じ計算です（診断をしていないときは、5つの観点の平均）</dd></dl>`,
   skincare: `<p>点数は成分表から読み取れる「処方の傾向」です。配合量・使用感・効果そのものは反映されません。</p><dl>
     <dt>うるおい補給</dt><dd>0.5 ＋ 基本の保湿剤（グリセリン・BGなど）1種につき0.5（上限2.0）＋ 高機能保湿成分（ヒアルロン酸・セラミド類・尿素系など）1種につき0.75</dd>
@@ -1231,7 +1231,12 @@ const FAMOUS = [
   [/尿素|ウレア/,'尿素'], [/パンテノール/,'パンテノール'], [/アラントイン/,'アラントイン'], [/ピロクトンオラミン/,'ピロクトンオラミン'],
   [/サリチル酸/,'サリチル酸'], [/硫酸(na|ナトリウム|アンモニウム|tea)/,'硫酸系洗浄成分'], [/オレフィン.*スルホン酸/,'オレフィンスルホン酸Na'], [/^(ココイル|ラウロイル|ミリストイル|ヤシ油脂肪酸アシル|n-ヤシ油脂肪酸アシル).*(na|k|tea|液)$/,'アミノ酸系洗浄成分'], [/ベタイン|スルタイン/,'ベタイン系洗浄成分'], [/グルコシド/,'糖系洗浄成分'], [/ミコナゾール/,'ミコナゾール'], [/ジメチコン|アモジメチコン/,'シリコーン'], [/アミノ酸|グルタミン酸|アラニン|グリシン|タウリン|アスパラギン|アルギニン/,'アミノ酸']
 ];
+const CONCERN_N = {
+  shampoo:{dandruff:'フケ・かゆみ', oily:'ベタつき・ニオイ', damage:'ダメージ', volume:'ボリューム', dry:'頭皮の乾燥', sensitive:'刺激'},
+  conditioner:{damage:'ダメージ', tangle:'からまり', dry:'乾燥', volume:'ボリューム', sensitive:'刺激'}
+};
 const famousName = n => { const k=key(n); for(const [re,d] of FAMOUS) if(re.test(k)) return d; return null; };
+const famousRank = d => FAMOUS.findIndex(x=>x[1]===d); /* 先に並べたものほど、よく知られた名前として前に出す */
 const THEME_TAGS = {
   shampoo:{mild:['mildSurf'], clean:['strongSurf','midSurf','sebum'], scalp:['scalp','scalpA'], repair:['repair'], smooth:['cond','silicone']},
   conditioner:{smooth:['cond','silicone'], repair:['repair'], moist:['hum2'], light:['light']},
@@ -1246,7 +1251,7 @@ function topIngredients(themeKey, cur, concerns){
   const top = cur.ev.filter(e=>!e.ngHits.length).sort((x,y)=>y.matchRaw-x.matchRaw).slice(0,3);
   const cnt = new Map();
   top.forEach(e=>{ const seen=new Set(); e.a.items.forEach(it=>{ if(!it.tags.some(t=>tags.includes(t))) return; const f=famousName(it.name); if(f && !seen.has(f)){ seen.add(f); cnt.set(f,(cnt.get(f)||0)+1); } }); });
-  return [...cnt.entries()].sort((x,y)=>y[1]-x[1]).slice(0,5).map(x=>x[0]);
+  return [...cnt.entries()].sort((x,y)=>famousRank(x[0])-famousRank(y[0]) || y[1]-x[1]).slice(0,4).map(x=>x[0]);
 }
 function diagResult(a, w, QS, cur){
   const SKC = SKCore.SK_CONCERNS;
@@ -1256,7 +1261,13 @@ function diagResult(a, w, QS, cur){
   const cs = (a.concerns||[]).filter(c=>SKC[c]);
   if(S.cat==='skincare' && cs.length) F.concern = `${cs.map(c=>`${SKC[c]}に関係する成分（${CONCERN_ING[c]}）`).join('や、')}が入った商品`;
   let type, lead;
-  if(max-min < 0.3){ type='バランス'; lead='どれか1つに偏らず、すべての観点を同じくらい重視して並べています。'; }
+  if(max-min < 0.6){ type='バランス'; lead='どれか1つに偏らず、すべての観点を同じくらい重視して並べています。'; }
+  else if(CONCERN_N[S.cat] && (a.concerns||[]).some(c=>CONCERN_N[S.cat][c])){
+    const names = (a.concerns||[]).map(c=>CONCERN_N[S.cat][c]).filter(Boolean).slice(0,3);
+    const t2 = order[1] && w[order[1].k] >= max-0.5 && w[order[1].k] >= 1.4 ? order[1] : null;
+    type = `${names.join('・')}が気になる`;
+    lead = `気になること（${names.join('・')}）に合わせて、${t2 ? `「${N[order[0].k]}」と「${N[t2.k]}」` : `「${N[order[0].k]}」`}をとくに重視して並べています。`;
+  }
   else if(S.cat==='skincare' && order[0].k==='concern' && cs.length){
     type = `${cs.map(c=>SKC[c]).join('・')}が気になる`;
     lead = `気になること（${cs.map(c=>SKC[c]).join('・')}）に関係する成分が入っているかを、いちばん重視して並べています。`;
@@ -1265,7 +1276,7 @@ function diagResult(a, w, QS, cur){
     type = t2 ? `${N[order[0].k]} × ${N[t2.k]}` : `${N[order[0].k]}重視`;
     lead = `答えから、${t2 ? `「${N[order[0].k]}」と「${N[t2.k]}」` : `「${N[order[0].k]}」`}をとくに重視して並べています。`;
   }
-  const top = order.filter((t,i)=>i===0 ? max-min>=0.3 : w[t.k]>=1.4).slice(0,3);
+  const top = order.filter((t,i)=>i===0 ? max-min>=0.6 : w[t.k]>=1.4).slice(0,3);
   const pts = top.map((t,i)=>{
     const ings = topIngredients(t.k, cur, cs);
     const fav = (S.cat==='skincare' && t.k==='concern' && cs.length) ? (ings.length ? `${cs.map(c=>SKC[c]).join('・')}に関係する成分が入った商品` : F.concern) : (F[t.k]||'');

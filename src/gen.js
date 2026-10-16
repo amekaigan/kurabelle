@@ -27,6 +27,9 @@ const sprite = (html, extra = []) => { const ids = [...new Set([...[...html.matc
 const PH = { shampoo: "ph-bottle", conditioner: "ph-bottle", scalp: "ph-bottle", serum: "ph-bottle", handsoap: "ph-bottle", colorrinse: "ph-bottle", skincare: "ph-jar", facewash: "ph-tube" };
 
 /* ---------- 共通 ---------- */
+/* CSS・JSの版番号（中身が変わると番号が変わり、スマホに古いファイルが残っていても新しいものを読み込む） */
+const AV = {};
+const av = n => AV[n] || (AV[n] = crypto.createHash("sha1").update(fs.readFileSync(path.join(__dirname, n), "utf8") + (n === "site.css" ? HAND.markerLight + HAND.markerDark : "")).digest("hex").slice(0, 8));
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const hid = (pre, s) => pre + crypto.createHash("sha1").update(C.norm(s)).digest("hex").slice(0, 8); // 名前から決まる短いID（毎回同じ）
 const slug = s => String(s).replace(/[^A-Za-z0-9_-]/g, "-");
@@ -202,6 +205,11 @@ const quizCta = (r, cat) => {
   <div class="two">${pick.map(c => quizLink(r, c)).join("")}</div>
 </div></aside>`;
 };
+/* 画面の下に出す小さな診断の案内（×で閉じると7日間出さない。ページ下の「迷ったら診断」が見えている間は隠れる） */
+const quizBar = (r, cat) => {
+  const c = QUIZ[cat] ? cat : (!cat || HAIR.has(cat)) ? "shampoo" : "skincare";
+  return `<div class="kb-qbar" hidden><a href="${r("app/")}${QUIZ[c].hash}"><b>${QUIZ[c].n}の診断</b><small>${QUIZ_N}問・1分で、あなたに合う順に</small></a><button type="button" aria-label="閉じる">×</button></div>`;
+};
 function write(p, title, desc, body, opts = {}) {
   const dir = path.join(OUT, p); fs.mkdirSync(dir, { recursive: true });
   const r = to => rel(p, to);
@@ -222,7 +230,7 @@ ${canon ? `<link rel="canonical" href="${esc(canon)}">` : ""}
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&text=${encodeURIComponent("全成分ここ大事5.0やさしさ")}&display=swap">
-<link rel="stylesheet" href="${r("assets/site.css")}"><link rel="stylesheet" href="${r("assets/chrome.css")}">
+<link rel="stylesheet" href="${r("assets/site.css")}?v=${av("site.css")}"><link rel="stylesheet" href="${r("assets/chrome.css")}?v=${av("chrome.css")}">
 ${ld}
 </head><body>
 ${sprite(head + main, opts.sym || [])}
@@ -230,11 +238,11 @@ ${head}
 <main class="wrap">
 ${crumbs.length > 1 ? `<nav class="crumbs" aria-label="現在地">${(opts.cat ? crumbs.slice(0, -1) : crumbs).map((c, i, L) => i < L.length - 1 || opts.cat ? `<a href="${r(c[1])}">${esc(c[0])}</a>` : `<span>${esc(c[0])}</span>`).join("<i>›</i>")}</nav>` : ""}
 ${main}
-${p && !opts.noQuiz ? quizCta(r, opts.cat) : ""}
+${p && !opts.noQuiz ? quizCta(r, opts.cat) + quizBar(r, opts.cat) : ""}
 </main>
 ${foot}
-<script>window.KB={root:${JSON.stringify(root)},pv:${PREVIEW}}</script><script src="${r("assets/kb.js")}" defer></script>
-${RK_ON ? `<script>window.RK={api:${JSON.stringify(root + "api/rk")}}</script><script src="${r("assets/rk.js")}" defer></script>` : ""}
+<script>window.KB={root:${JSON.stringify(root)},pv:${PREVIEW}}</script><script src="${r("assets/kb.js")}?v=${av("kb.js")}" defer></script>
+${RK_ON ? `<script>window.RK={api:${JSON.stringify(root + "api/rk")}}</script><script src="${r("assets/rk.js")}?v=${av("rk.js")}" defer></script>` : ""}
 </body></html>`;
   fs.writeFileSync(path.join(dir, "index.html"), html);
   PAGES.push(p);
@@ -358,15 +366,15 @@ P.forEach(x => {
   const desc = `${p.name}の全成分${x.a.items.length}種類を、成分ごとの役割つきで一覧にしました。${x.sc && x.sc.mainSurf ? `主洗浄成分は${x.sc.mainSurf.name}。` : ""}香料・シリコーンなどの有無と、似た成分の商品も。`;
   write(x.url, `${p.name}の成分`, desc, r => `
 <article class="prod">
-  <div class="phead">${imgSlot(x, "pimg")}<div>
+  <div class="phead"><div class="pfig">${imgSlot(x, "pimg")}<button class="fav-btn star" type="button" hidden aria-pressed="false" aria-label="お気に入りに追加" title="お気に入りに追加" data-fav="${esc(JSON.stringify({ id: p.id, name: p.name, brand: p.brand || "", url: x.url, match: x.match, grade: x.grade, type: x.sc ? typeOf(x).title : "", ph: PH[p.category] || "ph-bottle" }))}"></button></div><div>
   <h1>${esc(p.name)} の成分</h1>
   <div class="row">${chips(x)}</div>
-  <div class="acts"><button class="fav-btn" type="button" hidden aria-pressed="false" data-fav="${esc(JSON.stringify({ id: p.id, name: p.name, brand: p.brand || "", url: x.url, match: x.match, grade: x.grade, type: x.sc ? typeOf(x).title : "", ph: PH[p.category] || "ph-bottle" }))}">お気に入りに追加</button>${RK_ON || PREVIEW ? `<a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : ""}</div>
+  <div class="acts">${RK_ON || PREVIEW ? `<a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : ""}</div>
   ${RK_ON || PREVIEW ? `<p class="rk-price" data-rk-price="${esc(rkKey(x))}" hidden></p>` : ""}
   </div></div>
+  ${typeBlock(x, r)}
   <p class="lead">${esc(leadText(x))}</p>
   ${p.desc || p.scent ? `<div class="maker"><span class="lbl">メーカーの説明</span>${p.desc ? `<p>${esc(p.desc)}</p>` : ""}${p.scent ? `<p class="mk-scent"><b>香り</b>${esc(p.scent)}</p>` : ""}${p.infoSource && p.infoSource.url ? `<p class="small muted">出典：<a href="${esc(p.infoSource.url)}" rel="nofollow noopener" target="_blank">${esc((p.infoSource.url.split("/")[2] || "").replace(/^www\./, ""))}</a>（${esc(p.infoSource.date || "")}確認）。メーカーの説明を短くまとめたもので、効果を保証するものではありません。</p>` : ""}</div>` : ""}
-  ${typeBlock(x, r)}
   ${reviewBlock(x)}
   <section><h2>全成分と、それぞれの役割</h2>
     <p class="small muted">${p.kind === "quasi" ? "医薬部外品は、有効成分とその他の成分に分けて表示されます。その他の成分は配合量の順とは限りません。" : "化粧品は、配合量の多い順に並びます（1%以下の成分は順不同）。"}</p>
@@ -580,8 +588,8 @@ if (APP && fs.existsSync(APP)) {
   const cs = h.indexOf("var SKCore = (function(){"), ce = h.indexOf("\n})();", cs);
   if (cs < 0 || ce < 0) throw new Error("app/index.html に採点ロジックの位置が見つかりません");
   h = h.slice(0, cs) + core.trim() + h.slice(ce + "\n})();".length);
-  const rk = RK_ON ? `<script>window.RK={api:${JSON.stringify(r("api/rk"))}}</script><script src="${r("assets/rk.js")}" defer></script>` : "";
-  const inject = `<link rel="stylesheet" href="${r("assets/chrome.css")}">${rk}${sprite(head + foot, Object.values(PH))}${head}`;
+  const rk = RK_ON ? `<script>window.RK={api:${JSON.stringify(r("api/rk"))}}</script><script src="${r("assets/rk.js")}?v=${av("rk.js")}" defer></script>` : "";
+  const inject = `<link rel="stylesheet" href="${r("assets/chrome.css")}?v=${av("chrome.css")}">${rk}${sprite(head + foot, Object.values(PH))}${head}`;
   h = h.replace(/<!--KB:HEAD-->[\s\S]*?<!--\/KB:HEAD-->/, `<!--KB:HEAD-->${inject}<!--/KB:HEAD-->`).replace(/<!--KB:FOOT-->[\s\S]*?<!--\/KB:FOOT-->/, `<!--KB:FOOT-->${foot}<!--/KB:FOOT-->`);
   fs.mkdirSync(path.join(OUT, ap), { recursive: true });
   fs.writeFileSync(path.join(OUT, ap, "index.html"), h);

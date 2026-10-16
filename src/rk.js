@@ -15,7 +15,7 @@
   function paint(k, d) {
     document.querySelectorAll('[data-rk="' + CSS.escape(k) + '"]').forEach(function (el) {
       if (!d || !d.img) return; // 見つからないときは種類別の絵のまま
-      var img = new Image(); img.alt = ""; img.loading = "lazy"; img.decoding = "async";
+      var img = new Image(); img.alt = ""; img.decoding = "async"; // 画面に置く前に読み込むので loading="lazy" は付けない（付けると読み込まれない）
       img.onload = function () { el.innerHTML = ""; el.appendChild(img); el.classList.add("on"); };
       img.src = d.img;
     });

@@ -7,6 +7,14 @@
   function load() { try { var v = JSON.parse(localStorage.getItem("kb-fav") || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
   function save(l) { try { localStorage.setItem("kb-fav", JSON.stringify(l)); return true; } catch (e) { return false; } }
 
+  /* 画面の下に短く出す知らせ */
+  var tEl = null, tTimer = 0;
+  function toast(msg, extra) {
+    if (!tEl) { tEl = document.createElement("div"); tEl.className = "kb-toast"; tEl.setAttribute("role", "status"); tEl.setAttribute("aria-live", "polite"); document.body.appendChild(tEl); }
+    tEl.innerHTML = "<span>" + esc(msg) + "</span>" + (extra || "");
+    tEl.classList.add("on"); clearTimeout(tTimer); tTimer = setTimeout(function () { tEl.classList.remove("on"); }, 2600);
+  }
+
   /* 商品ページの「お気に入りに追加」 */
   document.querySelectorAll(".fav-btn").forEach(function (b) {
     var d; try { d = JSON.parse(b.getAttribute("data-fav")); } catch (e) { return; }
@@ -17,11 +25,14 @@
       if (b.classList.contains("star")) { b.setAttribute("aria-label", lab); b.title = lab; } else b.textContent = on ? "お気に入り済み" : "お気に入りに追加";
     }
     b.addEventListener("click", function () {
-      var l = load(), i = -1;
+      var l = load(), i = -1, was;
       l.forEach(function (x, k) { if (x.id === d.id) i = k; });
-      if (i >= 0) l.splice(i, 1); else l.unshift(d);
+      was = i >= 0;
+      if (was) l.splice(i, 1); else l.unshift(d);
       if (!save(l.slice(0, 30))) { if (b.classList.contains("star")) b.title = "このブラウザでは保存できません"; else b.textContent = "このブラウザでは保存できません"; return; }
       sync();
+      b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
+      toast(was ? "お気に入りから外しました" : "お気に入りに追加しました", was ? "" : '<a href="' + esc(link("")) + '#favs">一覧を見る</a>');
     });
     sync(); b.hidden = false;
   });

@@ -393,7 +393,7 @@ function scoreSkincare(items, a){
   why.light = `強い保護油${oS.length}種・油分${oM.length}種` + (lt.length?` ／ 軽さを出す：${lt.join('、')}`:'');
   const b=namesWith(items,'beauty'), ex=namesWith(items,'extract');
   v.beauty = 0.5 + 0.75*b.length + Math.min(1, 0.25*ex.length);
-  why.beauty = (b.length?b.join('、'):'美容成分なし') + (ex.length?` ＋ エキス${ex.length}種`:'');
+  why.beauty = (b.length?b.join('、'):'ケア成分なし') + (ex.length?` ＋ エキス${ex.length}種`:'');
   const cs = concerns && concerns.length ? concerns : Object.keys(SK_CONCERNS);
   const parts=[]; let sum=0;
   cs.forEach(c=>{
@@ -417,18 +417,20 @@ function adjSkincare(a){
   return out;
 }
 function weightsSkincare(w, a){
-  if(a.skin==='dry'){w.moist+=1.5;w.barrier+=1.5;w.light*=0.5;}
-  else if(a.skin==='oily'){w.light+=2;w.barrier*=0.5;}
-  else if(a.skin==='combo'){w.light+=1;w.moist+=0.5;}
+  /* 2026-10-17 見直し：肌のタイプや使い心地の好みより、選んだ悩みが強く効くようにした
+     （「脂性肌」「さっぱり」を選ぶと、シミやハリの悩みを選んでも「軽さ」がいちばん重くなっていたため） */
+  if(a.skin==='dry'){w.moist+=1;w.barrier+=1;w.light*=0.6;}
+  else if(a.skin==='oily'){w.light+=1.25;w.barrier*=0.6;}
+  else if(a.skin==='combo'){w.light+=0.5;w.moist+=0.5;}
   const c=a.concerns||[];
-  if(c.includes('dry')){w.moist+=1;w.barrier+=0.5;}
-  if(c.includes('oily')){w.light+=1;}
-  if(c.includes('rough')){w.gentle+=1;w.concern+=0.5;}
-  if(c.includes('spot')){w.concern+=1;}
-  if(c.includes('firm')){w.concern+=1;w.beauty+=0.5;}
-  if(c.includes('sensitive')){w.gentle+=2;}
-  if(a.texture==='rich'){w.barrier+=1;w.light*=0.3;}
-  else if(a.texture==='light'){w.light+=1.5;w.barrier*=0.5;}
+  if(c.includes('dry')){w.moist+=1.5;w.barrier+=0.5;w.concern+=1;}
+  if(c.includes('oily')){w.light+=1;w.concern+=1;}
+  if(c.includes('rough')){w.gentle+=1;w.concern+=2;}
+  if(c.includes('spot')){w.concern+=2;w.beauty+=0.5;}
+  if(c.includes('firm')){w.concern+=2;w.beauty+=0.5;}
+  if(c.includes('sensitive')){w.gentle+=2;w.concern+=1;}
+  if(a.texture==='rich'){w.barrier+=0.75;w.light*=0.5;}
+  else if(a.texture==='light'){w.light+=1;w.barrier*=0.6;}
   if(a.beauty==='high') w.beauty+=1.5; else if(a.beauty==='low') w.beauty*=0.3;
 }
 
@@ -540,7 +542,7 @@ const CATS = {
     ng:{fragrance:'香料', strongSurf:'硫酸系洗浄成分', silicone:'シリコーン', menthol:'メントール', alcohol:'アルコール', paraben:'パラベン'},
     score:scoreShampoo, adjust:adjShampoo, weigh:weightsShampoo},
   skincare:{n:'保湿クリーム・乳液', scored:true, unit:'g',
-    themes:[{k:'moist',n:'うるおい補給',s:'うるおい'},{k:'barrier',n:'保護力（フタ）',s:'保護'},{k:'light',n:'軽さ',s:'軽さ'},{k:'beauty',n:'美容成分',s:'美容'},{k:'concern',n:'悩みへの対応',s:'悩み'},{k:'gentle',n:'刺激の少なさ',s:'低刺激'}],
+    themes:[{k:'moist',n:'うるおい補給',s:'うるおい'},{k:'barrier',n:'保護力（フタ）',s:'保護'},{k:'light',n:'軽さ',s:'軽さ'},{k:'beauty',n:'ケア成分（ビタミン類など）',s:'ケア成分'},{k:'concern',n:'悩みへの対応',s:'悩み'},{k:'gentle',n:'刺激の少なさ',s:'低刺激'}],
     ng:{fragrance:'香料', alcohol:'アルコール', uvabs:'紫外線吸収剤', silicone:'シリコーン', paraben:'パラベン', mineral:'鉱物油'},
     score:scoreSkincare, adjust:adjSkincare, weigh:weightsSkincare},
   facewash:{n:'洗顔料', scored:false, unit:'g'},

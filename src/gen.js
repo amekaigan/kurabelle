@@ -40,7 +40,7 @@ const TAG_EXPLAIN = {
   strongSurf: "洗浄力の強い洗浄成分（硫酸系など）", midSurf: "中程度の洗浄成分", mildSurf: "やさしい洗浄成分（アミノ酸系・ベタイン系・糖系など）",
   cond: "髪の指通りをよくする", repair: "髪の補修", scalp: "頭皮をすこやかに保つ", scalpA: "医薬部外品で有効成分になることがある殺菌成分",
   sebum: "皮脂を取り除く", hum1: "基本の保湿剤", hum2: "高機能な保湿成分", occS: "水分の蒸発を防ぐ強い保護油", occM: "一般的な油分", light: "軽い使用感を出す",
-  beauty: "美容成分", extract: "植物などのエキス", fragrance: "香料", essoil: "精油", alcohol: "アルコール（エタノール）", uvabs: "紫外線吸収剤",
+  beauty: "ケア成分（ビタミン類など）", extract: "植物などのエキス", fragrance: "香料", essoil: "精油", alcohol: "アルコール（エタノール）", uvabs: "紫外線吸収剤",
   silicone: "シリコーン", paraben: "パラベン類", mineral: "鉱物油", menthol: "清涼剤", colorant: "着色料・染料", preserv: "防腐剤", strongpres: "少量で効く防腐剤（イソチアゾリノン系）",
   dry: "乾燥", oily: "ベタつき", rough: "肌あれ", spot: "シミ", firm: "ハリ", sensitive: "刺激を感じやすい肌"
 };
@@ -261,7 +261,7 @@ function themesBlock(x) {
 /* ---------- 成分から見たタイプ（レーダーグラフ） ---------- */
 const AX_LABEL = {
   shampoo: { mild: "やさしい洗浄", clean: "洗浄力", scalp: "頭皮ケア", repair: "髪の補修", smooth: "指通り", gentle: "低刺激" },
-  skincare: { moist: "うるおい", barrier: "保護（フタ）", light: "軽さ", beauty: "美容成分", concern: "悩み対応", gentle: "低刺激" },
+  skincare: { moist: "うるおい", barrier: "保護（フタ）", light: "軽さ", beauty: "ケア成分", concern: "悩み対応", gentle: "低刺激" },
   conditioner: { smooth: "指通り", repair: "髪の補修", moist: "うるおい", light: "軽さ", gentle: "低刺激" }
 };
 const CAT_AVG = {}, CAT_RANK = {};

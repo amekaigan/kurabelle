@@ -17,7 +17,7 @@
       if (!d || !d.img) return; // 見つからないときは種類別の絵のまま
       var img = new Image(); img.alt = ""; img.decoding = "async"; // 画面に置く前に読み込むので loading="lazy" は付けない（付けると読み込まれない）
       img.onload = function () { el.innerHTML = ""; el.appendChild(img); el.classList.add("on"); };
-      img.src = d.img;
+      img.src = d.img.replace(/\?_ex=\d+x\d+/, "") + (el.classList.contains("pimg") ? "?_ex=500x500" : "?_ex=240x240"); // 商品ページは大きく、一覧は中くらい
     });
     document.querySelectorAll('[data-rk-link="' + CSS.escape(k) + '"]').forEach(function (a) { if (d && d.url) { a.href = d.url; a.hidden = false; } });
   }

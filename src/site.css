@@ -64,7 +64,7 @@ main section{display:block}
 .pc-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
 .pc-name{display:flex;flex-direction:column;min-width:0;flex:1}
 .pc-name .brand{font-size:13px;color:var(--ink3)}
-.pc-name b{font-weight:700;font-size:17px;line-height:1.5;overflow-wrap:anywhere}
+.pc-name b{font-weight:700;font-size:15.5px;line-height:1.5;overflow-wrap:anywhere}
 .pc-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .pc-meta .small{font-size:13.5px;overflow-wrap:anywhere;min-width:0}
 .score{display:inline-flex;align-items:center;gap:6px;flex:none}
@@ -87,13 +87,16 @@ main section{display:block}
 /* 商品ページ */
 .prod{display:flex;flex-direction:column;gap:30px}
 .prod .lead{color:var(--ink);font-size:17px;line-height:1.9}
-.phead{display:flex;gap:16px;align-items:flex-start}
+/* 商品ページの頭：スマホは画像を上に大きく、その下に商品名。広い画面では横並び */
+.phead{display:flex;flex-direction:column;gap:16px;align-items:stretch}
 .phead>div{min-width:0;flex:1}
+.prod .phead h1{font-size:clamp(22px,5.6vw,30px);line-height:1.45}
 .thumb,.pimg{flex:none;display:grid;place-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.thumb{width:60px;height:60px}
-.pimg{width:116px;height:116px;border-radius:16px}
+.thumb{width:88px;height:88px}
+.pimg{width:min(100%,340px);height:auto;aspect-ratio:1/1;border-radius:20px;align-self:center;background:#fff}
 .thumb svg,.pimg svg{width:100%;height:100%;display:block}
 .thumb img,.pimg img{width:100%;height:100%;object-fit:contain;background:#fff}
+.pimg img{padding:6px}
 .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .fav-btn{white-space:nowrap;min-height:48px;padding:0 16px;border-radius:12px;border:2px solid var(--ink);background:var(--card);color:var(--ink);font:inherit;font-size:16px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
 .fav-btn::before{content:"☆";font-size:19px;line-height:1}
@@ -154,7 +157,7 @@ table.ings tr:last-child td{border-bottom:0}
 .rv dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;margin:4px 0}
 .rv dl div{background:var(--paper);border-radius:8px;padding:6px 10px}
 .rv dt{font-size:12.5px;color:var(--ink3)}.rv dd{margin:0;font-size:15px}
-@media (max-width:480px){.pimg{width:92px;height:92px}.phead{gap:12px}}
+@media (min-width:760px){.phead{flex-direction:row;gap:24px;align-items:flex-start}.pimg{width:300px;align-self:flex-start}}
 
 /* トップ */
 .home-hero{display:grid;gap:12px}
@@ -197,7 +200,7 @@ table.ings tr:last-child td{border-bottom:0}
 .sticky p{margin:0;font-size:16px}
 .sticky a{display:flex;align-items:center;justify-content:center;min-height:58px;border-radius:14px;background:var(--note-ink);color:var(--note);font-size:18px;font-weight:700;text-decoration:none}
 .favs{display:grid;gap:10px}
-.fav{display:grid;grid-template-columns:60px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:10px 12px;text-decoration:none;color:var(--ink)}
+.fav{display:grid;grid-template-columns:88px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:10px 12px;text-decoration:none;color:var(--ink)}
 .fav:hover{border-color:var(--ink)}
 .fav .nm{display:flex;flex-direction:column;min-width:0}
 .fav small{font-size:13px;color:var(--ink3)}

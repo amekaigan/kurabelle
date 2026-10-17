@@ -252,14 +252,19 @@ ${RK_ON ? `<script>window.RK={api:${JSON.stringify(root + "api/rk")}}</script><s
 const chips = x => `<span class="chip">${KIND_N[x.p.kind] || ""}</span>${TARGET_N[x.p.target] ? `<span class="chip">${TARGET_N[x.p.target]}</span>` : ""}${x.p.volume ? `<span class="chip mono">${x.p.volume}${esc(x.p.unit || "")}</span>` : ""}`;
 const mix = x => { const cnt = {}; x.a.items.forEach(i => { const r = C.compRole(i); cnt[r] = (cnt[r] || 0) + 1; });
   return `<div class="mix" aria-hidden="true">${C.ROLE_ORDER.filter(r => cnt[r]).map(r => `<span style="flex:${cnt[r]};background:var(${ROLE_C(r)})"></span>`).join("")}</div>`; };
+/* メーカー直販の商品（アフィリエイトの仲介サービス経由）は、楽天の情報（画像・価格・リンク）を使わない。
+   楽天ウェブサービスの規約で、楽天の情報を使う商品に楽天以外のアフィリエイトを付けられないため。 */
+const SHOP_N = { a8: "A8.net", moshimo: "もしもアフィリエイト", accesstrade: "アクセストレード", afb: "afb" };
+const isDirect = x => !!(x.p.shop && x.p.shop.url);
+const useRk = x => (RK_ON || PREVIEW) && !isDirect(x);
 const rkKey = x => x.p.jan || `${x.p.brand || ""} ${x.p.name}`.trim();
-const imgSlot = (x, cls) => `<span class="${cls}" data-rk="${esc(rkKey(x))}"${x.p.jan ? ' data-jan="1"' : ""}><svg viewBox="0 0 120 120" aria-hidden="true"><use href="#${PH[x.p.category] || "ph-bottle"}"/></svg></span>`;
+const imgSlot = (x, cls) => `<span class="${cls}"${isDirect(x) ? "" : ` data-rk="${esc(rkKey(x))}"${x.p.jan ? ' data-jan="1"' : ""}`}><svg viewBox="0 0 120 120" aria-hidden="true"><use href="#${PH[x.p.category] || "ph-bottle"}"/></svg></span>`;
 const scoreBadge = x => x.match == null ? "" : `<span class="score"><b class="mono">${x.match}</b><i class="g g-${x.grade}">${x.grade}</i></span>`;
 function productCard(x, r, extra, opt = {}) {
   const ms = x.sc && x.sc.mainSurf ? `主洗浄成分 ${esc(x.sc.mainSurf.name)}・` : "";
   const meta = opt.posOnly ? extra : `${ms}${x.a.items.length}成分${extra ? "・" + extra : ""}`;
   return `<a class="pcard" href="${r(x.url)}"><div class="pc-top">${imgSlot(x, "thumb")}<div class="pc-name"><span class="brand">${esc(x.p.brand || "")}</span><b>${esc(x.p.name)}</b></div>${scoreBadge(x)}</div>
-  ${mix(x)}<div class="pc-meta">${chips(x)}<span class="small muted">${meta}</span>${RK_ON || PREVIEW ? `<span class="rk-price sm" data-rk-price="${esc(rkKey(x))}" hidden></span>` : ""}</div></a>`;
+  ${mix(x)}<div class="pc-meta">${chips(x)}<span class="small muted">${meta}</span>${useRk(x) ? `<span class="rk-price sm" data-rk-price="${esc(rkKey(x))}" hidden></span>` : isDirect(x) ? `<span class="small muted">メーカー直販</span>` : ""}</div></a>`;
 }
 function themesBlock(x) {
   if (!x.sc) return "";
@@ -399,8 +404,9 @@ P.forEach(x => {
   <div class="phead"><div class="pfig">${imgSlot(x, "pimg")}<button class="fav-btn star" type="button" hidden aria-pressed="false" aria-label="お気に入りに追加" title="お気に入りに追加" data-fav="${esc(JSON.stringify({ id: p.id, name: p.name, brand: p.brand || "", url: x.url, match: x.match, grade: x.grade, type: x.sc ? typeOf(x).title : "", ph: PH[p.category] || "ph-bottle" }))}"></button></div><div>
   <h1>${esc(p.name)} の成分</h1>
   <div class="row">${chips(x)}</div>
-  <div class="acts">${RK_ON || PREVIEW ? `<span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : ""}</div>
-  ${RK_ON || PREVIEW ? `<p class="rk-price" data-rk-price="${esc(rkKey(x))}" hidden></p><p class="pr-note" data-rk-pr="${esc(rkKey(x))}" hidden>「楽天市場で見る」は広告（楽天アフィリエイト）のリンクです。紹介料の有無は、点数や順位に関係しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
+  <div class="acts">${isDirect(x) ? `<span class="pr-tag">PR</span><a class="rk-buy" href="${esc(p.shop.url)}" rel="sponsored noopener" target="_blank">公式サイトで見る</a>${p.shop.pixel ? `<img class="px" src="${esc(p.shop.pixel)}" width="1" height="1" alt="">` : ""}` : ""}${useRk(x) ? `<span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : ""}</div>
+  ${isDirect(x) ? `<p class="pr-note">「公式サイトで見る」は広告（${esc(SHOP_N[p.shop.asp] || "アフィリエイト")}）のリンクです。メーカーの公式通販のページが開きます。紹介料の有無は、点数や順位に関係しません。価格や内容は公式サイトでご確認ください。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
+  ${useRk(x) ? `<p class="rk-price" data-rk-price="${esc(rkKey(x))}" hidden></p><p class="pr-note" data-rk-pr="${esc(rkKey(x))}" hidden>「楽天市場で見る」は広告（楽天アフィリエイト）のリンクです。紹介料の有無は、点数や順位に関係しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
   </div></div>
   ${typeBlock(x, r)}
   <p class="lead">${esc(leadText(x))}</p>
@@ -551,7 +557,7 @@ write("about/", "クラベルとは", "クラベルは、シャンプーやス�
     <p>同じように悩み始めた人が、落ち着いて、自分で選べるように。そのための材料をそろえていきます。</p>
     ${OPERATOR_OK ? "" : "<small>運営者自身の言葉に書き直していただく前提の下書きです。本番には、確かめてもらうまで出しません。</small>"}</div></section>` : ""}
   <section class="ab-sec" id="ad"><h2>広告について</h2><div class="ab-box">
-    <p>商品ページの「楽天市場で見る」は、楽天アフィリエイトのリンクです。ここから購入されると、運営者が紹介料を受け取ることがあります。紹介料の有無は、点数や並び順には一切影響しません。</p>
+    <p>商品ページの「楽天市場で見る」は楽天アフィリエイトの、「公式サイトで見る」はA8.netなどのアフィリエイトの仲介サービスのリンクです。ここから購入されると、運営者が紹介料を受け取ることがあります。紹介料の有無は、点数や並び順には一切影響しません。</p>
     <small>商品画像と販売ページへのリンクは、楽天ウェブサービスから提供されています。</small></div></section>
   <a class="btn wide back" href="${r("")}">トップに戻る</a>
 </article>`, { crumbs: [["トップ", ""], ["クラベルとは", "about/"]] });

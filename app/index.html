@@ -1329,7 +1329,7 @@ function renderRank(cur){
 const PH = {shampoo:'ph-bottle', conditioner:'ph-bottle', scalp:'ph-bottle', serum:'ph-bottle', handsoap:'ph-bottle', colorrinse:'ph-bottle', skincare:'ph-jar', facewash:'ph-tube'};
 const isShared = p => !String(p.id).startsWith('u-');
 const pageUrl = p => isShared(p) ? `../products/${String(p.id).replace(/[^A-Za-z0-9_-]/g,'-')}/` : '';
-const rkKey = p => isShared(p) && window.RK ? (p.jan || `${p.brand||''} ${p.name}`.trim()) : '';
+const rkKey = p => isShared(p) && window.RK && !(p.shop && p.shop.url) ? (p.jan || `${p.brand||''} ${p.name}`.trim()) : ''; /* メーカー直販の商品は楽天の情報を使わない */
 function card(e, inCmp, isNg){
   const {p,a,sc}=e;
   const T = themes(), w = weights(S.cat, ans());

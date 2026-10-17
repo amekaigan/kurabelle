@@ -65,7 +65,7 @@ for f in sorted(glob.glob(os.path.join(ROOT, "tools/cands/*.py"))):
     spec = importlib.util.spec_from_file_location(os.path.basename(f), f)
     m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m); C += m.C
 
-have = {p["jan"] for p in D["products"]} | {p["jan"] for p in PEND["products"]}
+have = {p.get("jan") for p in D["products"]} | {p.get("jan") for p in PEND["products"]}
 skipped = {s["jan"] for s in SKIP["items"]}
 public_cats = {p["category"] for p in D["products"]}
 ok, ng = [], []

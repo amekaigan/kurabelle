@@ -608,6 +608,21 @@ fs.writeFileSync(path.join(OUT, "assets/site.css"), fs.readFileSync(path.join(__
 fs.copyFileSync(path.join(__dirname, "kb.js"), path.join(OUT, "assets/kb.js"));
 fs.copyFileSync(path.join(__dirname, "chrome.css"), path.join(OUT, "assets/chrome.css"));
 
+/* ---------- 見つからないページ（404） ----------
+   Cloudflare Pages は 404.html がないと、存在しないURLにもトップページを200で返す。
+   ページのリンクは相対パスなので、巡回ロボットが「URLの迷路」に入り込み、大量に読み込まれていた（2026-10-17）。
+   どの深さのURLで表示されても壊れないよう、リンクはすべて「/」から始める。 */
+{
+  const r = to => "/" + to;
+  const { head, foot } = chrome(r, "404");
+  fs.writeFileSync(path.join(OUT, "404.html"), `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ページが見つかりません｜クラベル</title><meta name="robots" content="noindex">
+<link rel="stylesheet" href="/assets/site.css?v=${av("site.css")}"><link rel="stylesheet" href="/assets/chrome.css?v=${av("chrome.css")}"></head>
+<body>${sprite(head + foot)}${head}<main class="wrap"><article class="ab"><section><h1>ページが見つかりません</h1>
+<p class="lead">URLが変わったか、まだ用意していないページです。</p></section>
+<a class="btn wide back" href="/">トップに戻る</a></article></main>${foot}</body></html>`);
+}
+
 /* ---------- 比較ツール：同じヘッダー・フッターを差し込む ---------- */
 const APP = rest.includes("--app") ? rest[rest.indexOf("--app") + 1] : "";
 if (APP && fs.existsSync(APP)) {

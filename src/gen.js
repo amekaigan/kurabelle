@@ -258,6 +258,9 @@ const mix = x => { const cnt = {}; x.a.items.forEach(i => { const r = C.compRole
 const SHOP_N = { a8: "A8.net", moshimo: "もしもアフィリエイト", accesstrade: "アクセストレード", afb: "afb" };
 const REL_IMG = p => "/" + p;
 const isDirect = x => !!(x.p.shop && x.p.shop.url);
+/* 飛び先：メーカーの公式通販（既定）か Amazon（shop.dest: "amazon"） */
+const DEST = { amazon: { btn: "Amazonで見る", page: "Amazonの商品ページ", tag: "Amazonで販売" } };
+const dest = x => DEST[x.p.shop && x.p.shop.dest] || { btn: "公式サイトで見る", page: "メーカーの公式通販のページ", tag: "メーカー直販" };
 const useRk = x => (RK_ON || PREVIEW) && !isDirect(x);
 const rkKey = x => x.p.jan || `${x.p.brand || ""} ${x.p.name}`.trim();
 const imgSlot = (x, cls) => isDirect(x) && x.p.shop.img
@@ -268,7 +271,7 @@ function productCard(x, r, extra, opt = {}) {
   const ms = x.sc && x.sc.mainSurf ? `主洗浄成分 ${esc(x.sc.mainSurf.name)}・` : "";
   const meta = opt.posOnly ? extra : `${ms}${x.a.items.length}成分${extra ? "・" + extra : ""}`;
   return `<a class="pcard" href="${r(x.url)}"><div class="pc-top">${imgSlot(x, "thumb")}<div class="pc-name"><span class="brand">${esc(x.p.brand || "")}</span><b>${esc(x.p.name)}</b></div>${scoreBadge(x)}</div>
-  ${mix(x)}<div class="pc-meta">${chips(x)}<span class="small muted">${meta}</span>${useRk(x) ? `<span class="rk-price sm" data-rk-price="${esc(rkKey(x))}" hidden></span>` : isDirect(x) ? `<span class="small muted">メーカー直販</span>` : ""}</div></a>`;
+  ${mix(x)}<div class="pc-meta">${chips(x)}<span class="small muted">${meta}</span>${useRk(x) ? `<span class="rk-price sm" data-rk-price="${esc(rkKey(x))}" hidden></span>` : isDirect(x) ? `<span class="small muted">${dest(x).tag}</span>` : ""}</div></a>`;
 }
 function themesBlock(x) {
   if (!x.sc) return "";
@@ -408,8 +411,8 @@ P.forEach(x => {
   <div class="phead"><div class="pfig">${imgSlot(x, "pimg")}<button class="fav-btn star" type="button" hidden aria-pressed="false" aria-label="お気に入りに追加" title="お気に入りに追加" data-fav="${esc(JSON.stringify({ id: p.id, name: p.name, brand: p.brand || "", url: x.url, match: x.match, grade: x.grade, type: x.sc ? typeOf(x).title : "", ph: PH[p.category] || "ph-bottle" }))}"></button></div><div>
   <h1>${esc(p.name)} の成分</h1>
   <div class="row">${chips(x)}</div>
-  <div class="acts">${isDirect(x) ? `<span class="pr-tag">PR</span><a class="rk-buy" href="${esc(p.shop.url)}" rel="sponsored noopener" target="_blank">公式サイトで見る</a>${p.shop.pixel ? `<img class="px" src="${esc(p.shop.pixel)}" width="1" height="1" alt="">` : ""}` : ""}${useRk(x) ? `<span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : ""}</div>
-  ${isDirect(x) ? `<p class="pr-note">「公式サイトで見る」は広告（${esc(SHOP_N[p.shop.asp] || "アフィリエイト")}）のリンクです。メーカーの公式通販のページが開きます。紹介料の有無は、点数や順位に関係しません。価格や内容は公式サイトでご確認ください。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
+  <div class="acts">${isDirect(x) ? `<span class="pr-tag">PR</span><a class="rk-buy" href="${esc(p.shop.url)}" rel="sponsored noopener" target="_blank">${dest(x).btn}</a>${p.shop.pixel ? `<img class="px" src="${esc(p.shop.pixel)}" width="1" height="1" alt="">` : ""}` : ""}${useRk(x) ? `<span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : ""}</div>
+  ${isDirect(x) ? `<p class="pr-note">「${dest(x).btn}」は広告（${esc(SHOP_N[p.shop.asp] || "アフィリエイト")}）のリンクです。${dest(x).page}が開きます。紹介料の有無は、点数や順位に関係しません。価格や内容は公式サイトでご確認ください。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
   ${useRk(x) ? `<p class="rk-price" data-rk-price="${esc(rkKey(x))}" hidden></p><p class="pr-note" data-rk-pr="${esc(rkKey(x))}" hidden>「楽天市場で見る」は広告（楽天アフィリエイト）のリンクです。紹介料の有無は、点数や順位に関係しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
   </div></div>
   ${typeBlock(x, r)}
@@ -561,7 +564,7 @@ write("about/", "クラベルとは", "クラベルは、シャンプーやス�
     <p>同じように悩み始めた人が、落ち着いて、自分で選べるように。そのための材料をそろえていきます。</p>
     ${OPERATOR_OK ? "" : "<small>運営者自身の言葉に書き直していただく前提の下書きです。本番には、確かめてもらうまで出しません。</small>"}</div></section>` : ""}
   <section class="ab-sec" id="ad"><h2>広告について</h2><div class="ab-box">
-    <p>商品ページの「楽天市場で見る」は楽天アフィリエイトの、「公式サイトで見る」はA8.netなどのアフィリエイトの仲介サービスのリンクです。ここから購入されると、運営者が紹介料を受け取ることがあります。紹介料の有無は、点数や並び順には一切影響しません。</p>
+    <p>商品ページの「楽天市場で見る」は楽天アフィリエイトの、「公式サイトで見る」「Amazonで見る」はA8.netなどのアフィリエイトの仲介サービスのリンクです。ここから購入されると、運営者が紹介料を受け取ることがあります。紹介料の有無は、点数や並び順には一切影響しません。</p>
     <small>商品画像と販売ページへのリンクは、楽天ウェブサービスから提供されています。</small></div></section>
   <a class="btn wide back" href="${r("")}">トップに戻る</a>
 </article>`, { crumbs: [["トップ", ""], ["クラベルとは", "about/"]] });

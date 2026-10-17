@@ -1883,6 +1883,31 @@
    }
   },
   {
+   "id": "mynature-shampoo",
+   "category": "shampoo",
+   "brand": "マイナチュレ",
+   "name": "マイナチュレ 薬用スカルプシャンプー",
+   "kind": "quasi",
+   "target": "women",
+   "volume": 280,
+   "unit": "ml",
+   "price": null,
+   "ingredients": "有効成分：サリチル酸、グリチルリチン酸ジカリウム　その他の成分：精製水、ヤシ油脂肪酸アミドプロピルベタイン液、ラウロイルメチルβアラニンナトリウム液、常水、ヤシ油脂肪酸Nメチルエタノールアミド、濃グリセリン、ヤシ油脂肪酸モノエタノールアミド、ヒドロキシエチルセルロース・ヒドロキシプロピルトリメチルアンモニウムクロリドエチル、Nヤシ油脂肪酸アシルLグルタミン酸ナトリウム、クエン酸、オレンジ油、フェノキシエタノール、安息香酸ナトリウム、ラベンダー油、香料、ポリプロピレングリコール、1,3ブチレングリコール、セージエキス、ローズマリーエキス、1,2ペンタンジオール、グルコノデルタラクトン、ステアリン酸ジメチルアミノプロピルアミド、塩化ナトリウム、水酸化カリウム、大豆たん白加水分解物(2)、ヒアルロン酸ナトリウム(2)、シロキクラゲ多糖体",
+   "note": "販売名：マイナチュレ シャンプーA3。",
+   "source": {
+    "type": "brand",
+    "label": "マイナチュレ楽天市場店（メーカーのお店）",
+    "url": "https://item.rakuten.co.jp/my-nature/y-shampoo/",
+    "date": "2026-10-18"
+   },
+   "shop": {
+    "asp": "a8",
+    "url": "https://px.a8.net/svt/ejp?a8mat=4BEIPF+5URQYI+2GP2+BWVTE",
+    "pixel": "https://www11.a8.net/0.gif?a8mat=4BEIPF+5URQYI+2GP2+BWVTE",
+    "img": "assets/products/mynature-shampoo.webp"
+   }
+  },
+  {
    "id": "jan-4902806437348",
    "jan": "4902806437348",
    "category": "shampoo",

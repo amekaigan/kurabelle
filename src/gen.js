@@ -259,8 +259,8 @@ const SHOP_N = { a8: "A8.net", moshimo: "もしもアフィリエイト", access
 const REL_IMG = p => "/" + p;
 const isDirect = x => !!(x.p.shop && x.p.shop.url);
 /* 飛び先：メーカーの公式通販（既定）か Amazon（shop.dest: "amazon"） */
-const DEST = { amazon: { btn: "Amazonで見る", page: "Amazonの商品ページ", tag: "Amazonで販売" } };
-const dest = x => DEST[x.p.shop && x.p.shop.dest] || { btn: "公式サイトで見る", page: "メーカーの公式通販のページ", tag: "メーカー直販" };
+const DEST = { amazon: { btn: "Amazonで見る", page: "Amazonの商品ページ", tag: "Amazonで販売", where: "Amazon" } };
+const dest = x => DEST[x.p.shop && x.p.shop.dest] || { btn: "公式サイトで見る", page: "メーカーの公式通販のページ", tag: "メーカー直販", where: "公式サイト" };
 const useRk = x => (RK_ON || PREVIEW) && !isDirect(x);
 const rkKey = x => x.p.jan || `${x.p.brand || ""} ${x.p.name}`.trim();
 const imgSlot = (x, cls) => isDirect(x) && x.p.shop.img
@@ -412,7 +412,7 @@ P.forEach(x => {
   <h1>${esc(p.name)} の成分</h1>
   <div class="row">${chips(x)}</div>
   <div class="acts">${isDirect(x) ? `<span class="pr-tag">PR</span><a class="rk-buy" href="${esc(p.shop.url)}" rel="sponsored noopener" target="_blank">${dest(x).btn}</a>${p.shop.pixel ? `<img class="px" src="${esc(p.shop.pixel)}" width="1" height="1" alt="">` : ""}` : ""}${useRk(x) ? `<span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : ""}</div>
-  ${isDirect(x) ? `<p class="pr-note">「${dest(x).btn}」は広告（${esc(SHOP_N[p.shop.asp] || "アフィリエイト")}）のリンクです。${dest(x).page}が開きます。紹介料の有無は、点数や順位に関係しません。価格や内容は公式サイトでご確認ください。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
+  ${isDirect(x) ? `<p class="pr-note">「${dest(x).btn}」は広告（${esc(SHOP_N[p.shop.asp] || "アフィリエイト")}）のリンクです。${dest(x).page}が開きます。紹介料の有無は、点数や順位に関係しません。価格や内容は${dest(x).where}でご確認ください。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
   ${useRk(x) ? `<p class="rk-price" data-rk-price="${esc(rkKey(x))}" hidden></p><p class="pr-note" data-rk-pr="${esc(rkKey(x))}" hidden>「楽天市場で見る」は広告（楽天アフィリエイト）のリンクです。紹介料の有無は、点数や順位に関係しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
   </div></div>
   ${typeBlock(x, r)}

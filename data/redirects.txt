@@ -1,3 +1,4 @@
 # 外した・まとめた商品の古いURLを、移り先へ案内する（Cloudflare Pages の _redirects としてそのまま使う）
 # 書き方：古いURL 新しいURL 301
 /products/lucido-q10-perfect-skin-cream/ /products/jan-4902806121483/ 301
+/products/lucido-scalp-deo-shampoo-w/ /products/jan-4902806437348/ 301

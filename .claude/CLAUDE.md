@@ -29,7 +29,7 @@ Claude Codeが起動時に自動で読むファイル。`.claude/` に置くの�
 - 迷ったら一つ上の段階として扱う。作業の前に本番の最新を取り込む。1回の保存は1つの目的に絞る。
 
 ### 進捗ボード
-全サイトの状況は「サイト進行ボード」（https://claude.ai/artifact/L6VBB41iVJqRdGobi937B7）の `items` に ArtifactData で書く。`site` は「成分比較」。
+全サイトの状況は「サイト進行ボード」（https://claude.ai/artifact/L6VBB41iVJqRdGobi937B7）の `items` に ArtifactData で書く。`site` は「クラベル」。
 status：doing／review（B）／ask（C）／ok（反映待ち）／hold／done。作業を始めたらまずボードを読み、`ok` は反映して `done` にする。
 
 ## クラベルだけのルール

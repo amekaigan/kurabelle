@@ -399,8 +399,8 @@ P.forEach(x => {
   <div class="phead"><div class="pfig">${imgSlot(x, "pimg")}<button class="fav-btn star" type="button" hidden aria-pressed="false" aria-label="お気に入りに追加" title="お気に入りに追加" data-fav="${esc(JSON.stringify({ id: p.id, name: p.name, brand: p.brand || "", url: x.url, match: x.match, grade: x.grade, type: x.sc ? typeOf(x).title : "", ph: PH[p.category] || "ph-bottle" }))}"></button></div><div>
   <h1>${esc(p.name)} の成分</h1>
   <div class="row">${chips(x)}</div>
-  <div class="acts">${RK_ON || PREVIEW ? `<a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : ""}</div>
-  ${RK_ON || PREVIEW ? `<p class="rk-price" data-rk-price="${esc(rkKey(x))}" hidden></p>` : ""}
+  <div class="acts">${RK_ON || PREVIEW ? `<span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : ""}</div>
+  ${RK_ON || PREVIEW ? `<p class="rk-price" data-rk-price="${esc(rkKey(x))}" hidden></p><p class="pr-note" data-rk-pr="${esc(rkKey(x))}" hidden>「楽天市場で見る」は広告（楽天アフィリエイト）のリンクです。紹介料の有無は、点数や順位に関係しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
   </div></div>
   ${typeBlock(x, r)}
   <p class="lead">${esc(leadText(x))}</p>

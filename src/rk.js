@@ -21,6 +21,7 @@
       img.src = d.img.replace(/\?_ex=\d+x\d+/, "") + (el.classList.contains("pimg") ? "?_ex=500x500" : "?_ex=240x240"); // 商品ページは大きく、一覧は中くらい
     });
     document.querySelectorAll('[data-rk-link="' + CSS.escape(k) + '"]').forEach(function (a) { if (d && d.url) { a.href = d.url; a.hidden = false; } });
+    document.querySelectorAll('[data-rk-pr="' + CSS.escape(k) + '"]').forEach(function (el) { if (d && d.url) el.hidden = false; }); /* 広告リンクが出るときだけ、PRの表示も出す */
     document.querySelectorAll('[data-rk-price="' + CSS.escape(k) + '"]').forEach(function (p) {
       if (!d || !d.price) return;
       var yen = "¥" + Number(d.price).toLocaleString("ja-JP");

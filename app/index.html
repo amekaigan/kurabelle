@@ -1343,7 +1343,8 @@ function card(e, inCmp, isNg){
   const rankHtml = isNg ? `<div class="pc-rank" style="background:var(--warn)" aria-label="順位なし">⚠</div>`
     : e.rank==null ? `<div class="pc-rank" aria-label="順位なし">–</div>`
     : `<div class="pc-rank" aria-label="${e.rank}位">${e.rank}<small>位</small></div>`;
-  const pic = `<div class="pc-pic">${key?`<span class="thumb" data-rk="${esc(key)}"${p.jan?' data-jan="1"':''}>`:'<span class="thumb">'}<svg viewBox="0 0 120 120" aria-hidden="true"><use href="#${PH[p.category]||'ph-bottle'}"/></svg></span>${rankHtml}</div>`;
+  const own = p.shop && p.shop.img ? `<span class="thumb"><img src="/${esc(p.shop.img)}" alt="" loading="lazy"></span>` : ''; /* メーカー直販の商品画像 */
+  const pic = own ? `<div class="pc-pic">${own}${rankHtml}</div>` : `<div class="pc-pic">${key?`<span class="thumb" data-rk="${esc(key)}"${p.jan?' data-jan="1"':''}>`:'<span class="thumb">'}<svg viewBox="0 0 120 120" aria-hidden="true"><use href="#${PH[p.category]||'ph-bottle'}"/></svg></span>${rankHtml}</div>`;
   const surf = sc.mainSurf ? `　主洗浄 <strong>${esc(sc.mainSurf.name)}</strong>` : '';
   return `<article class="card pcard${isNg?' dim':''}" data-pid="${esc(p.id)}">
     <div class="pc-head">

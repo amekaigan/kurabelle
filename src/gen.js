@@ -12,6 +12,7 @@ if (!SRC || !OUT) { console.error("usage: gen.js products.json outdir [--site UR
 const SITE = rest.includes("--site") ? (rest[rest.indexOf("--site") + 1] || "").replace(/\/$/, "") : "";
 // 楽天の画像は、Cloudflare に RAKUTEN_APP_ID が入っているときだけ出す（鍵は functions/api/rk.js だけが使い、ページには出さない）
 const RK_ON = !!process.env.RAKUTEN_APP_ID;
+const ROOT_DIR = path.join(__dirname, "..");
 const PREVIEW = rest.includes("--preview"); // ファイルを直接開く見本用：リンクの末尾に index.html を付ける
 const DATA = JSON.parse(fs.readFileSync(SRC, "utf8"));
 const PRODUCTS = DATA.products;
@@ -255,10 +256,13 @@ const mix = x => { const cnt = {}; x.a.items.forEach(i => { const r = C.compRole
 /* メーカー直販の商品（アフィリエイトの仲介サービス経由）は、楽天の情報（画像・価格・リンク）を使わない。
    楽天ウェブサービスの規約で、楽天の情報を使う商品に楽天以外のアフィリエイトを付けられないため。 */
 const SHOP_N = { a8: "A8.net", moshimo: "もしもアフィリエイト", accesstrade: "アクセストレード", afb: "afb" };
+const REL_IMG = p => "/" + p;
 const isDirect = x => !!(x.p.shop && x.p.shop.url);
 const useRk = x => (RK_ON || PREVIEW) && !isDirect(x);
 const rkKey = x => x.p.jan || `${x.p.brand || ""} ${x.p.name}`.trim();
-const imgSlot = (x, cls) => `<span class="${cls}"${isDirect(x) ? "" : ` data-rk="${esc(rkKey(x))}"${x.p.jan ? ' data-jan="1"' : ""}`}><svg viewBox="0 0 120 120" aria-hidden="true"><use href="#${PH[x.p.category] || "ph-bottle"}"/></svg></span>`;
+const imgSlot = (x, cls) => isDirect(x) && x.p.shop.img
+  ? `<span class="${cls} on"><img src="${REL_IMG(x.p.shop.img)}" alt="" loading="${cls === "pimg" ? "eager" : "lazy"}" decoding="async"></span>` /* メーカーが用意した商品画像（仲介サービスの素材） */
+  : `<span class="${cls}"${isDirect(x) ? "" : ` data-rk="${esc(rkKey(x))}"${x.p.jan ? ' data-jan="1"' : ""}`}><svg viewBox="0 0 120 120" aria-hidden="true"><use href="#${PH[x.p.category] || "ph-bottle"}"/></svg></span>`;
 const scoreBadge = x => x.match == null ? "" : `<span class="score"><b class="mono">${x.match}</b><i class="g g-${x.grade}">${x.grade}</i></span>`;
 function productCard(x, r, extra, opt = {}) {
   const ms = x.sc && x.sc.mainSurf ? `主洗浄成分 ${esc(x.sc.mainSurf.name)}・` : "";
@@ -613,6 +617,8 @@ fs.mkdirSync(path.join(OUT, "assets"), { recursive: true });
 fs.writeFileSync(path.join(OUT, "assets/site.css"), fs.readFileSync(path.join(__dirname, "site.css"), "utf8").split("__MKL__").join(HAND.markerLight).split("__MKD__").join(HAND.markerDark));
 fs.copyFileSync(path.join(__dirname, "kb.js"), path.join(OUT, "assets/kb.js"));
 fs.copyFileSync(path.join(__dirname, "chrome.css"), path.join(OUT, "assets/chrome.css"));
+/* メーカー直販の商品画像（assets/products/） */
+if (fs.existsSync(path.join(ROOT_DIR, "assets/products"))) fs.cpSync(path.join(ROOT_DIR, "assets/products"), path.join(OUT, "assets/products"), { recursive: true });
 
 /* ---------- 見つからないページ（404） ----------
    Cloudflare Pages は 404.html がないと、存在しないURLにもトップページを200で返す。

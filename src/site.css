@@ -97,7 +97,9 @@ main section{display:block}
 .pfig{position:relative;width:min(100%,300px);align-self:center}
 .pimg{width:100%;height:auto;aspect-ratio:1/1;border-radius:20px;background:#fff}
 .thumb svg,.pimg svg{width:100%;height:100%;display:block}
-.thumb img,.pimg img{width:100%;height:100%;object-fit:contain;background:#fff}
+.thumb,.pimg{position:relative}
+.thumb img,.pimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff}   /* 縦長・横長の写真も、正方形の枠の中に全体を収める */
+.pimg img{box-sizing:border-box}
 .pimg img{padding:6px}
 .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .fav-btn{white-space:nowrap;min-height:48px;padding:0 16px;border-radius:12px;border:2px solid var(--ink);background:var(--card);color:var(--ink);font:inherit;font-size:16px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px}

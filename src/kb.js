@@ -34,6 +34,10 @@
       b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
       toast(was ? "お気に入りから外しました" : "お気に入りに追加しました", was ? "" : '<a href="' + esc(link("")) + '#favs">一覧を見る</a>');
     });
+    /* 前に保存したお気に入りにも、画像の情報を足しておく（古い版で保存したものは画像がなかった） */
+    var l0 = load(), ch = false;
+    l0.forEach(function (x, k) { if (x.id === d.id && (x.img !== d.img || x.rk !== d.rk)) { l0[k] = d; ch = true; } });
+    if (ch) save(l0);
     sync(); b.hidden = false;
   });
 
@@ -57,10 +61,16 @@
   if (box) {
     var l = load();
     if (l.length) box.innerHTML = l.slice(0, 6).map(function (x) {
-      return '<a class="fav" href="' + esc(link(x.url)) + '"><span class="thumb"><svg viewBox="0 0 120 120" aria-hidden="true"><use href="#' + esc(x.ph || "ph-bottle") + '"/></svg></span>' +
+      /* 画像：メーカー直販はその画像、楽天の商品は楽天の画像（rk.js が埋める）。古い保存分は商品IDのJANから探す */
+      var rk = x.rk || (!x.img && /^jan-\d{8,14}$/.test(x.id || "") ? x.id.slice(4) : ""), jan = x.rk ? x.jan : (rk ? 1 : 0);
+      var ph = '<svg viewBox="0 0 120 120" aria-hidden="true"><use href="#' + esc(x.ph || "ph-bottle") + '"/></svg>';
+      var th = x.img ? '<span class="thumb on"><img src="' + esc(x.img) + '" alt="" loading="lazy" decoding="async"></span>'
+        : '<span class="thumb"' + (rk ? ' data-rk="' + esc(rk) + '"' + (jan ? ' data-jan="1"' : "") : "") + '>' + ph + '</span>';
+      return '<a class="fav" href="' + esc(link(x.url)) + '">' + th +
         '<span class="nm"><small>' + esc(x.brand) + '</small><strong>' + esc(x.name) + '</strong>' + (x.type ? '<em>' + esc(x.type) + '</em>' : "") + '</span>' +
         (x.match != null ? '<span class="n">' + esc(x.match) + '<svg viewBox="0 0 60 44" preserveAspectRatio="none" aria-hidden="true"><use href="#ring"/></svg></span>' : "<span></span>") + "</a>";
     }).join("");
+    if (window.RK && window.RK.scan) window.RK.scan();
   }
 
   /* トップの検索：商品名・ブランド・成分名（別名も）で探す */

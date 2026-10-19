@@ -41,7 +41,8 @@
     "type": "photo",
     "label": "パッケージ写真から",
     "date": "2026-10-14"
-   }
+   },
+   "img": "assets/products/jan-4573360720025.webp"
   },
   {
    "id": "jan-4901301448705",
@@ -291,7 +292,8 @@
    "infoSource": {
     "url": "https://netshop.create-sd.co.jp/shop/g/g4902806100570/",
     "date": "2026-10-16"
-   }
+   },
+   "img": "assets/products/jan-4902806100570.webp"
   },
   {
    "id": "jan-4987205110054",

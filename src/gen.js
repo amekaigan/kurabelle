@@ -263,8 +263,9 @@ const DEST = { amazon: { btn: "Amazonで見る", page: "Amazonの商品ページ
 const dest = x => DEST[x.p.shop && x.p.shop.dest] || { btn: "公式サイトで見る", page: "メーカーの公式通販のページ", tag: "メーカー直販", where: "公式サイト" };
 const useRk = x => (RK_ON || PREVIEW) && !isDirect(x);
 const rkKey = x => x.p.jan || `${x.p.brand || ""} ${x.p.name}`.trim();
-const imgSlot = (x, cls) => isDirect(x) && x.p.shop.img
-  ? `<span class="${cls} on"><img src="${REL_IMG(x.p.shop.img)}" alt="" loading="${cls === "pimg" ? "eager" : "lazy"}" decoding="async"></span>` /* メーカーが用意した商品画像（仲介サービスの素材） */
+const ownImg = x => (isDirect(x) && x.p.shop.img) || x.p.img || "";   /* 運営者が用意した商品画像（メーカー直販の素材、または差し替え用） */
+const imgSlot = (x, cls) => ownImg(x)
+  ? `<span class="${cls} on"><img src="${REL_IMG(ownImg(x))}" alt="" loading="${cls === "pimg" ? "eager" : "lazy"}" decoding="async"></span>` /* メーカーが用意した商品画像（仲介サービスの素材） */
   : `<span class="${cls}"${isDirect(x) ? "" : ` data-rk="${esc(rkKey(x))}"${x.p.jan ? ' data-jan="1"' : ""}`}><svg viewBox="0 0 120 120" aria-hidden="true"><use href="#${PH[x.p.category] || "ph-bottle"}"/></svg></span>`;
 const scoreBadge = x => x.match == null ? "" : `<span class="score"><b class="mono">${x.match}</b><i class="g g-${x.grade}">${x.grade}</i></span>`;
 function productCard(x, r, extra, opt = {}) {
@@ -408,7 +409,7 @@ P.forEach(x => {
   const desc = `${p.name}の全成分${x.a.items.length}種類を、成分ごとの役割つきで一覧にしました。${x.sc && x.sc.mainSurf ? `主洗浄成分は${x.sc.mainSurf.name}。` : ""}香料・シリコーンなどの有無と、似た成分の商品も。`;
   write(x.url, `${p.name}の成分`, desc, r => `
 <article class="prod">
-  <div class="phead"><div class="pfig">${imgSlot(x, "pimg")}<button class="fav-btn star" type="button" hidden aria-pressed="false" aria-label="お気に入りに追加" title="お気に入りに追加" data-fav="${esc(JSON.stringify({ id: p.id, name: p.name, brand: p.brand || "", url: x.url, match: x.match, grade: x.grade, type: x.sc ? typeOf(x).title : "", ph: PH[p.category] || "ph-bottle", img: isDirect(x) && p.shop.img ? REL_IMG(p.shop.img) : "", rk: useRk(x) ? rkKey(x) : "", jan: p.jan ? 1 : 0 }))}"></button></div><div>
+  <div class="phead"><div class="pfig">${imgSlot(x, "pimg")}<button class="fav-btn star" type="button" hidden aria-pressed="false" aria-label="お気に入りに追加" title="お気に入りに追加" data-fav="${esc(JSON.stringify({ id: p.id, name: p.name, brand: p.brand || "", url: x.url, match: x.match, grade: x.grade, type: x.sc ? typeOf(x).title : "", ph: PH[p.category] || "ph-bottle", img: ownImg(x) ? REL_IMG(ownImg(x)) : "", rk: useRk(x) && !ownImg(x) ? rkKey(x) : "", jan: p.jan ? 1 : 0 }))}"></button></div><div>
   <h1>${esc(p.name)} の成分</h1>
   <div class="row">${chips(x)}</div>
   <div class="acts">${isDirect(x) ? `<span class="pr-tag">PR</span><a class="rk-buy" href="${esc(p.shop.url)}" rel="sponsored noopener" target="_blank">${dest(x).btn}</a>${p.shop.pixel ? `<img class="px" src="${esc(p.shop.pixel)}" width="1" height="1" alt="">` : ""}` : ""}${useRk(x) ? `<span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : ""}</div>

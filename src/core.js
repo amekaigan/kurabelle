@@ -499,7 +499,7 @@ function weightsShampoo(w, a){
   if(c.includes('dandruff')) w.scalp+=2.5;
   if(c.includes('oily')){w.clean+=1.5;w.scalp+=1;}
   if(c.includes('damage')){w.repair+=2.5;w.smooth+=1;}
-  if(c.includes('volume')) w.scalp+=2.5;
+  if(c.includes('volume')){w.scalp+=2.5;w.smooth*=0.3;}   // 2026-10-20：髪に残る成分が多いと根元が寝やすいので、ボリュームを選んだ人には指通りを重く見ない
   if(c.includes('dry')){w.mild+=2;w.gentle+=0.5;w.clean*=0.7;}
   if(c.includes('sensitive')){w.gentle+=2.5;w.mild+=1;}
   if(a.texture==='rich'){w.smooth+=0.75;w.clean*=0.7;}

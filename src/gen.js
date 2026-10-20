@@ -325,7 +325,7 @@ const AX_DESC = {
     clean: "主な洗浄成分が、硫酸系などの洗浄力の高いものほど高くなります。皮脂をしっかり落とす処方の傾向です。",
     scalp: "グリチルリチン酸2K・ピロクトンオラミンなど、頭皮ケアの成分が多いほど高くなります。",
     repair: "ケラチン・セラミド・加水分解タンパクなど、髪の補修成分が多いほど高くなります。",
-    smooth: "カチオン成分・シリコーン・油分が多いほど高くなります。洗っているときにきしみにくい処方の傾向です。",
+    smooth: "カチオン成分・シリコーン・油分が多いほど高くなります。きしみにくく、まとまりやすい処方の傾向です。髪に残る成分が多いと根元が寝やすいので、ボリュームを重視するなら低くても気にしなくて大丈夫です。",
     gentle: "香料・アルコール・メントール・着色料などが少ないほど高くなります。" },
   conditioner: { smooth: "カチオン成分・シリコーンが多いほど高くなります。髪の表面をなめらかにする処方の傾向です。",
     repair: "ケラチン・セラミド・加水分解タンパクなど、髪の補修成分が多いほど高くなります。",
@@ -342,10 +342,10 @@ const AX_DESC = {
 function axesBlock(x, r) {
   const cat = x.p.category, T = C.CATS[cat].themes, D = AX_DESC[cat] || {}, ty = typeOf(x);
   if (!T.length) return "";
+  /* 観点ごとの説明は、押したときだけ開く（説明が並びすぎて、成分表まで遠くならないように） */
   return `<div class="axes">
-    <h3>それぞれの観点の見方</h3>
-    ${ty.top.length ? `<p class="small">「${esc(ty.title)}」は、この商品で点数が高い観点です。</p>` : ""}
-    <dl>${T.map(t => `<div><dt>${esc(t.n)}<b class="mono">${x.sc.v[t.k].toFixed(1)}</b></dt><dd>${esc(D[t.k] || "")}<small>この商品：${esc(x.sc.why[t.k] || "")}</small></dd></div>`).join("")}</dl>
+    <h3>それぞれの観点の見方<small>押すと、数え方とこの商品の中身が出ます</small></h3>
+    <div class="axl">${T.map(t => `<details><summary><span>${esc(t.n)}</span><i class="axbar" style="--v:${(x.sc.v[t.k] / 5 * 100).toFixed(0)}%"></i><b class="mono">${x.sc.v[t.k].toFixed(1)}</b></summary><p>${esc(D[t.k] || "")}</p><p class="ax-this">この商品：${esc(x.sc.why[t.k] || "")}</p></details>`).join("")}</div>
   </div>`;
 }
 function typeBlock(x, r) {
@@ -362,7 +362,7 @@ function typeBlock(x, r) {
     <li><span>いちばん控えめ</span><b>${esc(ty.low.n)}</b><i>${ty.low.v.toFixed(1)}点</i></li>
   </ul>
   ${axesBlock(x, r)}
-  <p class="small muted">成分表に何が入っているかを、決まったルールで5点満点に数えたものです。効果や使い心地を表すものではありません。数え方は<a href="${r("about/scoring/")}">点数のつけ方</a>に${QUIZ[x.p.category] ? `、自分の${x.p.category === "skincare" ? "肌" : "髪や頭皮"}に合わせた順位は<a href="${r("app/")}${QUIZ[x.p.category].hash}">診断つきの比較ツール</a>に` : ""}あります。${QUIZ_CATS.includes(x.p.category) ? "" : `${esc(CAT_N[x.p.category])}の診断は準備中です。`}</p>
+  <p class="small muted">成分表の中身を決まったルールで数えた点数で、効果や使い心地ではありません。<a href="${r("about/scoring/")}">数え方</a>${QUIZ[x.p.category] ? `・<a href="${r("app/")}${QUIZ[x.p.category].hash}">自分に合う順に並べる</a>` : `（${esc(CAT_N[x.p.category])}の診断は準備中）`}</p>
 </section>`;
 }
 function leadText(x) {
@@ -387,7 +387,7 @@ function scentBlock(x) {
   const fromLabel = fr && ess.length ? `香料と精油（${ess.map(esc).join("、")}）で香りをつけています。`
     : fr ? "香料で香りをつけています。" : ess.length ? `香料は入っていません。精油（${ess.map(esc).join("、")}）が入っています。` : "香料も精油も入っていません（無香料）。";
   const maker = x.p.scent ? `<p>メーカーの説明では「${esc(x.p.scent)}」です。</p>` : "";
-  return `<p>${fromLabel}</p>${maker}<p class="small muted">香りの好みは人それぞれなので、点数には入れていません。成分表から分かるのは、香料や精油が入っているかどうかまでです。</p>`;
+  return `<p>${fromLabel}</p>${maker}<p class="small muted">香りは点数に入れていません。下の項目も、入っていること自体の良い・悪いではありません。</p>`;
 }
 /* 使った感想：運営者が実際に使ったものだけ（reviews 項目）。点数とは分けて、個人の感想とはっきり書く */
 function reviewBlock(x) {
@@ -418,12 +418,11 @@ P.forEach(x => {
   </div></div>
   ${typeBlock(x, r)}
   <p class="lead">${esc(leadText(x))}</p>
-  ${p.desc || p.scent ? `<div class="maker"><span class="lbl">メーカーの説明</span>${p.desc ? `<p>${esc(p.desc)}</p>` : ""}${p.scent ? `<p class="mk-scent"><b>香り</b>${esc(p.scent)}</p>` : ""}${p.infoSource && p.infoSource.url ? `<p class="small muted">出典：<a href="${esc(p.infoSource.url)}" rel="nofollow noopener" target="_blank">${esc((p.infoSource.url.split("/")[2] || "").replace(/^www\./, ""))}</a>（${esc(p.infoSource.date || "")}確認）。メーカーの説明を短くまとめたもので、効果を保証するものではありません。</p>` : ""}</div>` : ""}
+  ${p.desc || p.scent ? `<div class="maker"><span class="lbl">メーカーの説明</span>${p.desc ? `<p>${esc(p.desc)}</p>` : ""}${p.scent ? `<p class="mk-scent"><b>香り</b>${esc(p.scent)}</p>` : ""}${p.infoSource && p.infoSource.url ? `<p class="small muted">出典：<a href="${esc(p.infoSource.url)}" rel="nofollow noopener" target="_blank">${esc((p.infoSource.url.split("/")[2] || "").replace(/^www\./, ""))}</a>（${esc(p.infoSource.date || "")}確認）の要約。効果を保証するものではありません。</p>` : ""}</div>` : ""}
   ${reviewBlock(x)}
   <section><h2>全成分と、それぞれの役割</h2>
-    <p class="small muted">${p.kind === "quasi" ? "医薬部外品は、有効成分とその他の成分に分けて表示されます。その他の成分は配合量の順とは限りません。" : "化粧品は、配合量の多い順に並びます（1%以下の成分は順不同）。"}</p>
     ${mix(x)}
-    ${x.a.items.some(i => i.active) ? `<p class="small"><span class="actkey"></span>青い行は<b>有効成分</b>です。医薬部外品で、効能を表示するために配合が認められている成分です。</p>` : ""}
+    <p class="small muted">${p.kind === "quasi" ? `${x.a.items.some(i => i.active) ? '<span class="actkey"></span>青い行が有効成分。' : ""}その他の成分は、配合量の順とは限りません。` : "配合量の多い順です（1%以下は順不同）。"}</p>
     <div class="scroll"><table class="ings"><thead><tr><th>#</th><th>成分名</th><th>役割</th></tr></thead><tbody>
     ${x.a.items.map((it, i) => { const u = ingUrl.get(it.name); const nm = esc(C.norm(it.raw));
       return `<tr${it.active ? ' class="act"' : ""}><td class="mono">${i + 1}</td><td>${u ? `<a href="${r(u)}">${nm}</a>` : nm}${it.active ? '<span class="chip acc">有効成分</span>' : ""}<span class="desc">${esc(it.desc || (it.role === "unk" ? "辞書にない成分" : ""))}</span></td><td><span class="role" style="--c:var(${ROLE_C(C.compRole(it))})">${esc(ROLE_N(C.compRole(it)))}</span></td></tr>`; }).join("")}
@@ -431,7 +430,6 @@ P.forEach(x => {
   </section>
   <section><h2>香りと、よく気にされる成分</h2>
     ${scentBlock(x)}
-    <p class="small muted">成分で商品を選ぶときによく確かめられる項目です。入っていること自体が良い・悪いということではありません。</p>
     <ul class="flags">${flags.map(([n, on]) => `<li class="${on ? "on" : "off"}"><span>${on ? "入っている" : "入っていない"}</span>${esc(n)}</li>`).join("")}</ul>
   </section>
   <section><h2>成分が似ている${esc(catN)}</h2><div class="plist">${similar(x, 4).map(({ y, s }) => productCard(y, r, `共通の成分 ${Math.round(s * 100)}%`)).join("")}</div></section>

@@ -1290,7 +1290,8 @@ function diagResult(a, w, QS, cur){
     return `<li><span class="no">${i+1}</span><div><b>${esc(t.n)}</b><span class="fv">${esc(fav)}がおすすめです。</span>${ings.length?`<span class="ings"><small>いまの上位の商品に入っている成分</small>${ings.map(n=>`<em>${esc(n)}</em>`).join('')}</span>`:''}</div></li>`;
   }).join('');
   const lowT = order.filter(t=>w[t.k]<=0.8).slice(-1)[0];
-  const low = lowT ? `<p class="low">「${esc(lowT.n)}」は控えめにしています。</p>` : '';
+  const low = (lowT ? `<p class="low">「${esc(lowT.n)}」は控えめにしています。</p>` : '')
+    + (S.cat==='shampoo' && (a.concerns||[]).includes('volume') ? `<p class="low">髪に残る成分が多いと、根元が寝てボリュームが出にくくなります。コンディショナーは使わない選び方もあります。使う場合は、<a href="#conditioner">コンディショナーの診断</a>で「ボリューム」を選ぶと、髪に残る成分が少ないものから並びます。</p>` : '');
   return `<div class="type"><small>あなたの診断結果</small><b><span class="tmk">${esc(type)}</span><span class="sfx">タイプ</span></b><p>${esc(lead)}</p></div>
     <div><h3>重視していること</h3>${weightRadar(w)}<p class="rnote">いちばん重視している観点を5.0としたときの度合いです</p></div>
     ${pts?`<div><h3>あなたにおすすめの商品</h3><ol class="pts">${pts}</ol></div>`:''}${low}

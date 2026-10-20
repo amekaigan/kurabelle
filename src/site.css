@@ -288,3 +288,15 @@ table.ings tr:last-child td{border-bottom:0}
 .rk-price.sm b{font-size:15px}
 .rk-price[hidden]{display:none}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* 観点の見方：押すと開く一覧（2026-10-20） */
+.axes h3 small{display:block;font-size:13px;font-weight:400;color:var(--ink3);margin-top:2px}
+.axl{border:1px solid var(--line);border-radius:12px;background:var(--paper);overflow:hidden}
+.axl details+details{border-top:1px solid var(--line)}
+.axl summary{list-style:none;display:grid;grid-template-columns:7.5em 1fr 2.6em 14px;align-items:center;gap:10px;min-height:52px;padding:0 14px;cursor:pointer;font-weight:700;font-size:16px}
+.axl summary::-webkit-details-marker{display:none}
+.axl summary::after{content:"";width:8px;height:8px;border-right:2px solid var(--ink3);border-bottom:2px solid var(--ink3);transform:rotate(45deg);margin-top:-4px}
+.axl details[open] summary::after{transform:rotate(-135deg);margin-top:4px}
+.axl summary b{text-align:right;font-size:17px}
+.axbar{display:block;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--hl) var(--v),var(--grid) var(--v))}
+.axl details p{margin:0 14px 10px;font-size:15px;line-height:1.7}
+.axl details p.ax-this{font-size:13px;color:var(--ink3);overflow-wrap:anywhere;margin-bottom:14px}

@@ -7,6 +7,8 @@
 候補ファイル（tools/cands/*.py）の書き方は tools/cands/cands.py を見本にする。
 A = 採用する出典、B = 照合用（別サイト。なければ同じページを番号つき一覧とJSON配列で2回取得）。
 list には取得結果をそのまま貼る（2回目も1回目を流用せず、取得した結果を貼る）。
+JANが見つからない商品は jan="" とし、id="<ブランド>-<商品>" の英小文字とハイフンの名前を付ける
+（2026年10月22日、ユーザーの判断。楽天のボタンは商品名で探す）。
 
 登録先：
   data/products.json … サイトに出る商品
@@ -65,18 +67,21 @@ for f in sorted(glob.glob(os.path.join(ROOT, "tools/cands/*.py"))):
     spec = importlib.util.spec_from_file_location(os.path.basename(f), f)
     m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m); C += m.C
 
-have = {p.get("jan") for p in D["products"]} | {p.get("jan") for p in PEND["products"]}
-skipped = {s["jan"] for s in SKIP["items"]}
+uid = lambda x: x.get("jan") or x.get("id")
+have = {uid(p) for p in D["products"]} | {uid(p) for p in PEND["products"]}
+skipped = {uid(s) for s in SKIP["items"]}
 public_cats = {p["category"] for p in D["products"]}
 ok, ng = [], []
 for c in C:
-    if c["jan"] in have: continue          # 登録済みは黙って飛ばす
+    if not c.get("jan") and not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)+", c.get("id", "")):
+        ng.append((c, ["JANがない商品に id がない"])); continue
+    if uid(c) in have: continue          # 登録済みは黙って飛ばす
     a = [norm(x) for x in c["A"]["list"]]; b = [norm(x) for x in c["B"]["list"]]
     errs = []
     if [key(x) for x in a] != [key(x) for x in b]:
         d = [l for l in difflib.unified_diff([key(x) for x in a], [key(x) for x in b], n=0, lineterm="") if l[:1] in "+-" and not l.startswith(("+++", "---"))]
         errs.append("2つの出典で成分が違う（" + " / ".join(d[:8]) + "）")
-    if not jan_ok(c["jan"]): errs.append("JANのチェックデジットが合わない")
+    if c.get("jan") and not jan_ok(c["jan"]): errs.append("JANのチェックデジットが合わない")
     act = [norm(x) for x in c["A"].get("active", [])]
     if c["kind"] == "quasi" and not act: errs.append("医薬部外品なのに有効成分がない")
     for x in act:
@@ -87,12 +92,12 @@ for c in C:
     if dup: errs.append(f"成分が重複{dup}")
     if len(a) < 8: errs.append(f"成分が{len(a)}個しかない")
     if errs: ng.append((c, errs)); continue
-    p = {"id": f"jan-{c['jan']}", "jan": c["jan"], "category": c["category"], "brand": c["brand"], "name": c["name"],
+    p = {"id": f"jan-{c['jan']}" if c.get("jan") else c["id"], "jan": c.get("jan") or "", "category": c["category"], "brand": c["brand"], "name": c["name"],
          "kind": c["kind"], "target": c["target"], "volume": c["volume"], "unit": c["unit"], "price": None,
          "ingredients": ("有効成分：" + "、".join(act) + "　その他の成分：" + "、".join(others)) if act else "、".join(a)}
     if c.get("note"): p["note"] = c["note"]
     p["source"] = {"type": c["A"]["type"], "label": c["A"]["label"], "url": c["A"]["url"], "date": c.get("date", TODAY)}
-    ok.append((c, p)); have.add(c["jan"])
+    ok.append((c, p)); have.add(uid(c))
 
 for c, p in ok: print("✅", c["category"], c["name"], f"（{c['A']['label']}＋{c['B']['label']}）")
 for c, e in ng: print("⚠️", c["category"], c["name"], "→", "；".join(e))
@@ -102,8 +107,8 @@ if "--write" in sys.argv:
     for c, p in ok:
         (D if p["category"] in public_cats else PEND)["products"].append(p)
     for c, e in ng:
-        if c["jan"] not in skipped:
-            SKIP["items"].append({"jan": c["jan"], "name": c["name"], "category": c["category"], "reason": "；".join(e), "date": TODAY})
+        if uid(c) not in skipped:
+            SKIP["items"].append({"jan": c.get("jan") or None, "id": c.get("id"), "name": c["name"], "category": c["category"], "reason": "；".join(e), "date": TODAY})
     # 待機中のカテゴリが規定数に達したら公開側へ移す
     from collections import Counter
     cnt = Counter(p["category"] for p in PEND["products"])

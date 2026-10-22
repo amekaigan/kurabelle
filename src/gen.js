@@ -493,14 +493,31 @@ ING_PAGES.forEach(g => {
   const tagTxt = g.tags.map(t => TAG_EXPLAIN[t]).filter(Boolean);
   const same = ING_PAGES.filter(h => h !== g && h.role === g.role).slice(0, 12);
   const top = g.uses.slice().sort((a, b) => a.pos / a.of - b.pos / b.of);
-  const desc = `${g.name}は「${ROLE_N(g.role)}」の成分です。${g.desc}。${g.name}が入っている商品${g.uses.length}件と、成分表のどのあたりに書かれているかを一覧にしました。`;
+  /* 数字で見る（2026年10月22日）：手元の商品データから計算できることだけを出す。新しい主張は書かない */
+  const catStat = CAT_ORDER.map(cat => { const n = P.filter(x => x.p.category === cat).length, k = g.uses.filter(u => u.x.p.category === cat).length; return { cat, n, k, pct: n ? Math.round(k / n * 100) : 0 }; }).filter(o => o.k > 0);
+  const best = catStat.slice().sort((m, n) => n.pct - m.pct || n.k - m.k)[0];
+  const posU = g.uses.filter(u => !u.active && u.x.p.kind === "cosme");
+  const bk = [0, 0, 0]; posU.forEach(u => bk[Math.min(2, Math.floor((u.pos - 1) / u.of * 3))]++);
+  const coCnt = new Map(); g.uses.forEach(u => new Set(u.x.names).forEach(n => { if (n !== g.name && ingUrl.has(n)) coCnt.set(n, (coCnt.get(n) || 0) + 1); }));
+  const co = [...coCnt].map(([n, c]) => ({ n, c, pct: Math.round(c / g.uses.length * 100), lift: c / g.uses.length - (ING.get(n).uses.length / P.length) }))
+    .filter(o => o.c >= 2 && o.lift > 0.1).sort((m, n) => n.lift - m.lift).slice(0, 8);
+  const dataLead = best ? `クラベルに登録している${CAT_N[best.cat]}では、${best.n}件のうち${best.k}件（${best.pct}%）に入っています。` : "";
+  const desc = `${g.name}は「${ROLE_N(g.role)}」の成分です。${g.desc}。${dataLead}入っている商品${g.uses.length}件と、成分表での位置、よく一緒に入っている成分も。`;
   write(u, `${g.name}とは｜役割と入っている商品`, desc, r => `
 <article>
   <p class="eyebrow">成分</p>
   <h1>${esc(g.name)}<span class="sub">とは</span></h1>
   <div class="row"><span class="role big" style="--c:var(${ROLE_C(g.role)})">${esc(ROLE_N(g.role))}</span>${tagTxt.map(t => `<span class="chip">${esc(t)}</span>`).join("")}</div>
-  <p class="lead">${esc(g.desc)}。</p>
+  <p class="lead">${esc(g.desc)}。${esc(dataLead)}</p>
   ${others.length ? `<p class="small">別の表示名：${others.map(esc).join("、")}<br><span class="muted">化粧品と医薬部外品では、同じ成分でも表示名が違うことがあります。</span></p>` : ""}
+  <section class="idata"><h2>数字で見る${esc(g.name)}</h2>
+    <p class="big-stat"><b class="mono">${g.uses.length}</b><span>件に入っている<small>（登録している${P.length}件のうち）</small></span></p>
+    <div class="cbars">${catStat.map(o => `<div class="cbar"><span class="cl-n">${esc(CAT_N[o.cat])}</span><span class="st"><i style="width:${o.pct}%"></i></span><b class="mono">${o.pct}%</b><small class="mono">${o.k}/${o.n}</small></div>`).join("")}</div>
+    ${posU.length >= 2 ? `<h3>成分表での位置</h3><div class="pbar" role="img" aria-label="前のほう${bk[0]}件、真ん中${bk[1]}件、後ろのほう${bk[2]}件"><i class="p0" style="flex:${bk[0]}"></i><i class="p1" style="flex:${bk[1]}"></i><i class="p2" style="flex:${bk[2]}"></i></div>
+      <div class="pleg"><span><b class="mono">${bk[0]}</b>前のほう</span><span><b class="mono">${bk[1]}</b>真ん中</span><span><b class="mono">${bk[2]}</b>後ろのほう</span></div>
+      <p class="small muted">化粧品${posU.length}件で数えています。化粧品の成分表は配合量の多い順（1%以下は順不同）です。</p>` : ""}
+    ${co.length ? `<h3>よく一緒に入っている成分</h3><div class="tags">${co.map(o => `<a class="tagl" href="${r(ingUrl.get(o.n))}">${esc(o.n)}<span class="mono">${o.pct}%</span></a>`).join("")}</div><p class="small muted">${esc(g.name)}が入っている商品のうち、その成分も入っている割合です。</p>` : ""}
+  </section>
   <section><h2>${esc(g.name)}が入っている商品（${g.uses.length}件）</h2>
     <p class="small muted">「◯番目／全◯成分」は成分表での位置です。化粧品では前のほうほど配合量が多い目安になります。医薬部外品は配合量の順とは限りません。「有効成分として配合」は、医薬部外品の有効成分として表示されているものです（有効成分は成分表の先頭に別枠で書かれるため、位置は出していません）。</p>
     <div class="plist">${top.map(({ x, pos, of, active }) => productCard(x, r, active ? `有効成分として配合（全${of}成分）` : `${pos}番目／全${of}成分`, { posOnly: true })).join("")}</div>

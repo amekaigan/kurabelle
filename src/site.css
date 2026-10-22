@@ -399,3 +399,24 @@ details.more[open] summary::after{transform:rotate(180deg)}
 .duo .thumb img{object-fit:cover}
 ul.chk.dif li::before{content:""}
 ul.chk.dif li small{margin-left:6px;font-size:12px;color:var(--ink3)}
+/* 成分ページ「数字で見る」（2026-10-22） */
+.idata h3{font-size:17px;margin:22px 0 8px}
+.big-stat{display:flex;align-items:baseline;gap:10px;margin:4px 0 14px}
+.big-stat b{font-size:44px;line-height:1}
+.big-stat span{font-size:17px;font-weight:700}
+.big-stat small{display:block;font-size:13px;font-weight:400;color:var(--ink2)}
+.cbars{display:grid;gap:8px}
+.cbar{display:grid;grid-template-columns:minmax(0,8.5em) 1fr 3em 3.4em;align-items:center;gap:8px;font-size:14px}
+.cbar .cl-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cbar .st{height:14px;background:var(--card);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.cbar .st i{display:block;height:100%;background:var(--ink)}
+.cbar b{text-align:right;font-size:16px}
+.cbar small{color:var(--ink3);text-align:right}
+.pbar{display:flex;height:20px;border-radius:10px;overflow:hidden;gap:2px}
+.pbar i{display:block;min-width:0}
+.pbar .p0{background:var(--ink)}.pbar .p1{background:var(--ink3)}.pbar .p2{background:var(--line2)}
+.pleg{display:flex;justify-content:space-between;font-size:14px;margin-top:6px}
+.pleg span{display:flex;flex-direction:column;line-height:1.3}
+.pleg span:nth-child(2){align-items:center}.pleg span:last-child{align-items:flex-end}
+.pleg b{font-size:20px}
+.idata{margin-top:28px}

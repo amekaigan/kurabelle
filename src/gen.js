@@ -471,8 +471,15 @@ ${C.ROLE_ORDER.filter(ro => ING_PAGES.some(g => g.role === ro)).map(ro => `<sect
 BRAND_PAGES.forEach(([b, list]) => {
   const u = brandUrl.get(b);
   const common = (() => { const cnt = new Map(); list.forEach(x => x.names.forEach(n => cnt.set(n, (cnt.get(n) || 0) + 1))); return [...cnt].filter(([n, c]) => c === list.length && ingUrl.has(n)).map(([n]) => n); })();
-  write(u, `${b}の商品と成分`, `${b}の商品${list.length}件の成分を一覧で比べられます。全商品に共通する成分と、商品ごとの違いも。`, r => `
-<h1>${esc(b)} の商品と成分</h1><p class="lead">登録している${esc(b)}の商品は${list.length}件です。</p>
+  /* 検索の言葉（「アムウェイ シャンプー 成分」など）とそろえるため、商品名の先頭がそろってメーカー名になっていれば添え、
+     カテゴリが1つならその名前を使う（2026年10月22日、ユーザーと決定）。URLは変えない */
+  const heads = new Set(list.map(x => String(x.p.name).split(/[\s　]+/)[0]));
+  const mk = heads.size === 1 && ![...heads][0].includes(b) && !b.includes([...heads][0]) ? [...heads][0] : "";
+  const full = mk ? `${mk} ${b}` : b;
+  const cats = [...new Set(list.map(x => x.p.category))];
+  const what = cats.length === 1 ? (CAT_N[cats[0]] || "商品") : "商品";
+  write(u, `${full}の${what}と成分`, `${full}の${what}${list.length}件の成分を一覧で比べられます。全商品に共通する成分と、商品ごとの違いも。`, r => `
+<h1>${esc(full)} の${esc(what)}と成分</h1><p class="lead">登録している${esc(b)}の商品は${list.length}件です。</p>
 ${common.length ? `<section><h2>全商品に共通する成分</h2><div class="tags">${common.map(n => `<a class="tagl" href="${r(ingUrl.get(n))}">${esc(n)}</a>`).join("")}</div></section>` : ""}
 <section><h2>商品</h2><div class="plist">${list.slice().sort((a, b) => (b.match || 0) - (a.match || 0)).map(x => productCard(x, r)).join("")}</div></section>`,
     { crumbs: [["トップ", ""], ["ブランド", "brands/"], [b, u]] });

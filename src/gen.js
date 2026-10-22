@@ -604,7 +604,9 @@ CMP.forEach(c => {
   const desc = `${a.p.name}と${b.p.name}を成分表で比べ、どんな人に向くかをまとめました。${scored ? "点数とグラフ、" : ""}香料・シリコーンなどの有無、片方だけに入っている成分。`;
   const nameA = `<b class="na">${esc(la)}</b>`, nameB = `<b class="nb">${esc(lb)}</b>`;
   const card = (x, lab, cls, r) => `<div class="cmp-p ${cls}${win === cls ? " win" : ""}">${win === cls ? `<span class="crown">迷ったらこっち</span>` : ""}<a href="${r(x.url)}">${imgSlot(x, "thumb")}<span class="cmp-lab">${esc(lab)}</span>${scored ? `<span class="cmp-sc">${scoreBadge(x)}</span>` : ""}<span class="cmp-full">${esc(x.p.name)}</span></a><div class="acts">${buyLink(x, r)}</div></div>`;
-  const forWho = (lab, R, cls) => `<div class="fw ${cls}"><p class="fw-h"><b>${esc(lab)}</b> が合う人</p>${R.length ? `<ul class="chk">${R.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : `<p class="small">大きく偏ったところはありません</p>`}</div>`;
+  const near = c.s >= 0.78 || onlyA.length + onlyB.length <= 4; // ほぼ同じ商品どうし
+  const diffChips = L => L.length ? `<ul class="chk dif">${L.slice(0, 6).map(it => `<li>${esc(C.norm(it.raw))}<small>${esc(ROLE_N(C.compRole(it)))}</small></li>`).join("")}${L.length > 6 ? `<li>ほか${L.length - 6}種類</li>` : ""}</ul>` : `<p class="small">この商品だけの成分はありません</p>`;
+  const forWho = (lab, R, cls, only) => `<div class="fw ${cls}">${R.length && !near ? `<p class="fw-h"><b>${esc(lab)}</b> が合う人</p><ul class="chk">${R.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : `<p class="fw-h"><b>${esc(lab)}</b> だけに入っている成分</p>${diffChips(only)}`}</div>`;
   const bar = (n, v, cls) => `<div class="sbar ${cls}"><span class="sl">${n}</span><span class="st"><i style="width:${v}%"></i></span><b class="mono">${v}</b></div>`;
   const tot = common.length + onlyA.length + onlyB.length || 1;
   const mark = on => on ? `<span class="mk-on" aria-label="入っている">●</span>` : `<span class="mk-off" aria-label="入っていない">－</span>`;
@@ -614,8 +616,9 @@ CMP.forEach(c => {
   <h1><span class="ha">${esc(la)}</span><span class="hv">と</span><span class="hb">${esc(lb)}</span><span class="sub">の違い</span></h1>
   <div class="cmp-head">${card(a, la, "a", r)}${card(b, lb, "b", r)}</div>
   <section class="verdict"><h2>結論</h2>
-    ${scored ? `<p class="vd">${win ? `迷ったら ${win === "a" ? nameA : nameB}` : "点数は同じ。合う人で選ぶ"}</p>${bar(esc(la), a.match, "a")}${bar(esc(lb), b.match, "b")}<p class="small muted">クラベルの点数（100点満点）</p>` : `<p class="vd">合う人で選ぶ</p>`}
-    <div class="fws">${forWho(la, ra, "a")}${forWho(lb, rb, "b")}</div>
+    ${near ? `<p class="vd">ほぼ同じ商品です</p><p>全成分の<b>${Math.round(c.s * 100)}%</b>が共通。違いは下の成分だけです。${scored && win ? `点数は ${win === "a" ? nameA : nameB} が少し上です。` : ""}</p>${scored ? bar(esc(la), a.match, "a") + bar(esc(lb), b.match, "b") : ""}`
+      : scored ? `<p class="vd">${win ? `迷ったら ${win === "a" ? nameA : nameB}` : "点数は同じ。合う人で選ぶ"}</p>${bar(esc(la), a.match, "a")}${bar(esc(lb), b.match, "b")}<p class="small muted">クラベルの点数（100点満点）</p>` : `<p class="vd">合う人で選ぶ</p>`}
+    <div class="fws">${forWho(la, ra, "a", onlyA)}${forWho(lb, rb, "b", onlyB)}</div>
     <p class="small muted">成分表から見た向き・不向きです。効果や使い心地を約束するものではありません。</p></section>
   ${scored ? `<section><h2>成分のバランス</h2><p class="legend l2"><span><span class="lg la"></span>${esc(la)}</span><span><span class="lg lb"></span>${esc(lb)}</span></p>${radar2(a, b, la, lb)}
     <p class="small muted">5点満点。<a href="${r("about/scoring/")}">点数のつけ方</a></p></section>` : ""}

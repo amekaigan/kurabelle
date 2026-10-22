@@ -27,8 +27,7 @@
       var rv = d && d.rv; if (!rv || !rv.n) return;
       var full = !el.classList.contains("sm");
       el.innerHTML = '<span class="stars" style="--w:' + Math.round(rv.avg / 5 * 100) + '%" aria-hidden="true">★★★★★</span><b>' + Number(rv.avg).toFixed(1) + '</b>' +
-        '<span class="rv-n">' + (full ? '（' : '') + Number(rv.n).toLocaleString("ja-JP") + '件' + (full ? '）' : '') + '</span>' + (full ? '<span class="rv-l">楽天のレビュー</span>' +
-        '<small>楽天市場の購入者の評価です' + (rv.shops > 1 ? '（この商品を扱うお店' + rv.shops + '店の合計）' : '') + '。クラベルの点数とは別のものです。</small>' : '');
+        '<span class="rv-n">' + (full ? '（' : '') + Number(rv.n).toLocaleString("ja-JP") + '件' + (full ? '）' : '') + '</span>' + (full ? '<span class="rv-l">楽天のレビュー</span>' : '');
       el.setAttribute("aria-label", "楽天のレビュー 5点中" + rv.avg + "、" + rv.n + "件");
       el.hidden = false;
     });
@@ -38,8 +37,8 @@
       if (p.classList.contains("sm")) { p.innerHTML = "<b>" + yen + "</b>楽天市場"; }
       else {
         var t = d.at ? new Date(d.at) : new Date();
-        p.innerHTML = "<b>" + yen + "</b>" + (d.postage ? "（" + esc(d.postage) + "）" : "") + "楽天市場" + (d.shop ? "・" + esc(d.shop) : "") +
-          "<small>" + (t.getMonth() + 1) + "月" + t.getDate() + "日 " + t.getHours() + "時" + ("0" + t.getMinutes()).slice(-2) + "分時点の一例です。価格や在庫は変わることがあります。</small>";
+        p.innerHTML = "<b>" + yen + "</b>" + (d.postage ? esc(d.postage) : "") + (d.shop ? "・" + esc(d.shop) : "");
+        document.querySelectorAll('[data-rk-at="' + CSS.escape(k) + '"]').forEach(function (s) { s.textContent = (t.getMonth() + 1) + "月" + t.getDate() + "日" + t.getHours() + "時" + ("0" + t.getMinutes()).slice(-2) + "分"; });
       }
       p.hidden = false;
     });

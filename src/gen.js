@@ -242,14 +242,14 @@ const HAIR = new Set(["shampoo", "conditioner", "scalp", "colorrinse"]);
 const quizLink = (r, c) => `<a href="${r("app/")}${QUIZ[c].hash}">${QUIZ[c].n}の診断をはじめる</a>`;
 const quizCta = (r, cat) => {
   if (QUIZ[cat]) return `<aside class="quiz-cta" aria-label="診断の案内"><div class="sticky">
-  <h2>迷ったら、<br>${QUIZ_N}つの質問で。</h2>
+  <h2>迷ったら、${QUIZ_N}つの質問で。</h2>
   <p>年代や${QUIZ[cat].what}、気になること、仕上がりの好みなどを選ぶと、成分表から合いそうな順に並べます。1分ほどで終わります。</p>
   ${quizLink(r, cat)}
 </div></aside>`;
   const isHair = !cat || HAIR.has(cat), name = cat ? CAT_N[cat] : "";
   const pick = isHair ? ["shampoo", "conditioner"] : ["skincare", "shampoo"];
   return `<aside class="quiz-cta" aria-label="診断の案内"><div class="sticky">
-  <h2>迷ったら、<br>診断で。</h2>
+  <h2>迷ったら、診断で。</h2>
   <p>診断は、いまは${QUIZ_CATS.map(c => QUIZ[c].n).join("・")}の${QUIZ_CATS.length}つです。${name ? `${esc(name)}の診断は準備中です。` : ""}${QUIZ_N}つの質問に答えると、成分表から合いそうな順に並べます。</p>
   <div class="two">${pick.map(c => quizLink(r, c)).join("")}</div>
 </div></aside>`;
@@ -736,17 +736,17 @@ write("about/", "クラベルとは", "クラベルは、シャンプーやス�
   <section><h1>クラベルとは</h1>
     <p class="lead">シャンプーやスキンケアの、パッケージの裏にある「全成分」。読み方が分かれば、商品選びのいちばん確かな手がかりになります。クラベルは、その全成分を決まったルールで読み解き、商品どうしを比べられるようにしたサイトです。</p></section>
   <div class="stats"><div><b class="mono">${PRODUCTS.length}</b><span>登録商品</span></div><div><b class="mono">${ING_PAGES.length}</b><span>成分のページ</span></div><div><b class="mono">${PRODUCTS.filter(p => p.source && (p.source.url || p.source.label)).length}</b><span>出典つきの成分表</span></div></div>
-  <section class="ab-sec"><h2><b>1</b><span class="mk">メーカー表示のとおり</span>に載せる</h2><ul>
+  <section class="ab-sec"><h2><b>1</b><span><span class="mk">メーカー表示のとおり</span>に載せる</span></h2><ul>
     <li>全成分は、メーカーの公式ページ・販売店のページ・パッケージの表示を、一字一句そのまま写しています。</li>
     <li>同じページを2回読み込み、写した内容が完全に一致したものだけを載せています。</li>
     <li>商品ごとに出典と確認日を載せています。リニューアルで成分が変わることがあるためです。</li>
     <li>成分の解析サイトや口コミを、成分表の出典には使いません。</li></ul></section>
-  <section class="ab-sec"><h2><b>2</b>どの商品も<span class="mk">同じルール</span>で採点</h2><ul>
+  <section class="ab-sec"><h2><b>2</b><span>どの商品も<span class="mk">同じルール</span>で採点</span></h2><ul>
     <li>点数は、6つの観点（シャンプーなら、やさしい洗浄・洗浄力・頭皮ケア・髪の補修・指通り・低刺激）を、誰が数えても同じになる決まりで数えたものです。</li>
     <li>数え方はすべて公開しています。<a href="${r("about/scoring/")}">点数のつけ方</a></li>
     <li>特定の商品を売り込みません。メーカーから依頼を受けて載せることも、紹介料で点数や並び順を変えることもしません。</li>
     <li>点数は成分表に何が入っているかを数えたもので、効果や使い心地を表すものではありません。</li></ul></section>
-  <section class="ab-sec"><h2><b>3</b>不安を<span class="mk">あおらない</span></h2><ul>
+  <section class="ab-sec"><h2><b>3</b><span>不安を<span class="mk">あおらない</span></span></h2><ul>
     <li>成分を「危険」「有害」とは書きません。入っていること自体を、良い・悪いと決めつけません。</li>
     <li>海外での規制に触れるときは、EUの化粧品規則や米国FDAなどの一次資料を確かめ、条文や日付を添えます。</li>
     <li>医薬部外品の効能は、パッケージやメーカーの表示どおりの言葉だけを使います。</li></ul></section>
@@ -786,7 +786,7 @@ write("", "クラベル｜成分でくらべるシャンプー・スキンケア
   <p class="note">ボタンの言葉は、メーカーの表示に出てくる言葉に合わせています。効果を約束するものではありません。<a href="${r("concerns/")}">成分の条件から選ぶ（硫酸系なし・ノンシリコンなど）</a></p>
 </section>
 <section class="sticky" aria-labelledby="h-quiz">
-  <h2 id="h-quiz">迷ったら、<br>${QUIZ_N}つの質問で。</h2>
+  <h2 id="h-quiz">迷ったら、${QUIZ_N}つの質問で。</h2>
   <p>年代や頭皮・肌のタイプ、気になること、仕上がりの好みなどを選ぶと、成分表から合いそうな順に並べます。1分ほどで終わります。</p>
   <a href="${r("app/")}">診断をはじめる</a>
 </section>

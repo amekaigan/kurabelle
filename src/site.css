@@ -305,8 +305,7 @@ table.ings tr:last-child td{border-bottom:0}
 .cmp h1 .sub{font-size:.72em;margin-left:.15em}
 .cmp-head{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 8px}
 .cmp-p{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column}
-.cmp-p.a{border-top:5px solid var(--ink)}
-.cmp-p.b{border-top:5px solid var(--cb)}
+.cmp-p.b .cmp-lab{color:var(--cb)}
 .cmp-p>a{display:block;text-decoration:none;color:var(--ink);flex:1}
 .cmp-p .thumb{display:block;margin:0 auto 8px}
 .cmp-lab{display:block;font-size:19px;font-weight:700;line-height:1.35;overflow-wrap:anywhere}
@@ -319,8 +318,8 @@ table.ings tr:last-child td{border-bottom:0}
 .verdict h2{margin:0 0 6px}
 .verdict .vd{font-size:19px;line-height:1.6;margin:0 0 12px}
 .fws{display:grid;gap:10px}
-.fw{background:var(--card);border-radius:12px;padding:12px 14px;border-left:5px solid var(--ink)}
-.fw.b{border-left-color:var(--cb)}
+.fw{background:var(--card);border-radius:12px;padding:12px 14px}
+.fw.b .fw-h b{color:var(--cb)}
 .fw-h{margin:0 0 4px;font-size:16px}
 .fw ul{margin:0;padding-left:1.2em}
 .fw li{margin:2px 0}

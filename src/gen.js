@@ -435,7 +435,7 @@ function scentBlock(x) {
   const fromLabel = fr && ess.length ? `香料と精油（${ess.map(esc).join("、")}）で香りをつけています。`
     : fr ? "香料で香りをつけています。" : ess.length ? `香料は入っていません。精油（${ess.map(esc).join("、")}）が入っています。` : "香料も精油も入っていません（無香料）。";
   const maker = x.p.scent ? `<p>メーカーの説明では「${esc(x.p.scent)}」です。</p>` : "";
-  return `<p>${fromLabel}</p>${maker}<p class="small muted">入っている・いないは、良い悪いではありません。</p>`;
+  return `<p>${fromLabel}</p>${maker}<p class="small muted">● 入っている　－ 入っていない（良い・悪いではありません）</p>`;
 }
 /* 使った感想：運営者が実際に使ったものだけ（reviews 項目）。点数とは分けて、個人の感想とはっきり書く */
 function reviewBlock(x) {
@@ -479,7 +479,7 @@ P.forEach(x => {
   </section>
   <section><h2>香りと、よく気にされる成分</h2>
     ${scentBlock(x)}
-    <ul class="flags">${flags.map(([n, on]) => `<li class="${on ? "on" : "off"}"><span>${on ? "入っている" : "入っていない"}</span>${esc(n)}</li>`).join("")}</ul>
+    <ul class="flags">${flags.map(([n, on]) => `<li class="${on ? "on" : "off"}"><span aria-label="${on ? "入っている" : "入っていない"}">${on ? "●" : "－"}</span>${esc(n)}</li>`).join("")}</ul>
   </section>
   ${cmpOf(x).length ? `<section><h2>どっちが合う？近い商品と比べる</h2><div class="clist">${cmpOf(x).map(c => { const o = c.a === x ? c.b : c.a; return cmpCard(c, r, `${o.p.name}と比べる`); }).join("")}</div></section>` : ""}
   <section><h2>成分が似ている${esc(catN)}</h2><div class="plist">${similar(x, 4).map(({ y, s }) => productCard(y, r, `共通の成分 ${Math.round(s * 100)}%`)).join("")}</div></section>

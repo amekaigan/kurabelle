@@ -300,3 +300,16 @@ table.ings tr:last-child td{border-bottom:0}
 .axbar{display:block;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--hl) var(--v),var(--grid) var(--v))}
 .axl details p{margin:0 14px 10px;font-size:15px;line-height:1.7}
 .axl details p.ax-this{font-size:13px;color:var(--ink3);overflow-wrap:anywhere;margin-bottom:14px}
+/* 「AとBの違い」のページ（2026-10-22） */
+.cmp h1 .sub{font-size:.7em;margin:0 .2em}
+.cmp-head{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.cmp-p{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:12px}
+.cmp-p>a{display:block;text-decoration:none;color:var(--ink)}
+.cmp-p .thumb{display:block;margin:0 auto 8px}
+.cmp-p .brand{display:block;font-size:13px;color:var(--ink3)}
+.cmp-p b{display:block;font-size:15px;line-height:1.45;overflow-wrap:anywhere}
+.cmp-p .rk-buy{font-size:15px;padding:0 12px}
+table.cmp-t td:first-child,table.cmp-t td:nth-child(2),table.cmp-t td:last-child{width:auto;color:var(--ink)}
+table.cmp-t th{overflow-wrap:anywhere}
+table.cmp-t{table-layout:fixed}
+table.cmp-t th:first-child{width:36%}

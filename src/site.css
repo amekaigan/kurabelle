@@ -6,7 +6,7 @@
   --c:#FFFFFF; --ic:#1B2230; --soft:#FCF6DE;
   --r-base:#C9CDD0; --r-active:#2D5BC9; --r-hum:#1C9884; --r-beauty:#BF8618; --r-oil:#D96E34; --r-cond:#6F8F22;
   --r-emul:#8A70C8; --r-uv:#CC5585; --r-pres:#6C7B83; --r-clean:#3A97BF; --r-other:#A7A196;
-  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+  --f-body:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --mk:url("__MKL__");
   --tap:52px;

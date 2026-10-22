@@ -320,7 +320,7 @@ function productCard(x, r, extra, opt = {}) {
   const ms = x.sc && x.sc.mainSurf ? `主洗浄成分 ${esc(x.sc.mainSurf.name)}・` : "";
   const meta = opt.posOnly ? extra : `${ms}${x.a.items.length}成分${extra ? "・" + extra : ""}`;
   return `<a class="pcard" href="${r(x.url)}"><div class="pc-top">${imgSlot(x, "thumb")}<div class="pc-name"><span class="brand">${esc(x.p.brand || "")}</span><b>${esc(x.p.name)}</b></div>${scoreBadge(x)}</div>
-  ${mix(x)}<div class="pc-meta">${chips(x)}<span class="small muted">${meta}</span>${useRk(x) ? `<span class="rk-price sm" data-rk-price="${esc(rkKey(x))}" hidden></span>` : isDirect(x) ? `<span class="small muted">${dest(x).tag}</span>` : ""}</div></a>`;
+  ${mix(x)}<div class="pc-meta">${chips(x)}<span class="small muted">${meta}</span>${useRk(x) ? `<span class="rk-rv sm" data-rk-rv="${esc(rkKey(x))}" hidden></span><span class="rk-price sm" data-rk-price="${esc(rkKey(x))}" hidden></span>` : isDirect(x) ? `<span class="small muted">${dest(x).tag}</span>` : ""}</div></a>`;
 }
 function themesBlock(x) {
   if (!x.sc) return "";
@@ -462,6 +462,7 @@ P.forEach(x => {
   <div class="row">${chips(x)}</div>
   <div class="acts">${isDirect(x) ? `<span class="pr-tag">PR</span><a class="rk-buy" href="${esc(p.shop.url)}" rel="sponsored noopener" target="_blank">${dest(x).btn}</a>${p.shop.pixel ? `<img class="px" src="${esc(p.shop.pixel)}" width="1" height="1" alt="">` : ""}` : ""}${useRk(x) ? `<span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : ""}</div>
   ${isDirect(x) ? `<p class="pr-note">「${dest(x).btn}」は広告（${esc(SHOP_N[p.shop.asp] || "アフィリエイト")}）のリンクです。${dest(x).page}が開きます。紹介料の有無は、点数や順位に関係しません。価格や内容は${dest(x).where}でご確認ください。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
+  ${useRk(x) ? `<p class="rk-rv" data-rk-rv="${esc(rkKey(x))}" hidden></p>` : ""}
   ${useRk(x) ? `<p class="rk-price" data-rk-price="${esc(rkKey(x))}" hidden></p><p class="pr-note" data-rk-pr="${esc(rkKey(x))}" hidden>「楽天市場で見る」は広告（楽天アフィリエイト）のリンクです。紹介料の有無は、点数や順位に関係しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
   </div></div>
   ${typeBlock(x, r)}
@@ -603,7 +604,7 @@ CMP.forEach(c => {
   const title = `${h}の違い｜どっちが合う？成分で比較`;
   const desc = `${a.p.name}と${b.p.name}を成分表で比べ、どんな人に向くかをまとめました。${scored ? "点数とグラフ、" : ""}香料・シリコーンなどの有無、片方だけに入っている成分。`;
   const nameA = `<b class="na">${esc(la)}</b>`, nameB = `<b class="nb">${esc(lb)}</b>`;
-  const card = (x, lab, cls, r) => `<div class="cmp-p ${cls}${win === cls ? " win" : ""}">${win === cls ? `<span class="crown">迷ったらこっち</span>` : ""}<a href="${r(x.url)}">${imgSlot(x, "thumb")}<span class="cmp-lab">${esc(lab)}</span>${scored ? `<span class="cmp-sc">${scoreBadge(x)}</span>` : ""}<span class="cmp-full">${esc(x.p.name)}</span></a><div class="acts">${buyLink(x, r)}</div></div>`;
+  const card = (x, lab, cls, r) => `<div class="cmp-p ${cls}${win === cls ? " win" : ""}">${win === cls ? `<span class="crown">迷ったらこっち</span>` : ""}<a href="${r(x.url)}">${imgSlot(x, "thumb")}<span class="cmp-lab">${esc(lab)}</span>${scored ? `<span class="cmp-sc">${scoreBadge(x)}</span>` : ""}${useRk(x) ? `<span class="rk-rv sm" data-rk-rv="${esc(rkKey(x))}" hidden></span>` : ""}<span class="cmp-full">${esc(x.p.name)}</span></a><div class="acts">${buyLink(x, r)}</div></div>`;
   const near = c.s >= 0.78 || onlyA.length + onlyB.length <= 4; // ほぼ同じ商品どうし
   const diffChips = L => L.length ? `<ul class="chk dif">${L.slice(0, 6).map(it => `<li>${esc(C.norm(it.raw))}<small>${esc(ROLE_N(C.compRole(it)))}</small></li>`).join("")}${L.length > 6 ? `<li>ほか${L.length - 6}種類</li>` : ""}</ul>` : `<p class="small">この商品だけの成分はありません</p>`;
   const forWho = (lab, R, cls, only) => `<div class="fw ${cls}">${R.length && !near ? `<p class="fw-h"><b>${esc(lab)}</b> が合う人</p><ul class="chk">${R.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : `<p class="fw-h"><b>${esc(lab)}</b> だけに入っている成分</p>${diffChips(only)}`}</div>`;

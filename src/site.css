@@ -420,3 +420,19 @@ ul.chk.dif li small{margin-left:6px;font-size:12px;color:var(--ink3)}
 .pleg span:nth-child(2){align-items:center}.pleg span:last-child{align-items:flex-end}
 .pleg b{font-size:20px}
 .idata{margin-top:28px}
+/* 楽天のレビュー（星と件数。2026-10-23） */
+:root{--star:#D99A00}
+.rk-rv{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;margin:10px 0 0;font-size:14px;color:var(--ink2)}
+.rk-rv[hidden]{display:none}
+.rk-rv .stars{font-size:18px;letter-spacing:1px;background:linear-gradient(90deg,var(--star) var(--w),var(--line2) var(--w));-webkit-background-clip:text;background-clip:text;color:transparent}
+.rk-rv b{font-family:var(--f-mono);font-size:17px;color:var(--ink)}
+.rk-rv small{flex-basis:100%;font-size:12.5px;color:var(--ink3)}
+.rk-rv.sm{margin:2px 0 0;font-size:12.5px;gap:4px}
+.rk-rv.sm .stars{font-size:14px;letter-spacing:0}
+.rk-rv.sm b{font-size:14px}
+.cmp-p .rk-rv{margin:4px 0 0}
+.cmp-p .rk-rv{flex-wrap:nowrap;white-space:nowrap;gap:3px}
+.cmp-p .rk-rv .stars{font-size:12px}
+.cmp-p .rk-rv .rv-n{font-size:11.5px}
+.cmp-p{min-width:0}
+.cmp-p .rk-rv{overflow:hidden}

@@ -82,6 +82,23 @@ P.forEach(x => { const b = x.p.brand || ""; if (!b) return; if (!BR.has(b)) BR.s
 const BRAND_PAGES = [...BR.entries()].filter(([, l]) => l.length >= 3).sort((a, b) => b[1].length - a[1].length);
 const brandUrl = new Map(BRAND_PAGES.map(([b]) => [b, `brands/${hid("b-", b)}/`]));
 
+/* 「AとBの違い」：同じカテゴリで、同じブランドか同じメーカー（商品名の先頭の語。例「花王」）の商品どうし。
+   1商品につき成分が近い順に最大 CMP_PER 件。成分がまったく同じ組は作らない（2026年10月22日、ユーザーと決定） */
+const CMP_PER = 3;
+const maker = x => { const w = String(x.p.name).split(/[\s　]+/)[0]; return w && w !== x.p.name ? w : (x.p.brand || ""); };
+const jac = (a, b) => { const A = new Set(a.names), B = new Set(b.names); let i = 0; A.forEach(v => B.has(v) && i++); return i / (A.size + B.size - i); };
+const CMP = new Map(); // key -> {a, b, s, url}
+P.forEach(x => {
+  P.filter(y => y !== x && y.p.category === x.p.category && ((x.p.brand && y.p.brand === x.p.brand) || maker(y) === maker(x)))
+    .map(y => ({ y, s: jac(x, y) })).filter(o => o.s < 1).sort((a, b) => b.s - a.s).slice(0, CMP_PER)
+    .forEach(({ y, s }) => {
+      const [a, b] = [x, y].sort((m, n) => m.p.id < n.p.id ? -1 : 1);
+      const k = a.p.id + "|" + b.p.id;
+      if (!CMP.has(k)) CMP.set(k, { a, b, s, url: `compare/${hid("c-", k)}/` });
+    });
+});
+const cmpOf = x => [...CMP.values()].filter(c => c.a === x || c.b === x).sort((m, n) => n.s - m.s);
+
 /* 目的別（シャンプー） */
 const SH = P.filter(x => x.p.category === "shampoo");
 const CONCERNS = [
@@ -432,6 +449,7 @@ P.forEach(x => {
     ${scentBlock(x)}
     <ul class="flags">${flags.map(([n, on]) => `<li class="${on ? "on" : "off"}"><span>${on ? "入っている" : "入っていない"}</span>${esc(n)}</li>`).join("")}</ul>
   </section>
+  ${cmpOf(x).length ? `<section><h2>ほかの商品との成分の違い</h2><div class="clist">${cmpOf(x).map(c => { const o = c.a === x ? c.b : c.a; return `<a class="cl" href="${r(c.url)}"><b>${esc(o.p.name)}との違い</b><i>共通 ${Math.round(c.s * 100)}%</i></a>`; }).join("")}</div></section>` : ""}
   <section><h2>成分が似ている${esc(catN)}</h2><div class="plist">${similar(x, 4).map(({ y, s }) => productCard(y, r, `共通の成分 ${Math.round(s * 100)}%`)).join("")}</div></section>
   <p class="src">出典：${s.url ? `<a href="${esc(s.url)}" rel="nofollow noopener" target="_blank">${esc(s.label || s.url)}</a>` : esc(s.label || "")}${s.date ? `（${esc(s.date)}確認）` : ""}${p.jan ? `　JAN ${esc(p.jan)}` : ""}${p.note ? `<br>${esc(p.note)}` : ""}</p>
 </article>`, { crumbs, cat: p.category });
@@ -481,10 +499,59 @@ BRAND_PAGES.forEach(([b, list]) => {
   write(u, `${full}の${what}と成分`, `${full}の${what}${list.length}件の成分を一覧で比べられます。全商品に共通する成分と、商品ごとの違いも。`, r => `
 <h1>${esc(full)} の${esc(what)}と成分</h1><p class="lead">登録している${esc(b)}の商品は${list.length}件です。</p>
 ${common.length ? `<section><h2>全商品に共通する成分</h2><div class="tags">${common.map(n => `<a class="tagl" href="${r(ingUrl.get(n))}">${esc(n)}</a>`).join("")}</div></section>` : ""}
-<section><h2>商品</h2><div class="plist">${list.slice().sort((a, b) => (b.match || 0) - (a.match || 0)).map(x => productCard(x, r)).join("")}</div></section>`,
+<section><h2>商品</h2><div class="plist">${list.slice().sort((a, b) => (b.match || 0) - (a.match || 0)).map(x => productCard(x, r)).join("")}</div></section>
+${(() => { const L = [...CMP.values()].filter(c => c.a.p.brand === b && c.b.p.brand === b); return L.length ? `<section><h2>${esc(b)}の商品どうしの成分の違い</h2><div class="clist">${L.map(c => `<a class="cl" href="${r(c.url)}"><b>${esc(c.a.p.name)} と ${esc(c.b.p.name)}</b><i>共通 ${Math.round(c.s * 100)}%</i></a>`).join("")}</div></section>` : ""; })()}`,
     { crumbs: [["トップ", ""], ["ブランド", "brands/"], [b, u]] });
 });
-write("brands/", "ブランドの一覧", `クラベルに登録した商品のブランド一覧です。`, r => `
+/* ---------- AとBの違い ---------- */
+const buyLink = (x, r) => isDirect(x)
+  ? `<span class="pr-tag">PR</span><a class="rk-buy" href="${esc(x.p.shop.url)}" rel="sponsored noopener" target="_blank">${dest(x).btn}</a>${x.p.shop.pixel ? `<img class="px" src="${esc(x.p.shop.pixel)}" width="1" height="1" alt="">` : ""}`
+  : useRk(x) ? `<span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : "";
+const ingList = (L, r) => L.length ? `<div class="tags">${L.map(it => { const u = ingUrl.get(it.name); const nm = esc(C.norm(it.raw)); return u ? `<a class="tagl" href="${r(u)}">${nm}</a>` : `<span class="tagl plain">${nm}</span>`; }).join("")}</div>` : `<p class="small muted">ありません。</p>`;
+CMP.forEach(c => {
+  const { a, b } = c, catN = CAT_N[a.p.category] || a.p.category;
+  const uniqIt = x => { const seen = new Set(); return x.a.items.filter(it => !seen.has(it.name) && seen.add(it.name)); };
+  const IA = uniqIt(a), IB = uniqIt(b), NA = new Set(a.names), NB = new Set(b.names);
+  const common = IA.filter(it => NB.has(it.name)), onlyA = IA.filter(it => !NB.has(it.name)), onlyB = IB.filter(it => !NA.has(it.name));
+  const T = a.sc && b.sc ? C.CATS[a.p.category].themes : null, L = AX_LABEL[a.p.category] || {};
+  const gaps = T ? T.map(t => ({ n: L[t.k] || t.n, d: a.sc.v[t.k] - b.sc.v[t.k] })).filter(g => Math.abs(g.d) >= 0.5).sort((m, n) => Math.abs(n.d) - Math.abs(m.d)) : [];
+  const hiA = gaps.filter(g => g.d > 0).slice(0, 2).map(g => g.n), hiB = gaps.filter(g => g.d < 0).slice(0, 2).map(g => g.n);
+  const ms = x => x.sc && x.sc.mainSurf ? x.sc.mainSurf.name : "";
+  let lead = `どちらも${a.p.brand === b.p.brand && a.p.brand ? a.p.brand + "の" : ""}${catN}です。全成分のうち${common.length}種類が共通で、「${a.p.name}」だけに入っている成分が${onlyA.length}種類、「${b.p.name}」だけに入っている成分が${onlyB.length}種類あります。`;
+  if (ms(a) && ms(b)) lead += ms(a) === ms(b) ? `洗浄成分の中心はどちらも${ms(a)}です。` : `洗浄成分の中心は、「${a.p.name}」が${ms(a)}、「${b.p.name}」が${ms(b)}です。`;
+  if (T) lead += hiA.length || hiB.length ? `成分表から数えた点数では、${hiA.length ? `「${a.p.name}」は「${hiA.join("」「")}」が高め` : ""}${hiA.length && hiB.length ? "、" : ""}${hiB.length ? `「${b.p.name}」は「${hiB.join("」「")}」が高め` : ""}です。` : "成分表から数えた点数は、どの観点も近い値です。";
+  if (a.p.kind !== b.p.kind) lead += `「${a.p.name}」は${KIND_N[a.p.kind]}、「${b.p.name}」は${KIND_N[b.p.kind]}です。`;
+  const bShort = maker(a) === maker(b) && b.p.name.startsWith(maker(b) + " ") ? b.p.name.slice(maker(b).length + 1) : b.p.name;
+  const aShort = bShort !== b.p.name && a.p.name.startsWith(maker(a) + " ") ? a.p.name.slice(maker(a).length + 1) : a.p.name;
+  const title = `${a.p.name}と${bShort}の違い`;
+  const desc = `${a.p.name}と${b.p.name}の全成分を並べて比べました。共通の成分${common.length}種類と、片方だけに入っている成分、${T ? "成分表から数えた点数、" : ""}香料・シリコーンなどの有無の違い。`;
+  const head = x => `<div class="cmp-p"><a href="${r0(x.url)}">${imgSlot(x, "thumb")}<span class="brand">${esc(x.p.brand || "")}</span><b>${esc(x.p.name)}</b></a><div class="row">${chips(x)}</div><div class="acts">${buyLink(x, r0)}</div></div>`;
+  let r0;
+  write(c.url, title, desc, r => { r0 = r; return `
+<article class="cmp">
+  <p class="eyebrow">成分の違い</p>
+  <h1>${esc(a.p.name)}<span class="sub">と</span>${esc(b.p.name)}<span class="sub">の違い</span></h1>
+  <div class="cmp-head">${head(a)}${head(b)}</div>
+  ${isDirect(a) || isDirect(b) || useRk(a) || useRk(b) ? `<p class="pr-note">「楽天市場で見る」「公式サイトで見る」などは広告のリンクです。紹介料の有無は、点数や順位に関係しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
+  <p class="lead">${esc(lead)}</p>
+  ${T ? `<section><h2>成分表から数えた点数</h2><div class="scroll"><table class="ings cmp-t"><thead><tr><th>観点</th><th>${esc(aShort)}</th><th>${esc(bShort)}</th></tr></thead><tbody>
+    ${T.map(t => `<tr><td>${esc(L[t.k] || t.n)}</td><td class="mono">${a.sc.v[t.k].toFixed(1)}</td><td class="mono">${b.sc.v[t.k].toFixed(1)}</td></tr>`).join("")}
+    </tbody></table></div><p class="small muted">点数は、成分表に何が入っているかを決まったルールで数えたものです。効果や使い心地ではありません。<a href="${r("about/scoring/")}">点数のつけ方</a></p></section>` : ""}
+  <section><h2>香りと、よく気にされる成分</h2><div class="scroll"><table class="ings cmp-t"><thead><tr><th>成分</th><th>${esc(aShort)}</th><th>${esc(bShort)}</th></tr></thead><tbody>
+    ${FLAGS.map(([t, n]) => `<tr><td>${esc(n)}</td><td>${a.tags.has(t) ? "入っている" : "入っていない"}</td><td>${b.tags.has(t) ? "入っている" : "入っていない"}</td></tr>`).join("")}
+    </tbody></table></div><p class="small muted">入っていること自体の良い・悪いではありません。</p></section>
+  <section><h2>「${esc(a.p.name)}」だけに入っている成分（${onlyA.length}種類）</h2>${ingList(onlyA, r)}</section>
+  <section><h2>「${esc(b.p.name)}」だけに入っている成分（${onlyB.length}種類）</h2>${ingList(onlyB, r)}</section>
+  <section><h2>共通の成分（${common.length}種類）</h2>${ingList(common, r)}</section>
+  <p class="small muted">成分の並び・役割・出典は、それぞれの商品のページで確かめられます：<a href="${r(a.url)}">${esc(a.p.name)}の成分</a>／<a href="${r(b.url)}">${esc(b.p.name)}の成分</a></p>
+</article>`; }, { crumbs: [["トップ", ""], ["成分の違い", "compare/"], [title, c.url]], cat: a.p.category });
+});
+if (CMP.size) write("compare/", "成分の違いを比べる", `同じブランド・同じメーカーの商品どうしで、全成分の違いを${CMP.size}組比べられます。`, r => `
+<h1>成分の違いを比べる</h1><p class="lead">同じカテゴリで、同じブランドか同じメーカーの商品どうしを、全成分で比べています。</p>
+${CAT_ORDER.filter(cat => [...CMP.values()].some(c => c.a.p.category === cat)).map(cat => `<section><h2>${esc(CAT_N[cat])}</h2><div class="clist">${[...CMP.values()].filter(c => c.a.p.category === cat).sort((m, n) => (m.a.p.brand || "").localeCompare(n.a.p.brand || "", "ja")).map(c => `<a class="cl" href="${r(c.url)}"><b>${esc(c.a.p.name)} と ${esc(c.b.p.name)}</b><i>共通 ${Math.round(c.s * 100)}%</i></a>`).join("")}</div></section>`).join("")}`,
+  { crumbs: [["トップ", ""], ["成分の違い", "compare/"]] });
+
+write("brands/", "ブランドの一覧",`クラベルに登録した商品のブランド一覧です。`, r => `
 <h1>ブランドの一覧</h1><p class="lead">商品が3件以上あるブランドは、ブランドのページで比べられます。</p>
 <div class="tags">${[...BR.entries()].sort((a, b) => b[1].length - a[1].length).map(([b, l]) => brandUrl.has(b) ? `<a class="tagl" href="${r(brandUrl.get(b))}">${esc(b)}<span class="mono">${l.length}</span></a>` : `<span class="tagl plain">${esc(b)}<span class="mono">${l.length}</span></span>`).join("")}</div>`,
   { crumbs: [["トップ", ""], ["ブランド", "brands/"]] });
@@ -618,7 +685,7 @@ write("", "クラベル｜成分でくらべるシャンプー・スキンケア
 ${latest.length ? `<section aria-labelledby="h-new"><div class="sec-h"><h2 id="h-new">最近追加した商品</h2><span class="mono">${esc(latestDate)}</span></div><div class="plist">${latest.map(x => productCard(x, r)).join("")}</div></section>` : ""}
 <section aria-labelledby="h-more"><h2 id="h-more">ほかの探し方</h2>
   <div class="clist">${CAT_ORDER.filter(c => P.some(x => x.p.category === c)).map(c => `<a class="cl" href="${r(`categories/${c}/`)}"><b>${esc(CAT_N[c])}</b><i>${P.filter(x => x.p.category === c).length}件</i></a>`).join("")}
-  <a class="cl" href="${r("ingredients/")}"><b>成分の一覧</b><i>${ING_PAGES.length}種類</i></a><a class="cl" href="${r("brands/")}"><b>ブランドの一覧</b><i>${BR.size}ブランド</i></a></div>
+  <a class="cl" href="${r("ingredients/")}"><b>成分の一覧</b><i>${ING_PAGES.length}種類</i></a><a class="cl" href="${r("brands/")}"><b>ブランドの一覧</b><i>${BR.size}ブランド</i></a>${CMP.size ? `<a class="cl" href="${r("compare/")}"><b>成分の違いを比べる</b><i>${CMP.size}組</i></a>` : ""}</div>
 </section>`, { sym: ["ph-bottle", "ph-jar", "ph-tube", "ring"] });
 
 /* ---------- CSS・sitemap・robots ---------- */

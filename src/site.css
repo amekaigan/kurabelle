@@ -373,6 +373,7 @@ table.cmp-t tr.diff td{background:var(--hl-soft)}
 .vbar i{display:block;min-width:4px}
 .vbar .va{background:var(--ink)}.vbar .vc{background:var(--line2)}.vbar .vb{background:var(--cb)}
 .vleg{display:flex;justify-content:space-between;gap:8px;font-size:14px;margin-bottom:8px}
-.vleg span{display:flex;flex-direction:column;line-height:1.3}
+.vleg span{display:flex;flex-direction:column;line-height:1.3;flex:1}
+.vleg .c{flex:none;white-space:nowrap}
 .vleg b{font-size:22px}
 .vleg .a b{color:var(--ink)}.vleg .b{text-align:right;align-items:flex-end}.vleg .b b{color:var(--cb)}.vleg .c{align-items:center}

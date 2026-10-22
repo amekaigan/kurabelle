@@ -376,3 +376,24 @@ table.cmp-t tr.diff td{background:var(--hl-soft)}
 .vleg .c{flex:none;white-space:nowrap}
 .vleg b{font-size:22px}
 .vleg .a b{color:var(--ink)}.vleg .b{text-align:right;align-items:flex-end}.vleg .b b{color:var(--cb)}.vleg .c{align-items:center}
+/* 「どっちが合う？」3回目の見直し（2026-10-22）：まとまりごとの余白、開く箇所の三角、比較カードの2枚組サムネイル */
+.cmp>section{margin-top:40px}
+.cmp>section.verdict{margin-top:24px}
+.cmp>section>h2{margin-bottom:12px}
+.cmp .fws{gap:14px}
+.cmp>.pr-note,.cmp>p.small{margin-top:32px}
+details.more{margin:12px 0}
+details.more summary{list-style:none;justify-content:space-between;gap:12px}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::after{content:"";flex:none;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid var(--ink2);transition:transform .15s}
+details.more[open] summary::after{transform:rotate(180deg)}
+.cl.cl-duo{flex-direction:row;align-items:center;gap:14px}
+.cl-t{display:flex;flex-direction:column;gap:4px;min-width:0}
+.clist .cl .cl-t{color:var(--ink)}
+.cl-t b{color:var(--ink)}
+.clist .cl .cl-t span{font-size:13px}
+.duo,.clist .cl .duo{flex:none;display:flex;width:80px;height:80px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#fff}
+.duo .thumb,.clist .cl .duo .thumb{display:block;width:50%;height:100%;border:0;border-radius:0}
+.duo .thumb+.thumb{border-left:1px solid var(--line)}
+.duo .thumb svg{width:200%;max-width:none;margin-left:-50%}
+.duo .thumb img{object-fit:cover}

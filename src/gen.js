@@ -127,6 +127,8 @@ function pairLabels(a, b) {
 }
 CMP.forEach(c => { const L = pairLabels(c.a, c.b); Object.assign(c, L); });
 const cmpOf = x => [...CMP.values()].filter(c => c.a === x || c.b === x).sort((m, n) => n.s - m.s);
+/* 比較の一覧のカード：2商品の画像の中央を半分ずつ並べた正方形のサムネイル（2026年10月22日、ユーザーの依頼） */
+const cmpCard = (c, r, sub) => `<a class="cl cl-duo" href="${r(c.url)}"><span class="duo">${imgSlot(c.a, "thumb")}${imgSlot(c.b, "thumb")}</span><span class="cl-t"><b>${esc(c.h)}</b>${sub ? `<span>${esc(sub)}</span>` : ""}</span></a>`;
 
 /* 目的別（シャンプー） */
 const SH = P.filter(x => x.p.category === "shampoo");
@@ -478,7 +480,7 @@ P.forEach(x => {
     ${scentBlock(x)}
     <ul class="flags">${flags.map(([n, on]) => `<li class="${on ? "on" : "off"}"><span>${on ? "入っている" : "入っていない"}</span>${esc(n)}</li>`).join("")}</ul>
   </section>
-  ${cmpOf(x).length ? `<section><h2>どっちが合う？近い商品と比べる</h2><div class="clist">${cmpOf(x).map(c => { const o = c.a === x ? c.b : c.a; return `<a class="cl" href="${r(c.url)}"><b>${esc(c.h)}</b><span>${esc(o.p.name)}と比べる</span></a>`; }).join("")}</div></section>` : ""}
+  ${cmpOf(x).length ? `<section><h2>どっちが合う？近い商品と比べる</h2><div class="clist">${cmpOf(x).map(c => { const o = c.a === x ? c.b : c.a; return cmpCard(c, r, `${o.p.name}と比べる`); }).join("")}</div></section>` : ""}
   <section><h2>成分が似ている${esc(catN)}</h2><div class="plist">${similar(x, 4).map(({ y, s }) => productCard(y, r, `共通の成分 ${Math.round(s * 100)}%`)).join("")}</div></section>
   <p class="src">出典：${s.url ? `<a href="${esc(s.url)}" rel="nofollow noopener" target="_blank">${esc(s.label || s.url)}</a>` : esc(s.label || "")}${s.date ? `（${esc(s.date)}確認）` : ""}${p.jan ? `　JAN ${esc(p.jan)}` : ""}${p.note ? `<br>${esc(p.note)}` : ""}</p>
 </article>`, { crumbs, cat: p.category });
@@ -529,7 +531,7 @@ BRAND_PAGES.forEach(([b, list]) => {
 <h1>${esc(full)} の${esc(what)}と成分</h1><p class="lead">登録している${esc(b)}の商品は${list.length}件です。</p>
 ${common.length ? `<section><h2>全商品に共通する成分</h2><div class="tags">${common.map(n => `<a class="tagl" href="${r(ingUrl.get(n))}">${esc(n)}</a>`).join("")}</div></section>` : ""}
 <section><h2>商品</h2><div class="plist">${list.slice().sort((a, b) => (b.match || 0) - (a.match || 0)).map(x => productCard(x, r)).join("")}</div></section>
-${(() => { const L = [...CMP.values()].filter(c => c.a.p.brand === b && c.b.p.brand === b); return L.length ? `<section><h2>${esc(b)}の商品どうし、どっちが合う？</h2><div class="clist">${L.map(c => `<a class="cl" href="${r(c.url)}"><b>${esc(c.h)}</b></a>`).join("")}</div></section>` : ""; })()}`,
+${(() => { const L = [...CMP.values()].filter(c => c.a.p.brand === b && c.b.p.brand === b); return L.length ? `<section><h2>${esc(b)}の商品どうし、どっちが合う？</h2><div class="clist">${L.map(c => cmpCard(c, r, "")).join("")}</div></section>` : ""; })()}`,
     { crumbs: [["トップ", ""], ["ブランド", "brands/"], [b, u]] });
 });
 /* ---------- AとBの違い ----------
@@ -614,7 +616,7 @@ CMP.forEach(c => {
 </article>`, { crumbs: [["トップ", ""], ["どっちが合う？", "compare/"], [h, c.url]], cat: a.p.category });
 });
 if (CMP.size) write("compare/", "どっちが合う？成分で比べる", `同じブランド・同じメーカーの近い商品どうし${CMP.size}組を、成分表から見てどんな人に向くかで比べました。`, r => `\n<h1>どっちが合う？</h1><p class="lead">同じブランドや同じメーカーの近い商品どうしを、成分表から見て「どんな人に向くか」で比べています。</p>
-${CAT_ORDER.filter(cat => [...CMP.values()].some(c => c.a.p.category === cat)).map(cat => `<section><h2>${esc(CAT_N[cat])}</h2><div class="clist">${[...CMP.values()].filter(c => c.a.p.category === cat).sort((m, n) => (m.a.p.brand || "").localeCompare(n.a.p.brand || "", "ja")).map(c => `<a class="cl" href="${r(c.url)}"><b>${esc(c.h)}</b><span>${esc(c.a.p.name)} ／ ${esc(c.b.p.name)}</span></a>`).join("")}</div></section>`).join("")}`,
+${CAT_ORDER.filter(cat => [...CMP.values()].some(c => c.a.p.category === cat)).map(cat => `<section><h2>${esc(CAT_N[cat])}</h2><div class="clist">${[...CMP.values()].filter(c => c.a.p.category === cat).sort((m, n) => (m.a.p.brand || "").localeCompare(n.a.p.brand || "", "ja")).map(c => cmpCard(c, r, `${c.a.p.name} ／ ${c.b.p.name}`)).join("")}</div></section>`).join("")}`,
   { crumbs: [["トップ", ""], ["どっちが合う？", "compare/"]] });
 
 write("brands/", "ブランドの一覧",`クラベルに登録した商品のブランド一覧です。`, r => `

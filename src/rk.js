@@ -5,9 +5,9 @@
   var C = window.RK || {};
   if (!C.api) return;
   var DAY = 864e5, GAP = 1100; // 楽天の決まり（1秒に1回まで）に合わせて間をあける
-  function get(k) { try { var v = JSON.parse(localStorage.getItem("rk2:" + k)); if (v && Date.now() - v.t < DAY) return v.d; } catch (e) {} return undefined; }
+  function get(k) { try { var v = JSON.parse(localStorage.getItem("rk3:" + k)); if (v && Date.now() - v.t < DAY) return v.d; } catch (e) {} return undefined; }
   function esc(v) { return String(v).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-  function put(k, d) { try { localStorage.setItem("rk2:" + k, JSON.stringify({ t: Date.now(), d: d })); } catch (e) {} }
+  function put(k, d) { try { localStorage.setItem("rk3:" + k, JSON.stringify({ t: Date.now(), d: d })); } catch (e) {} }
   function fetchOne(k, isJan) {
     return fetch(C.api + "?k=" + encodeURIComponent(k) + (isJan ? "&jan=1" : ""), { cache: "no-store" })
       .then(function (r) { return r.status === 429 ? { retry: true } : r.ok ? r.json() : null; })
@@ -22,6 +22,16 @@
     });
     document.querySelectorAll('[data-rk-link="' + CSS.escape(k) + '"]').forEach(function (a) { if (d && d.url) { a.href = d.url; a.hidden = false; } });
     document.querySelectorAll('[data-rk-pr="' + CSS.escape(k) + '"]').forEach(function (el) { if (d && d.url) el.hidden = false; }); /* 広告リンクが出るときだけ、PRの表示も出す */
+    /* 楽天のレビュー（星と件数）。クラベルの点数とは別のものとして出す */
+    document.querySelectorAll('[data-rk-rv="' + CSS.escape(k) + '"]').forEach(function (el) {
+      var rv = d && d.rv; if (!rv || !rv.n) return;
+      var full = !el.classList.contains("sm");
+      el.innerHTML = '<span class="stars" style="--w:' + Math.round(rv.avg / 5 * 100) + '%" aria-hidden="true">★★★★★</span><b>' + Number(rv.avg).toFixed(1) + '</b>' +
+        '<span class="rv-n">' + (full ? '（' : '') + Number(rv.n).toLocaleString("ja-JP") + '件' + (full ? '）' : '') + '</span>' + (full ? '<span class="rv-l">楽天のレビュー</span>' +
+        '<small>楽天市場の購入者の評価です' + (rv.shops > 1 ? '（この商品を扱うお店' + rv.shops + '店の合計）' : '') + '。クラベルの点数とは別のものです。</small>' : '');
+      el.setAttribute("aria-label", "楽天のレビュー 5点中" + rv.avg + "、" + rv.n + "件");
+      el.hidden = false;
+    });
     document.querySelectorAll('[data-rk-price="' + CSS.escape(k) + '"]').forEach(function (p) {
       if (!d || !d.price) return;
       var yen = "¥" + Number(d.price).toLocaleString("ja-JP");

@@ -488,6 +488,29 @@ P.forEach(x => {
 });
 
 /* ---------- 成分ページ ---------- */
+/* 「何の成分？」「何のために入っている？」（data/ingredient-notes.json）と、「気をつけることは？」（化粧品基準）。
+   2026年10月23日、ユーザーのOK。安全性・規制は一次資料（厚生労働省「化粧品基準」平成12年厚生省告示第331号）の範囲で、
+   「危険」「有害」など規制の中身より強い言葉は使わない。表示名と告示の名前が違うものは対応を書いておく */
+const NOTES = (() => { try { const j = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "data/ingredient-notes.json"), "utf8")); delete j._about; return new Map(Object.entries(j).map(([k, v]) => [C.key(k), v])); } catch (e) { return new Map(); } })();
+const KSRC = { label: "厚生労働省「化粧品基準」", url: "https://www.mhlw.go.jp/file/06-Seisakujouhou-11120000-Iyakushokuhinkyoku/keshouhin-standard.pdf", date: "2026-10-23" };
+const REG = new Map([
+  ["安息香酸", { t: "防腐剤として、化粧品に配合できる量の上限が決められています（100gあたり0.2gまで。化粧品基準 別表第3の1「安息香酸」）。" }],
+  ["安息香酸Na", { t: "防腐剤として、化粧品に配合できる量の上限が決められています（安息香酸塩類の合計で100gあたり1.0gまで。化粧品基準 別表第3の1「安息香酸塩類」）。" }],
+  ["サリチル酸", { t: "化粧品の防腐剤として、配合できる量の上限が決められています（100gあたり0.20gまで。化粧品基準 別表第3の1「サリチル酸」）。医薬部外品の有効成分としての配合は、別の基準で承認されます。" }],
+  ["ソルビン酸K", { t: "防腐剤として、化粧品に配合できる量の上限が決められています（ソルビン酸とその塩類の合計で100gあたり0.50gまで。化粧品基準 別表第3の1「ソルビン酸及びその塩類」）。" }],
+  ["メチルパラベン", { t: "防腐剤として、化粧品に配合できる量の上限が決められています（パラベン類の合計で100gあたり1.0gまで。化粧品基準 別表第3の1「パラオキシ安息香酸エステル及びそのナトリウム塩」）。" }],
+  ["フェノキシエタノール", { t: "防腐剤として、化粧品に配合できる量の上限が決められています（100gあたり1.0gまで。化粧品基準 別表第3の1「フェノキシエタノール」）。" }],
+  ["イソプロピルメチルフェノール", { t: "化粧品の防腐剤として、洗い流すものか、粘膜に使うものかなど、化粧品の種類ごとに配合できる量が決められています（化粧品基準 別表第3の2）。医薬部外品の有効成分としての配合は、別の基準で承認されます。" }],
+  ["クロルフェネシン", { t: "防腐剤として、洗い流すものか、粘膜に使うものかなど、化粧品の種類ごとに配合できる量が決められています（化粧品基準 別表第3の2）。" }],
+  ["ピロクトンオラミン", { t: "化粧品の防腐剤として、化粧品の種類ごとに配合できる量が決められています（化粧品基準 別表第3の2）。医薬部外品の有効成分としての配合は、別の基準で承認されます。" }],
+  ["ブチルカルバミン酸ヨウ化プロピニル", { t: "防腐剤として、化粧品の種類ごとに配合できる量が決められています（化粧品基準 別表第3の2）。" }],
+  ["メチルイソチアゾリノン", { t: "防腐剤として、化粧品の種類ごとに配合できる量が決められています（化粧品基準 別表第3の2）。" }],
+  ["ラウロイルサルコシンNa", { t: "化粧品の種類や使い方によって、配合の制限がある成分です（化粧品基準 別表第2の2「ラウロイルサルコシンナトリウム」）。" }],
+  ["ユビキノン", { t: "化粧品の種類によって、配合の制限がある成分です（化粧品基準 別表第2の3「ユビデカレノン」）。" }]
+].map(([k, v]) => [C.key(k), v]));
+const regOf = name => REG.get(C.key(name)) || { t: "化粧品基準で、配合できる量の上限が決められた成分ではありません（この表示名で確認）。", none: true };
+const noteOf = name => NOTES.get(C.key(name));
+
 ING_PAGES.forEach(g => {
   const u = ingUrl.get(g.name);
   const others = [...g.aliases].filter(a => C.key(a) !== C.key(g.name));
@@ -496,20 +519,27 @@ ING_PAGES.forEach(g => {
   const top = g.uses.slice().sort((a, b) => a.pos / a.of - b.pos / b.of);
   /* 数字で見る（2026年10月22日）：手元の商品データから計算できることだけを出す。新しい主張は書かない */
   const catStat = CAT_ORDER.map(cat => { const n = P.filter(x => x.p.category === cat).length, k = g.uses.filter(u => u.x.p.category === cat).length; return { cat, n, k, pct: n ? Math.round(k / n * 100) : 0 }; }).filter(o => o.k > 0);
-  const best = catStat.slice().sort((m, n) => n.pct - m.pct || n.k - m.k)[0];
+  const best = catStat.slice().sort((m, n) => n.k - m.k || n.pct - m.pct)[0]; // 件数のいちばん多いカテゴリ（1件中1件の100%などを避ける）
   const posU = g.uses.filter(u => !u.active && u.x.p.kind === "cosme");
   const bk = [0, 0, 0]; posU.forEach(u => bk[Math.min(2, Math.floor((u.pos - 1) / u.of * 3))]++);
   const coCnt = new Map(); g.uses.forEach(u => new Set(u.x.names).forEach(n => { if (n !== g.name && ingUrl.has(n)) coCnt.set(n, (coCnt.get(n) || 0) + 1); }));
   const co = [...coCnt].map(([n, c]) => ({ n, c, pct: Math.round(c / g.uses.length * 100), lift: c / g.uses.length - (ING.get(n).uses.length / P.length) }))
     .filter(o => o.c >= 2 && o.lift > 0.1).sort((m, n) => n.lift - m.lift).slice(0, 8);
   const dataLead = best ? `クラベルに登録している${CAT_N[best.cat]}では、${best.n}件のうち${best.k}件（${best.pct}%）に入っています。` : "";
-  const desc = `${g.name}は「${ROLE_N(g.role)}」の成分です。${g.desc}。${dataLead}入っている商品${g.uses.length}件と、成分表での位置、よく一緒に入っている成分も。`;
-  write(u, `${g.name}とは｜役割と入っている商品`, desc, r => `
+  const desc = `${g.name}とは何の成分か、何のために入っているか、化粧品基準での扱い。${dataLead}入っている商品${g.uses.length}件と、よく一緒に入っている成分も。`;
+  write(u, `${g.name}とは｜何の成分か・入っている商品`, desc, r => `
 <article>
   <p class="eyebrow">成分</p>
   <h1>${esc(g.name)}<span class="sub">とは</span></h1>
   <div class="row"><span class="role big" style="--c:var(${ROLE_C(g.role)})">${esc(ROLE_N(g.role))}</span>${tagTxt.map(t => `<span class="chip">${esc(t)}</span>`).join("")}</div>
-  <p class="lead">${esc(g.desc)}。${esc(dataLead)}</p>
+  ${(() => { const n = noteOf(g.name), rg = regOf(g.name), srcs = [...(n && n.src || []), KSRC];
+    return `<div class="qa">
+    <div class="qa-c"><p class="qa-q"><span class="qa-i" aria-hidden="true">?</span>何の成分？</p><p>${esc(n ? n.what : g.desc + "。")}</p></div>
+    <div class="qa-c"><p class="qa-q"><span class="qa-i" aria-hidden="true">◎</span>何のために入っている？</p><p>${esc(n ? n.why : `「${ROLE_N(g.role)}」の役割で配合されます。`)}</p></div>
+    <div class="qa-c${rg.none ? "" : " reg"}"><p class="qa-q"><span class="qa-i" aria-hidden="true">!</span>気をつけることは？</p><p>${esc(rg.t)}</p></div>
+    <p class="qa-src">出典：${srcs.map(o => `<a href="${esc(o.url)}" rel="nofollow noopener" target="_blank">${esc(o.label)}</a>`).join("・")}（${esc(KSRC.date)}確認）。効果や安全性を保証するものではありません。</p>
+  </div>`; })()}
+  <p class="lead">${esc(dataLead)}</p>
   ${others.length ? `<p class="small">別の表示名：${others.map(esc).join("、")}<br><span class="muted">化粧品と医薬部外品では、同じ成分でも表示名が違うことがあります。</span></p>` : ""}
   <section class="idata"><h2>数字で見る${esc(g.name)}</h2>
     <p class="big-stat"><b class="mono">${g.uses.length}</b><span>件に入っている<small>（登録している${P.length}件のうち）</small></span></p>
@@ -524,7 +554,6 @@ ING_PAGES.forEach(g => {
     <div class="plist">${top.map(({ x, pos, of, active }) => productCard(x, r, active ? `有効成分として配合（全${of}成分）` : `${pos}番目／全${of}成分`, { posOnly: true })).join("")}</div>
   </section>
   ${same.length ? `<section><h2>同じ「${esc(ROLE_N(g.role))}」の成分</h2><div class="tags">${same.map(h => `<a class="tagl" href="${r(ingUrl.get(h.name))}">${esc(h.name)}<span class="mono">${h.uses.length}</span></a>`).join("")}</div></section>` : ""}
-  <p class="small muted">成分の説明は、成分表示の名前から分かる一般的な役割です。安全性や効果を評価したものではありません。</p>
 </article>`, { crumbs: [["トップ", ""], ["成分", "ingredients/"], [g.name, u]] });
 });
 

@@ -450,3 +450,5 @@ ul.chk.dif li small{margin-left:6px;font-size:12px;color:var(--ink3)}
 .flags li.on span{background:none;color:var(--ink)}
 .flags li.off span{background:none;border:0;color:var(--ink3)}
 .flags li.off{color:var(--ink2)}
+/* 商品名を語のまとまりで折り返す（2026-10-23） */
+.w{display:inline-block;max-width:100%;overflow-wrap:anywhere}

@@ -128,7 +128,7 @@ function pairLabels(a, b) {
 CMP.forEach(c => { const L = pairLabels(c.a, c.b); Object.assign(c, L); });
 const cmpOf = x => [...CMP.values()].filter(c => c.a === x || c.b === x).sort((m, n) => n.s - m.s);
 /* 比較の一覧のカード：2商品の画像の中央を半分ずつ並べた正方形のサムネイル（2026年10月22日、ユーザーの依頼） */
-const cmpCard = (c, r, sub) => `<a class="cl cl-duo" href="${r(c.url)}"><span class="duo">${imgSlot(c.a, "thumb")}${imgSlot(c.b, "thumb")}</span><span class="cl-t"><b>${esc(c.h)}</b>${sub ? `<span>${esc(sub)}</span>` : ""}</span></a>`;
+const cmpCard = (c, r, sub) => `<a class="cl cl-duo" href="${r(c.url)}"><span class="duo">${imgSlot(c.a, "thumb")}${imgSlot(c.b, "thumb")}</span><span class="cl-t"><b>${wb(c.h)}</b>${sub ? `<span>${esc(sub)}</span>` : ""}</span></a>`;
 
 /* 目的別（シャンプー） */
 const SH = P.filter(x => x.p.category === "shampoo");
@@ -298,6 +298,8 @@ ${RK_ON ? `<script>window.RK={api:${JSON.stringify(root + "api/rk")}}</script><s
 }
 
 /* ---------- 部品 ---------- */
+/* 商品名を語のまとまりで折り返す（「シャンプ／ー」のような途中での改行を防ぐ。2026-10-23）。語が1行より長いときだけ、その語の中で折り返す */
+const wb = t => esc(t).split(/([\s　]+)/).map(w => /^[\s　]+$/.test(w) || !w ? w : `<span class="w">${w}</span>`).join("");
 const chips = x => `<span class="chip">${KIND_N[x.p.kind] || ""}</span>${TARGET_N[x.p.target] ? `<span class="chip">${TARGET_N[x.p.target]}</span>` : ""}${x.p.volume ? `<span class="chip mono">${x.p.volume}${esc(x.p.unit || "")}</span>` : ""}`;
 const mix = x => { const cnt = {}; x.a.items.forEach(i => { const r = C.compRole(i); cnt[r] = (cnt[r] || 0) + 1; });
   return `<div class="mix" aria-hidden="true">${C.ROLE_ORDER.filter(r => cnt[r]).map(r => `<span style="flex:${cnt[r]};background:var(${ROLE_C(r)})"></span>`).join("")}</div>`; };
@@ -401,7 +403,7 @@ function typeBlock(x, r) {
   const cat = x.p.category, catN = CAT_N[cat] || cat, ty = typeOf(x), rk = CAT_RANK[cat];
   const rank = rk ? rk.rank.get(x) : null;
   return `<section class="type">
-  <div class="type-head"><div><span class="lbl">成分から見たタイプ</span><b class="tt">${esc(ty.title)}</b></div>${scoreBadge(x)}</div>
+  <div class="type-head"><div><span class="lbl">成分から見たタイプ</span><b class="tt">${ty.title.split("・").map(t => `<span class="w">${esc(t)}</span>`).join("・")}</b></div>${scoreBadge(x)}</div>
   ${radarSVG(x)}
   <p class="legend small"><span class="lg me"></span>この商品<span class="lg avg"></span>${esc(catN)}の平均</p>
   <ul class="facts">
@@ -458,7 +460,7 @@ P.forEach(x => {
   write(x.url, `${p.name}の成分`, desc, r => `
 <article class="prod">
   <div class="phead"><div class="pfig">${imgSlot(x, "pimg")}<button class="fav-btn star" type="button" hidden aria-pressed="false" aria-label="お気に入りに追加" title="お気に入りに追加" data-fav="${esc(JSON.stringify({ id: p.id, name: p.name, brand: p.brand || "", url: x.url, match: x.match, grade: x.grade, type: x.sc ? typeOf(x).title : "", ph: PH[p.category] || "ph-bottle", img: ownImg(x) ? REL_IMG(ownImg(x)) : "", rk: useRk(x) && !ownImg(x) ? rkKey(x) : "", jan: p.jan ? 1 : 0 }))}"></button></div><div>
-  <h1>${esc(p.name)} の成分</h1>
+  <h1>${wb(p.name)} <span class="w">の成分</span></h1>
   <div class="row">${chips(x)}</div>
   <div class="acts">${isDirect(x) ? `<span class="pr-tag">PR</span><a class="rk-buy" href="${esc(p.shop.url)}" rel="sponsored noopener" target="_blank">${dest(x).btn}</a>${p.shop.pixel ? `<img class="px" src="${esc(p.shop.pixel)}" width="1" height="1" alt="">` : ""}` : ""}${useRk(x) ? `<span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : ""}</div>
   ${isDirect(x) ? `<p class="pr-note">「${dest(x).btn}」は広告（${esc(SHOP_N[p.shop.asp] || "アフィリエイト")}）のリンクです。${dest(x).page}が開きます。紹介料の有無は、点数や順位に関係しません。価格や内容は${dest(x).where}でご確認ください。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
@@ -633,7 +635,7 @@ CMP.forEach(c => {
   const title = `${h}の違い｜どっちが合う？成分で比較`;
   const desc = `${a.p.name}と${b.p.name}を成分表で比べ、どんな人に向くかをまとめました。${scored ? "点数とグラフ、" : ""}香料・シリコーンなどの有無、片方だけに入っている成分。`;
   const nameA = `<b class="na">${esc(la)}</b>`, nameB = `<b class="nb">${esc(lb)}</b>`;
-  const card = (x, lab, cls, r) => `<div class="cmp-p ${cls}${win === cls ? " win" : ""}">${win === cls ? `<span class="crown">迷ったらこっち</span>` : ""}<a href="${r(x.url)}">${imgSlot(x, "thumb")}<span class="cmp-lab">${esc(lab)}</span>${scored ? `<span class="cmp-sc">${scoreBadge(x)}</span>` : ""}${useRk(x) ? `<span class="rk-rv sm" data-rk-rv="${esc(rkKey(x))}" hidden></span>` : ""}<span class="cmp-full">${esc(x.p.name)}</span></a><div class="acts">${buyLink(x, r)}</div></div>`;
+  const card = (x, lab, cls, r) => `<div class="cmp-p ${cls}${win === cls ? " win" : ""}">${win === cls ? `<span class="crown">迷ったらこっち</span>` : ""}<a href="${r(x.url)}">${imgSlot(x, "thumb")}<span class="cmp-lab">${wb(lab)}</span>${scored ? `<span class="cmp-sc">${scoreBadge(x)}</span>` : ""}${useRk(x) ? `<span class="rk-rv sm" data-rk-rv="${esc(rkKey(x))}" hidden></span>` : ""}<span class="cmp-full">${esc(x.p.name)}</span></a><div class="acts">${buyLink(x, r)}</div></div>`;
   const near = c.s >= 0.78 || onlyA.length + onlyB.length <= 4; // ほぼ同じ商品どうし
   const diffChips = L => L.length ? `<ul class="chk dif">${L.slice(0, 6).map(it => `<li>${esc(C.norm(it.raw))}<small>${esc(ROLE_N(C.compRole(it)))}</small></li>`).join("")}${L.length > 6 ? `<li>ほか${L.length - 6}種類</li>` : ""}</ul>` : `<p class="small">この商品だけの成分はありません</p>`;
   const forWho = (lab, R, cls, only) => `<div class="fw ${cls}">${R.length && !near ? `<p class="fw-h"><b>${esc(lab)}</b> が合う人</p><ul class="chk">${R.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : `<p class="fw-h"><b>${esc(lab)}</b> だけに入っている成分</p>${diffChips(only)}`}</div>`;
@@ -643,7 +645,7 @@ CMP.forEach(c => {
   write(c.url, title, desc, r => `
 <article class="cmp">
   <p class="eyebrow">どっちが合う？${c.br ? "　" + esc(c.br) : ""}</p>
-  <h1><span class="ha">${esc(la)}</span><span class="hv">と</span><span class="hb">${esc(lb)}</span><span class="sub">の違い</span></h1>
+  <h1><span class="ha">${wb(la)}</span><span class="hv">と</span><span class="hb">${wb(lb)}</span><span class="sub">の違い</span></h1>
   <div class="cmp-head">${card(a, la, "a", r)}${card(b, lb, "b", r)}</div>
   <section class="verdict"><h2>結論</h2>
     ${near ? `<p class="vd">ほぼ同じ商品です</p><p>全成分の<b>${Math.round(c.s * 100)}%</b>が共通。違いは下の成分だけです。${scored && win ? `点数は ${win === "a" ? nameA : nameB} が少し上です。` : ""}</p>${scored ? bar(esc(la), a.match, "a") + bar(esc(lb), b.match, "b") : ""}`

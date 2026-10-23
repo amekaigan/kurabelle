@@ -18,6 +18,9 @@ const DATA = JSON.parse(fs.readFileSync(SRC, "utf8"));
 const PRODUCTS = DATA.products;
 const UPDATED = DATA.updated || "";
 const SITE_NAME = "クラベル";
+/* Googleアナリティクス4の測定ID。見本（--preview）では入れない。使っていることは「クラベルとは」の #analytics に書いている */
+const GA4_ID = "G-DJ0D89ETX9";
+const GA = GA4_ID && !PREVIEW ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA4_ID}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","${GA4_ID}")</script>` : "";
 const OPERATOR_OK = false; // 「運営者より」の文章をユーザーが確かめたら true（それまでは見本にだけ出す）
 
 /* 手書き風の絵（src/hand.json。作り直しは npm run hand）。ページで使っているものだけを埋め込む */
@@ -215,6 +218,7 @@ function chrome(r, cur) {
 <a class="mi" href="${r("about/")}"${cur === "about/" ? ' aria-current="page"' : ""}>クラベルとは</a>
 <a class="mi" href="${r("about/scoring/")}"${on("about/scoring/")}>点数のつけ方</a>
 <a class="mi" href="${r("about/")}#ad">広告について</a>
+<a class="mi" href="${r("about/")}#analytics">アクセス解析について</a>
 </div></details>`;
   const head = `<header class="kb-top"><div class="in">${logo}
 <nav class="kb-nav" aria-label="おもなページ"><a href="${r("concerns/")}"${on("concerns/")}>悩みから選ぶ</a><a href="${r("app/")}"${on("app/")}>診断</a><a href="${r("ingredients/")}"${on("ingredients/")}>成分</a><a href="${r("about/")}"${on("about/")}>クラベルとは</a></nav>
@@ -272,6 +276,7 @@ function write(p, title, desc, body, opts = {}) {
   const html = `<!doctype html>
 <html lang="ja"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+${GA}
 <title>${esc(title)}${p ? "｜" + SITE_NAME : ""}</title>
 <meta name="description" content="${esc(desc)}">
 ${canon ? `<link rel="canonical" href="${esc(canon)}">` : ""}
@@ -759,6 +764,10 @@ write("about/", "クラベルとは", "クラベルは、シャンプーやス�
   <section class="ab-sec" id="ad"><h2>広告について</h2><div class="ab-box">
     <p>商品ページの「楽天市場で見る」は楽天アフィリエイトの、「公式サイトで見る」「Amazonで見る」はA8.netなどのアフィリエイトの仲介サービスのリンクです。ここから購入されると、運営者が紹介料を受け取ることがあります。紹介料の有無は、点数や並び順には一切影響しません。</p>
     <small>商品画像と販売ページへのリンクは、楽天ウェブサービスから提供されています。</small></div></section>
+  <section class="ab-sec" id="analytics"><h2>アクセス解析について</h2><div class="ab-box">
+    <p>クラベルでは、どのページがよく読まれているかを知ってサイトを良くするために、Googleが提供するアクセス解析の仕組み「Googleアナリティクス」を使っています。Googleアナリティクスはクッキー（Cookie）を使って、閲覧したページや滞在時間、おおまかな地域、使っている端末の種類などの情報を集めます。お名前やメールアドレスなど、個人を特定する情報は集めていません。</p>
+    <p>集めた情報は、Googleのプライバシーポリシーに基づいて管理されます。計測を止めたいときは、ブラウザの設定でクッキーを無効にするか、Googleが配布している「<a href="https://tools.google.com/dlpage/gaoptout?hl=ja" rel="noopener" target="_blank">Googleアナリティクス オプトアウト アドオン</a>」をお使いください。</p>
+    <small>Googleによるデータの使われ方は「<a href="https://policies.google.com/technologies/partner-sites?hl=ja" rel="noopener" target="_blank">Googleのサービスを使用するサイトやアプリから収集した情報のGoogleによる使用</a>」をご覧ください。</small></div></section>
   <a class="btn wide back" href="${r("")}">トップに戻る</a>
 </article>`, { crumbs: [["トップ", ""], ["クラベルとは", "about/"]] });
 
@@ -824,7 +833,7 @@ if (fs.existsSync(path.join(ROOT_DIR, "assets/products"))) fs.cpSync(path.join(R
   const r = to => "/" + to;
   const { head, foot } = chrome(r, "404");
   fs.writeFileSync(path.join(OUT, "404.html"), `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ページが見つかりません｜クラベル</title><meta name="robots" content="noindex">
+${GA}<title>ページが見つかりません｜クラベル</title><meta name="robots" content="noindex">
 <link rel="stylesheet" href="/assets/site.css?v=${av("site.css")}"><link rel="stylesheet" href="/assets/chrome.css?v=${av("chrome.css")}"></head>
 <body>${sprite(head + foot)}${head}<main class="wrap"><article class="ab"><section><h1>ページが見つかりません</h1>
 <p class="lead">URLが変わったか、まだ用意していないページです。</p></section>
@@ -843,6 +852,7 @@ if (APP && fs.existsSync(APP)) {
   h = h.slice(0, cs) + core.trim() + h.slice(ce + "\n})();".length);
   const rk = RK_ON ? `<script>window.RK={api:${JSON.stringify(r("api/rk"))}}</script><script src="${r("assets/rk.js")}?v=${av("rk.js")}" defer></script>` : "";
   const inject = `<link rel="stylesheet" href="${r("assets/chrome.css")}?v=${av("chrome.css")}">${rk}${sprite(head + foot, Object.values(PH))}${head}`;
+  if (GA) h = h.replace("</head>", GA + "</head>");
   h = h.replace(/<!--KB:HEAD-->[\s\S]*?<!--\/KB:HEAD-->/, `<!--KB:HEAD-->${inject}<!--/KB:HEAD-->`).replace(/<!--KB:FOOT-->[\s\S]*?<!--\/KB:FOOT-->/, `<!--KB:FOOT-->${foot}<!--/KB:FOOT-->`);
   fs.mkdirSync(path.join(OUT, ap), { recursive: true });
   fs.writeFileSync(path.join(OUT, ap, "index.html"), h);

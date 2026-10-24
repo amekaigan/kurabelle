@@ -319,13 +319,12 @@ const DEST_OFFICIAL = { btn: "公式サイトで見る", page: "メーカーの�
 const destOf = s => DEST[s && s.dest] || DEST_OFFICIAL;
 const dest = x => destOf(x.p.shop);
 /* 2026-10-24：1商品に広告リンクを2つ（公式サイトとAmazonなど）出せるようにした。2つ目以降は shop.also に {asp, url, pixel, dest} で書く */
-const shops = x => isDirect(x) ? [x.p.shop, ...(x.p.shop.also || []).filter(s => s && s.url)] : [];
+const shops = x => isDirect(x) ? [x.p.shop, ...(x.p.shop.also || []).filter(s => s && s.url)].sort((a, b) => (b.dest === "amazon") - (a.dest === "amazon")) : [];   /* Amazonを先に（2026-10-24 ユーザーの指定） */
 const shopBtns = x => `<span class="pr-tag">PR</span>` + shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("");
 const shopTag = x => shops(x).map(s => destOf(s).tag).filter((v, i, a) => a.indexOf(v) === i).join("・");
-const shopNote = x => { const L = shops(x); const q = L.map(s => `「${destOf(s).btn}」`).join(""); const asps = [...new Set(L.map(s => SHOP_N[s.asp] || "アフィリエイト"))].join("・");
-  return L.length > 1
-    ? `${q}は広告（${esc(asps)}）のリンクです。それぞれ${L.map(s => destOf(s).page).join("、")}が開きます。紹介料の有無や金額は、点数や順位に関係しません。価格や内容はそれぞれのページでご確認ください。`
-    : `${q}は広告（${esc(asps)}）のリンクです。${destOf(L[0]).page}が開きます。紹介料の有無は、点数や順位に関係しません。価格や内容は${destOf(L[0]).where}でご確認ください。`; };
+const shopNote = () => `広告リンクです。紹介料は点数・順位に関係しません。価格は各サイトでご確認ください。`;   /* 2026-10-24 ユーザーの指定で短くした */
+/* 商品ページの購入ボックス：PRの札・ボタン（縦に並べる）・説明文をひとつの枠に入れる（2026-10-24 ユーザーの指定） */
+const buyBox = (x, r) => `<div class="buybox"><span class="pr-tag">PR</span>${shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("")}<p class="pr-note">${shopNote(x)}<a href="${r("about/")}#ad">広告について</a></p></div>`;
 const useRk = x => (RK_ON || PREVIEW) && !isDirect(x);
 const rkKey = x => x.p.jan || `${x.p.brand || ""} ${x.p.name}`.trim();
 const ownImg = x => (isDirect(x) && x.p.shop.img) || x.p.img || "";   /* 運営者が用意した商品画像（メーカー直販の素材、または差し替え用） */
@@ -477,8 +476,7 @@ P.forEach(x => {
   <div class="phead"><div class="pfig">${imgSlot(x, "pimg")}<button class="fav-btn star" type="button" hidden aria-pressed="false" aria-label="お気に入りに追加" title="お気に入りに追加" data-fav="${esc(JSON.stringify({ id: p.id, name: p.name, brand: p.brand || "", url: x.url, match: x.match, grade: x.grade, type: x.sc ? typeOf(x).title : "", ph: PH[p.category] || "ph-bottle", img: ownImg(x) ? REL_IMG(ownImg(x)) : "", rk: useRk(x) && !ownImg(x) ? rkKey(x) : "", jan: p.jan ? 1 : 0 }))}"></button></div><div>
   <h1>${wb(p.name)} <span class="w">の成分</span></h1>
   <div class="row">${chips(x)}</div>
-  <div class="acts">${isDirect(x) ? shopBtns(x) : ""}${useRk(x) ? `<span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : ""}</div>
-  ${isDirect(x) ? `<p class="pr-note">${shopNote(x)}<a href="${r("about/")}#ad">広告について</a></p>` : ""}
+  ${isDirect(x) ? buyBox(x, r) : ""}${useRk(x) ? `<div class="acts"><span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a></div>` : ""}
   ${useRk(x) ? `<p class="rk-rv" data-rk-rv="${esc(rkKey(x))}" hidden></p>` : ""}
   ${useRk(x) ? `<p class="rk-price" data-rk-price="${esc(rkKey(x))}" hidden></p><p class="pr-note" data-rk-pr="${esc(rkKey(x))}" hidden>価格・評価は<span data-rk-at="${esc(rkKey(x))}"></span>時点の楽天市場の情報です。リンクは広告で、点数や順位には影響しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
   </div></div>

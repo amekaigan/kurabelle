@@ -1852,11 +1852,18 @@
     "date": "2026-10-18"
    },
    "shop": {
-    "asp": "a8",
-    "dest": "amazon",
-    "url": "https://px.a8.net/svt/ejp?a8mat=1NWF4S+B5AEZU+249K+BWGDT&a8ejpredirect=https%3A%2F%2Fwww.amazon.co.jp%2Fdp%2FB015GWQ50K%3Ftag%3Da8-affi-322539-22",
-    "pixel": "https://www11.a8.net/0.gif?a8mat=1NWF4S+B5AEZU+249K+BWGDT",
-    "img": "assets/products/uma-shampoo-premium.webp"
+    "asp": "accesstrade",
+    "url": "https://h.accesstrade.net/sp/cc?rk=0100hntw00p103",
+    "pixel": "https://h.accesstrade.net/sp/rr?rk=0100hntw00p103",
+    "img": "assets/products/uma-shampoo-premium.webp",
+    "also": [
+     {
+      "asp": "a8",
+      "dest": "amazon",
+      "url": "https://px.a8.net/svt/ejp?a8mat=1NWF4S+B5AEZU+249K+BWGDT&a8ejpredirect=https%3A%2F%2Fwww.amazon.co.jp%2Fdp%2FB015GWQ50K%3Ftag%3Da8-affi-322539-22",
+      "pixel": "https://www11.a8.net/0.gif?a8mat=1NWF4S+B5AEZU+249K+BWGDT"
+     }
+    ]
    }
   },
   {

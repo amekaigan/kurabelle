@@ -450,6 +450,17 @@ ul.chk.dif li small{margin-left:6px;font-size:12px;color:var(--ink3)}
 .qa-c.reg .qa-i{background:var(--cb)}
 .qa-c p:last-child{margin:0}
 .qa-src{font-size:12.5px;color:var(--ink3);margin:2px 0 0}
+/* 成分ページの「知っておくと分かりやすいこと」「よくある疑問」（2026-10-26） */
+.ipoints ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.ipoints li{position:relative;padding:10px 14px 10px 38px;background:var(--hl-soft);border-radius:12px;line-height:1.7}
+.ipoints li::before{content:"✓";position:absolute;left:14px;top:10px;font-weight:700;color:var(--ink)}
+/* 成分表での書かれ方：表示名が長いので、名前を1行目に全部出し、棒と件数を2行目に置く */
+.cbars.names .cbar{grid-template-columns:1fr 3em;row-gap:4px}
+.cbars.names .cl-n{grid-column:1/-1;white-space:normal;overflow-wrap:anywhere;font-weight:700}
+.cbars.names small{display:none}
+.ifaq{display:grid;gap:10px}
+.ifaq h2{margin-bottom:0}
+.ifaq .qa-q{font-size:16px}
 /* 商品ページの「よく気にされる成分」：文字のラベルをやめて ● と － にする（2026-10-23、成分名が途中で折り返していたため） */
 .flags li span{min-width:1.4em;text-align:center;padding:0;border:0;background:none;font-size:16px}
 .flags li.on span{background:none;color:var(--ink)}

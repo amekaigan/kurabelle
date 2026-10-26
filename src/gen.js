@@ -51,7 +51,7 @@ const TAG_EXPLAIN = {
   silicone: "シリコーン", paraben: "パラベン類", mineral: "鉱物油", menthol: "清涼剤", colorant: "着色料・染料", preserv: "防腐剤", strongpres: "少量で効く防腐剤（イソチアゾリノン系）",
   dry: "乾燥", oily: "ベタつき", rough: "肌あれ", spot: "シミ", firm: "ハリ", sensitive: "刺激を感じやすい肌"
 };
-const FLAGS = [["fragrance", "香料"], ["silicone", "シリコーン"], ["strongSurf", "硫酸系など強めの洗浄成分"], ["paraben", "パラベン"], ["alcohol", "アルコール"], ["menthol", "メントール"], ["colorant", "着色料"], ["mineral", "鉱物油"]];
+const FLAGS = [["fragrance", "香料", "香りをつける成分"], ["silicone", "シリコーン", "髪の表面をおおって、指通りをなめらかにする成分"], ["strongSurf", "硫酸系など強めの洗浄成分", "泡立ちがよく、洗う力が強めの洗浄成分（ラウレス硫酸Naなど）"], ["paraben", "パラベン", "中身の品質を保つための防腐剤の一種"], ["alcohol", "アルコール", "さっぱり感を出したり、ほかの成分を溶かしたりする成分（エタノールなど）"], ["menthol", "メントール", "スーッとした清涼感を出す成分"], ["colorant", "着色料", "中身に色をつける成分"], ["mineral", "鉱物油", "石油からつくる油（ミネラルオイルなど）"]];
 
 /* ---------- 解析 ---------- */
 const P = PRODUCTS.map(p => {
@@ -471,7 +471,7 @@ P.forEach(x => {
   const crumbs = [["トップ", ""], [catN, `categories/${p.category}/`]];
   if (brandUrl.has(p.brand)) crumbs.push([p.brand, brandUrl.get(p.brand)]);
   crumbs.push([p.name, x.url]);
-  const flags = FLAGS.map(([t, n]) => [n, x.tags.has(t)]);
+  const flags = FLAGS.map(([t, n, d]) => [n, x.tags.has(t), d]);
   const s = p.source || {};
   const desc = `${p.name}の全成分${x.a.items.length}種類を、成分ごとの役割つきで一覧にしました。${x.sc && x.sc.mainSurf ? `主洗浄成分は${x.sc.mainSurf.name}。` : ""}香料・シリコーンなどの有無と、似た成分の商品も。`;
   write(x.url, `${p.name}の成分`, desc, r => `
@@ -497,7 +497,8 @@ P.forEach(x => {
   </section>
   <section><h2>香りと、よく気にされる成分</h2>
     ${scentBlock(x)}
-    <ul class="flags">${flags.map(([n, on]) => `<li class="${on ? "on" : "off"}"><span aria-label="${on ? "入っている" : "入っていない"}">${on ? "●" : "－"}</span>${esc(n)}</li>`).join("")}</ul>
+    <p class="small muted">商品を選ぶときに「入っているか」を確かめる人が多い成分です。好みで選ぶための目印で、危険かどうかを示すものではありません。</p>
+    <ul class="flags">${flags.map(([n, on, d]) => `<li class="${on ? "on" : "off"}"><span aria-label="${on ? "入っている" : "入っていない"}">${on ? "●" : "－"}</span><b>${esc(n)}</b><small>${esc(d)}</small></li>`).join("")}</ul>
   </section>
   ${cmpOf(x).length ? `<section><h2>どっちが合う？近い商品と比べる</h2><div class="clist">${cmpOf(x).map(c => { const o = c.a === x ? c.b : c.a; return cmpCard(c, r, `${o.p.name}と比べる`); }).join("")}</div></section>` : ""}
   <section><h2>成分が似ている${esc(catN)}</h2><div class="plist">${similar(x, 4).map(({ y, s }) => productCard(y, r, `共通の成分 ${Math.round(s * 100)}%`)).join("")}</div></section>

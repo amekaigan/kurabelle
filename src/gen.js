@@ -885,6 +885,42 @@ if (APP && fs.existsSync(APP)) {
   PAGES.push(ap);
 }
 if (RK_ON) fs.copyFileSync(path.join(__dirname, "rk.js"), path.join(OUT, "assets/rk.js"));
+
+/* ---------- 一度公開したページの記録と、消えたページの自動の転送（2026-10-27、ユーザーのOK） ----------
+   成分ページは「2商品以上」、ブランドは「3商品以上」など、作り直すたびに条件で選び直すため、商品の取り直しや辞書の直しで
+   ページが知らないうちに消えることがある（10月17〜18日にチャ乾留液・ヒドロキシエチルウレア・オクチルドデカノールなど11ページ）。
+   data/published-pages.json に一度公開したURLを貯め、今回なくなったURLは近い移り先へ301で転送する（dist/_redirects-auto）。
+   記録の更新は手元のビルドだけ（Cloudflare のビルドでは書き戻せないため）。変わったら一緒に保存する */
+if (SITE) {
+  const REG_F = path.join(ROOT_DIR, "data/published-pages.json");
+  let reg = { pages: {} };
+  try { reg = JSON.parse(fs.readFileSync(REG_F, "utf8")); } catch (e) { }
+  const now = new Set(PAGES), byUrl = new Map();
+  ING_PAGES.forEach(g => byUrl.set(ingUrl.get(g.name), { k: "ingredient", n: g.name }));
+  P.forEach(x => byUrl.set(x.url, { k: "product", n: x.p.name, b: x.p.brand || "", c: x.p.category }));
+  PAGES.forEach(u => { if (!byUrl.has(u)) byUrl.set(u, { k: u.split("/")[0] || "top" }); });
+  const dest = (u, o) => {
+    if (o.k === "ingredient" && o.n) { /* まとめた先の成分ページ（辞書で仲間に入った・表示名が同じ）があればそこへ */
+      const key = C.key(o.n), g = ING_PAGES.find(h => C.key(h.name) === key || [...h.aliases].some(a => C.key(a) === key));
+      return g ? ingUrl.get(g.name) : "ingredients/";
+    }
+    if (o.k === "product") { const b = o.b && brandUrl.get(o.b); return b && now.has(b) ? b : now.has(`categories/${o.c}/`) ? `categories/${o.c}/` : ""; }
+    const top = { compare: "compare/", brands: "brands/", concerns: "concerns/", categories: "", ingredients: "ingredients/" }[o.k];
+    return top && now.has(top) ? top : "";
+  };
+  const manual = (() => { try { return new Set(fs.readFileSync(path.join(ROOT_DIR, "data/redirects.txt"), "utf8").split("\n").map(l => l.trim().split(/\s+/)[0]).filter(s => s && !s.startsWith("#"))); } catch (e) { return new Set(); } })();
+  const gone = Object.entries(reg.pages || {}).filter(([u]) => !now.has(u));
+  const lines = gone.filter(([u]) => !manual.has("/" + u)).map(([u, o]) => `/${u} /${dest(u, o)} 301`);
+  fs.writeFileSync(path.join(OUT, "_redirects-auto"), lines.join("\n") + (lines.length ? "\n" : ""));
+  if (gone.length) console.warn(`[消えたページ] 一度公開して今回なくなったページが${gone.length}件あります（転送を自動で付けました）：\n` + gone.map(([u, o]) => `  /${u}（${o.n || o.k}）→ ${manual.has("/" + u) ? "data/redirects.txt の転送" : "/" + dest(u, o)}`).join("\n"));
+  const added = [...byUrl].filter(([u]) => !(reg.pages || {})[u]);
+  if (added.length && process.env.CF_PAGES !== "1") {
+    reg.pages = Object.fromEntries([...Object.entries(reg.pages || {}), ...added].sort(([a], [b]) => a < b ? -1 : 1));
+    reg._about = reg._about || "一度公開したページのURL。作り直しで消えたURLは gen.js が近い移り先へ301で転送する（dist/_redirects-auto）。手元のビルドで新しいURLが足される。変わったら一緒に保存する。消さない。";
+    fs.writeFileSync(REG_F, `{"_about":${JSON.stringify(reg._about)},\n"pages":{\n${Object.entries(reg.pages).map(([u, o]) => `${JSON.stringify(u)}:${JSON.stringify(o)}`).join(",\n")}\n}}\n`);
+    console.log(`[公開ページの記録] ${added.length}件を data/published-pages.json に足しました`);
+  }
+}
 if (SITE) {
   fs.writeFileSync(path.join(OUT, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${PAGES.map(p => `  <url><loc>${SITE}/${encodeURI(p)}</loc>${UPDATED ? `<lastmod>${UPDATED}</lastmod>` : ""}</url>`).join("\n")}\n</urlset>\n`);
   fs.writeFileSync(path.join(OUT, "robots.txt"), `User-agent: *\nAllow: /\nSitemap: ${SITE}/sitemap.xml\n`);

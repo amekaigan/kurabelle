@@ -912,13 +912,18 @@ if (SITE) {
   const gone = Object.entries(reg.pages || {}).filter(([u]) => !now.has(u));
   const lines = gone.filter(([u]) => !manual.has("/" + u)).map(([u, o]) => `/${u} /${dest(u, o)} 301`);
   fs.writeFileSync(path.join(OUT, "_redirects-auto"), lines.join("\n") + (lines.length ? "\n" : ""));
-  if (gone.length) console.warn(`[消えたページ] 一度公開して今回なくなったページが${gone.length}件あります（転送を自動で付けました）：\n` + gone.map(([u, o]) => `  /${u}（${o.n || o.k}）→ ${manual.has("/" + u) ? "data/redirects.txt の転送" : "/" + dest(u, o)}`).join("\n"));
+  /* 新しく消えたものだけを知らせる。消えたと分かった日を gone に書いておき、次からは件数だけ出す。戻ったら gone を消す */
+  const today = new Date(Date.now() + 9 * 36e5).toISOString().slice(0, 10);
+  const fresh = gone.filter(([, o]) => !o.gone), back = Object.entries(reg.pages || {}).filter(([u, o]) => o.gone && now.has(u));
+  if (fresh.length) console.warn(`[消えたページ] 今回新しくなくなったページが${fresh.length}件あります（転送を自動で付けました）：\n` + fresh.map(([u, o]) => `  /${u}（${o.n || o.k}）→ ${manual.has("/" + u) ? "data/redirects.txt の転送" : "/" + dest(u, o)}`).join("\n"));
+  if (gone.length > fresh.length) console.log(`[消えたページ] 以前に消えたページ${gone.length - fresh.length}件は、転送を続けています`);
   const added = [...byUrl].filter(([u]) => !(reg.pages || {})[u]);
-  if (added.length && process.env.CF_PAGES !== "1") {
+  if ((added.length || fresh.length || back.length) && process.env.CF_PAGES !== "1") {
+    fresh.forEach(([u, o]) => { o.gone = today; }); back.forEach(([u, o]) => { delete o.gone; });
     reg.pages = Object.fromEntries([...Object.entries(reg.pages || {}), ...added].sort(([a], [b]) => a < b ? -1 : 1));
     reg._about = reg._about || "一度公開したページのURL。作り直しで消えたURLは gen.js が近い移り先へ301で転送する（dist/_redirects-auto）。手元のビルドで新しいURLが足される。変わったら一緒に保存する。消さない。";
     fs.writeFileSync(REG_F, `{"_about":${JSON.stringify(reg._about)},\n"pages":{\n${Object.entries(reg.pages).map(([u, o]) => `${JSON.stringify(u)}:${JSON.stringify(o)}`).join(",\n")}\n}}\n`);
-    console.log(`[公開ページの記録] ${added.length}件を data/published-pages.json に足しました`);
+    console.log(`[公開ページの記録] 新しいURL${added.length}件・消えたURL${fresh.length}件・戻ったURL${back.length}件を data/published-pages.json に書きました`);
   }
 }
 if (SITE) {

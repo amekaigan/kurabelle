@@ -1,7 +1,8 @@
 /* クラベル：楽天市場の商品検索を取り次ぐ（Cloudflare Pages Functions、/api/rk）
    アクセスキーはページに出さず、Cloudflare の環境変数（RAKUTEN_APP_ID・RAKUTEN_ACCESS_KEY）だけで使う。
    楽天の規約に合わせ、取得した情報はここでは保存しない（Cache-Control: no-store）。
-   返すのは、商品画像のURL・販売ページへのリンク・その時点の価格（送料の扱い・お店の名前）だけ。 */
+   返すのは、商品画像のURL・販売ページへのリンク・その時点の価格（送料の扱い・お店の名前）と、
+   楽天のレビューの平均と件数（JANで探したときは、同じ商品を扱う複数のお店の分を合計。2026年10月23日、ユーザーのOK）。 */
 const API = "https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701";
 const AFF = "588643c2.b560f3b3.588643c3.4dd69634";
 
@@ -38,7 +39,13 @@ export async function onRequestGet({ request, env }) {
   const ok = it => (isJan || (it.itemName || "").replace(/\s+/g, "").indexOf(head) >= 0) && firstImg(it);
   const pick = list.find(it => ok(it) && !SET.test(it.itemName || "")) || list.find(ok);
   if (pick) {
+    /* レビュー：JANで探した結果は同じ商品なので、まとめ売りを除いたお店の分を件数で重み付けして合計する。名前で探したときは選んだ1店の分だけ */
+    const rvItems = isJan ? list.filter(it => ok(it) && !SET.test(it.itemName || "")) : [pick];
+    let rn = 0, rs = 0, shops = 0;
+    rvItems.forEach(it => { const n = Number(it.reviewCount) || 0, a = Number(it.reviewAverage) || 0; if (n > 0 && a > 0) { rn += n; rs += n * a; shops++; } });
+    const rv = rn ? { avg: Math.round(rs / rn * 10) / 10, n: rn, shops } : null;
     return json({
+      rv,
       img: firstImg(pick).replace(/\?_ex=\d+x\d+/, ""),
       url: pick.affiliateUrl || pick.itemUrl || "",
       price: Number(pick.itemPrice) || null,

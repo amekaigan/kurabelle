@@ -10,7 +10,10 @@ fs.rmSync(DIST, { recursive: true, force: true });
 execFileSync(process.execPath, [path.join(__dirname, "gen.js"), path.join(ROOT, "data/products.json"), DIST, "--site", SITE, "--app", path.join(ROOT, "app/index.html")], { stdio: "inherit", env: process.env });
 // 外した・まとめた商品の古いURLの案内（data/redirects.txt → Cloudflare Pages の _redirects）
 const RED = path.join(ROOT, "data/redirects.txt");
-if (fs.existsSync(RED)) fs.copyFileSync(RED, path.join(DIST, "_redirects"));
+// 手で書いた転送を先に、作り直しで消えたページの自動の転送（gen.js が作る _redirects-auto）を後ろに並べる（先に書いたほうが優先される）
+const AUTO = path.join(DIST, "_redirects-auto");
+fs.writeFileSync(path.join(DIST, "_redirects"), (fs.existsSync(RED) ? fs.readFileSync(RED, "utf8").replace(/\n*$/, "\n") : "") + (fs.existsSync(AUTO) ? fs.readFileSync(AUTO, "utf8") : ""));
+if (fs.existsSync(AUTO)) fs.rmSync(AUTO);
 // いつ作ったサイトかを記録（自動の反映が動いているかの確認に使う）
 fs.writeFileSync(path.join(DIST, "version.txt"), `built ${new Date().toISOString()} ${process.env.CF_PAGES_COMMIT_SHA || ""}\n`);
 console.log("built:", DIST);

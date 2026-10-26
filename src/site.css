@@ -6,7 +6,7 @@
   --c:#FFFFFF; --ic:#1B2230; --soft:#FCF6DE;
   --r-base:#C9CDD0; --r-active:#2D5BC9; --r-hum:#1C9884; --r-beauty:#BF8618; --r-oil:#D96E34; --r-cond:#6F8F22;
   --r-emul:#8A70C8; --r-uv:#CC5585; --r-pres:#6C7B83; --r-clean:#3A97BF; --r-other:#A7A196;
-  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
+  --f-body:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",system-ui,sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --mk:url("__MKL__");
   --tap:52px;
@@ -24,7 +24,7 @@ body{margin:0;color:var(--ink);font-family:var(--f-body);font-size:17px;line-hei
 a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--hl);text-decoration-thickness:3px;text-underline-offset:3px}
 a:hover{text-decoration-color:var(--ink)}
 .wrap{max-width:820px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-h1,h2,h3{font-family:var(--f-body);font-weight:700;line-height:1.4;text-wrap:balance;margin:0}
+h1,h2,h3{font-family:var(--f-body);font-weight:700;line-height:1.4;margin:0;word-break:auto-phrase}
 h1{font-size:clamp(27px,6vw,38px);letter-spacing:.01em}
 h1 .sub{font-size:.55em;margin-left:.3em;color:var(--ink2)}
 h2{font-size:22px;margin-bottom:12px}
@@ -144,6 +144,11 @@ body.has-qbar{padding-bottom:88px}
 .pr-tag[hidden],.pr-note[hidden]{display:none}
 .pr-note{margin:6px 0 0;font-size:13px;line-height:1.6;color:var(--ink3)}
 .pr-note a{color:var(--ink2)}
+/* 商品ページの購入ボックス（メーカー直販・Amazon）。2026-10-24 */
+.buybox{display:flex;flex-direction:column;align-items:stretch;gap:10px;margin-top:14px;padding:14px;border:1.5px solid var(--ink3);border-radius:14px;background:var(--paper)}
+.buybox .pr-tag{align-self:flex-start}
+.buybox .rk-buy{justify-content:center;width:100%}
+.buybox .pr-note{margin:0}
 .px{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .rk-credit{font-size:13px}
 .maker{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px 18px}
@@ -302,3 +307,166 @@ table.ings tr:last-child td{border-bottom:0}
 .axbar{display:block;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--hl) var(--v),var(--grid) var(--v))}
 .axl details p{margin:0 14px 10px;font-size:15px;line-height:1.7}
 .axl details p.ax-this{font-size:13px;color:var(--ink3);overflow-wrap:anywhere;margin-bottom:14px}
+/* 「AとBの違い」のページ（2026-10-22、ユーザーの指摘で作り直し） */
+.cmp h1{font-size:clamp(25px,6.4vw,34px)}
+.cmp h1 .sub{font-size:.72em;margin-left:.15em}
+.cmp-head{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 8px}
+.cmp-p{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column}
+.cmp-p.b .cmp-lab{color:var(--cb)}
+.cmp-p>a{display:block;text-decoration:none;color:var(--ink);flex:1}
+.cmp-p .thumb{display:block;margin:0 auto 8px}
+.cmp-lab{display:block;font-size:19px;font-weight:700;line-height:1.35;overflow-wrap:anywhere}
+.cmp-sc{display:block;margin:6px 0 2px}
+.cmp-full{display:block;font-size:13px;line-height:1.5;color:var(--ink2);margin-top:4px;overflow-wrap:anywhere}
+.cmp-p .acts{margin-top:10px}
+.cmp-p .rk-buy{font-size:15px;padding:0 12px;width:100%;justify-content:center}
+:root{--cb:#C2603A}
+.verdict{background:var(--note);border-radius:16px;padding:16px 18px;margin-top:18px}
+.verdict h2{margin:0 0 6px}
+.verdict .vd{font-size:19px;line-height:1.6;margin:0 0 12px}
+.fws{display:grid;gap:10px}
+.fw{background:var(--card);border-radius:12px;padding:12px 14px}
+.fw.b .fw-h b{color:var(--cb)}
+.fw-h{margin:0 0 4px;font-size:16px}
+.fw ul{margin:0;padding-left:1.2em}
+.fw li{margin:2px 0}
+.radar.r2 .pa{fill:var(--ink);fill-opacity:.12;stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
+.radar.r2 .pb{fill:var(--cb);fill-opacity:.14;stroke:var(--cb);stroke-width:2.5;stroke-dasharray:7 4;stroke-linejoin:round}
+.radar.r2 .va{fill:var(--ink)}.radar.r2 .vb{fill:var(--cb)}
+.legend .lg.la{background:color-mix(in srgb,var(--ink) 12%,transparent);border-color:var(--ink)}
+.legend .lg.lb{background:color-mix(in srgb,var(--cb) 14%,transparent);border:2.5px dashed var(--cb)}
+table.cmp-t{table-layout:fixed}
+table.cmp-t th:first-child{width:40%}
+table.cmp-t td{color:var(--ink)}
+table.cmp-t th{overflow-wrap:anywhere}
+details.more{border:1px solid var(--line);border-radius:12px;background:var(--card);margin:8px 0}
+details.more summary{min-height:52px;display:flex;align-items:center;padding:0 14px;cursor:pointer;font-weight:700}
+details.more>.tags,details.more>p{padding:0 14px 12px}
+.clist .cl span{display:block;font-size:14px;color:var(--ink2);font-weight:400}
+.legend.l2{flex-direction:column;align-items:flex-start;gap:4px;width:fit-content;margin:4px auto 6px}
+.legend.l2 .lg{margin:0 8px 0 0;vertical-align:-1px}
+.radar.r2{max-width:460px}
+/* 「どっちが合う？」2回目の見直し（2026-10-22）：読ませずに見せる */
+.cmp h1{display:flex;flex-direction:column;gap:2px}
+.cmp h1 .ha{color:var(--ink)}
+.cmp h1 .hb{color:var(--cb)}
+.cmp h1 .hv,.cmp h1 .sub{font-size:.6em;color:var(--ink2);font-weight:500}
+.cmp-p{position:relative}
+.cmp-p.win{box-shadow:0 0 0 3px var(--hl)}
+.crown{position:absolute;top:-12px;left:50%;transform:translateX(-50%);white-space:nowrap;background:var(--hl);color:var(--ink);font-size:13px;font-weight:700;border-radius:999px;padding:2px 10px}
+.verdict .vd{font-size:22px;font-weight:700;margin:0 0 10px}
+.na{color:var(--ink)}.nb{color:var(--cb)}
+.sbar{display:grid;grid-template-columns:minmax(0,9em) 1fr 2.4em;align-items:center;gap:8px;margin:6px 0}
+.sbar .sl{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sbar .st{height:14px;background:var(--card);border-radius:7px;overflow:hidden}
+.sbar .st i{display:block;height:100%;background:var(--ink);border-radius:7px}
+.sbar.b .st i{background:var(--cb)}
+.sbar b{font-size:20px;text-align:right}
+.sbar.b .sl,.sbar.b b{color:var(--cb)}
+.fws{margin-top:12px}
+ul.chk{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+ul.chk li{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:3px 12px 3px 10px;font-size:15px}
+ul.chk li::before{content:"✓ ";font-weight:700;color:var(--ink)}
+.fw.b ul.chk li::before{color:var(--cb)}
+table.cmp-t th.ca{color:var(--ink);font-weight:700}
+table.cmp-t th.cb{color:var(--cb);font-weight:700}
+table.cmp-t td:not(:first-child){text-align:center;font-size:18px}
+table.cmp-t th:not(:first-child){text-align:center}
+table.cmp-t tr.diff td{background:var(--hl-soft)}
+.mk-on{color:var(--ink);font-size:16px}
+.mk-off{color:var(--ink3)}
+.vbar{display:flex;height:22px;border-radius:11px;overflow:hidden;gap:2px;margin:6px 0}
+.vbar i{display:block;min-width:4px}
+.vbar .va{background:var(--ink)}.vbar .vc{background:var(--line2)}.vbar .vb{background:var(--cb)}
+.vleg{display:flex;justify-content:space-between;gap:8px;font-size:14px;margin-bottom:8px}
+.vleg span{display:flex;flex-direction:column;line-height:1.3;flex:1}
+.vleg .c{flex:none;white-space:nowrap}
+.vleg b{font-size:22px}
+.vleg .a b{color:var(--ink)}.vleg .b{text-align:right;align-items:flex-end}.vleg .b b{color:var(--cb)}.vleg .c{align-items:center}
+/* 「どっちが合う？」3回目の見直し（2026-10-22）：まとまりごとの余白、開く箇所の三角、比較カードの2枚組サムネイル */
+.cmp>section{margin-top:40px}
+.cmp>section.verdict{margin-top:24px}
+.cmp>section>h2{margin-bottom:12px}
+.cmp .fws{gap:14px}
+.cmp>.pr-note,.cmp>p.small{margin-top:32px}
+details.more{margin:12px 0}
+details.more summary{list-style:none;justify-content:space-between;gap:12px}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::after{content:"";flex:none;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid var(--ink2);transition:transform .15s}
+details.more[open] summary::after{transform:rotate(180deg)}
+.cl.cl-duo{flex-direction:row;align-items:center;gap:14px}
+.cl-t{display:flex;flex-direction:column;gap:4px;min-width:0}
+.clist .cl .cl-t{color:var(--ink)}
+.cl-t b{color:var(--ink)}
+.clist .cl .cl-t span{font-size:13px}
+.duo,.clist .cl .duo{flex:none;display:flex;width:80px;height:80px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#fff}
+.duo .thumb,.clist .cl .duo .thumb{display:block;width:50%;height:100%;border:0;border-radius:0}
+.duo .thumb+.thumb{border-left:1px solid var(--line)}
+.duo .thumb svg{width:200%;max-width:none;margin-left:-50%}
+.duo .thumb img{object-fit:cover}
+ul.chk.dif li::before{content:""}
+ul.chk.dif li small{margin-left:6px;font-size:12px;color:var(--ink3)}
+/* 成分ページ「数字で見る」（2026-10-22） */
+.idata h3{font-size:17px;margin:22px 0 8px}
+.big-stat{display:flex;align-items:baseline;gap:10px;margin:4px 0 14px}
+.big-stat b{font-size:44px;line-height:1}
+.big-stat span{font-size:17px;font-weight:700}
+.big-stat small{display:block;font-size:13px;font-weight:400;color:var(--ink2)}
+.cbars{display:grid;gap:8px}
+.cbar{display:grid;grid-template-columns:minmax(0,8.5em) 1fr 3em 3.4em;align-items:center;gap:8px;font-size:14px}
+.cbar .cl-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cbar .st{height:14px;background:var(--card);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.cbar .st i{display:block;height:100%;background:var(--ink)}
+.cbar b{text-align:right;font-size:16px}
+.cbar small{color:var(--ink3);text-align:right}
+.pbar{display:flex;height:20px;border-radius:10px;overflow:hidden;gap:2px}
+.pbar i{display:block;min-width:0}
+.pbar .p0{background:var(--ink)}.pbar .p1{background:var(--ink3)}.pbar .p2{background:var(--line2)}
+.pleg{display:flex;justify-content:space-between;font-size:14px;margin-top:6px}
+.pleg span{display:flex;flex-direction:column;line-height:1.3}
+.pleg span:nth-child(2){align-items:center}.pleg span:last-child{align-items:flex-end}
+.pleg b{font-size:20px}
+.idata{margin-top:28px}
+/* 楽天のレビュー（星と件数。2026-10-23） */
+:root{--star:#D99A00}
+.rk-rv{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;margin:10px 0 0;font-size:14px;color:var(--ink2)}
+.rk-rv[hidden]{display:none}
+.rk-rv .stars{font-size:18px;letter-spacing:1px;background:linear-gradient(90deg,var(--star) var(--w),var(--line2) var(--w));-webkit-background-clip:text;background-clip:text;color:transparent}
+.rk-rv b{font-family:var(--f-mono);font-size:17px;color:var(--ink)}
+.rk-rv small{flex-basis:100%;font-size:12.5px;color:var(--ink3)}
+.rk-rv.sm{margin:2px 0 0;font-size:12.5px;gap:4px}
+.rk-rv.sm .stars{font-size:14px;letter-spacing:0}
+.rk-rv.sm b{font-size:14px}
+.cmp-p .rk-rv{margin:4px 0 0}
+.cmp-p .rk-rv{flex-wrap:nowrap;white-space:nowrap;gap:3px}
+.cmp-p .rk-rv .stars{font-size:12px}
+.cmp-p .rk-rv .rv-n{font-size:11.5px}
+.cmp-p{min-width:0}
+.cmp-p .rk-rv{overflow:hidden}
+/* 成分ページの「何の成分？」などの問いと答え（2026-10-23） */
+.qa{display:grid;gap:10px;margin:16px 0 8px}
+.qa-c{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px 16px}
+.qa-c.reg{background:var(--hl-soft)}
+.qa-q{display:flex;align-items:center;gap:8px;margin:0 0 4px;font-weight:700;font-size:16px}
+.qa-i{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--paper);font-size:14px;font-weight:700;flex:none}
+.qa-c.reg .qa-i{background:var(--cb)}
+.qa-c p:last-child{margin:0}
+.qa-src{font-size:12.5px;color:var(--ink3);margin:2px 0 0}
+/* 成分ページの「知っておくと分かりやすいこと」「よくある疑問」（2026-10-26） */
+.ipoints ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.ipoints li{position:relative;padding:10px 14px 10px 38px;background:var(--hl-soft);border-radius:12px;line-height:1.7}
+.ipoints li::before{content:"✓";position:absolute;left:14px;top:10px;font-weight:700;color:var(--ink)}
+/* 成分表での書かれ方：表示名が長いので、名前を1行目に全部出し、棒と件数を2行目に置く */
+.cbars.names .cbar{grid-template-columns:1fr 3em;row-gap:4px}
+.cbars.names .cl-n{grid-column:1/-1;white-space:normal;overflow-wrap:anywhere;font-weight:700}
+.cbars.names small{display:none}
+.ifaq{display:grid;gap:10px}
+.ifaq h2{margin-bottom:0}
+.ifaq .qa-q{font-size:16px}
+/* 商品ページの「よく気にされる成分」：文字のラベルをやめて ● と － にする（2026-10-23、成分名が途中で折り返していたため） */
+.flags li span{min-width:1.4em;text-align:center;padding:0;border:0;background:none;font-size:16px}
+.flags li.on span{background:none;color:var(--ink)}
+.flags li.off span{background:none;border:0;color:var(--ink3)}
+.flags li.off{color:var(--ink2)}
+/* 商品名を語のまとまりで折り返す（2026-10-23） */
+.w{display:inline-block;max-width:100%;overflow-wrap:anywhere}

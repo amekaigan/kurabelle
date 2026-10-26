@@ -7,7 +7,7 @@ Claude Codeが起動時に自動で読むファイル。`.claude/` に置くの�
 ## このサイト
 - シャンプー・保湿クリームなどの**成分表を、決まったルールで読み解いて比べる**サイト。サイト名は「クラベル」（ロゴの横に小さく kurabelle。検索結果のタイトルは「クラベル｜成分でくらべるシャンプー・スキンケア」）、ドメインは kurabelle.com。
 - 本番は Cloudflare Pages（アカウント Ishimonzukan、プロジェクト kurabelle）が `npm run build`（`src/build.js`）を実行し、`dist/` を公開する。`dist/` はリポジトリに入れない。GitHub は amekaigan/kurabelle（2026年10月17日時点で**公開**のまま。非公開にするかはユーザーの返事待ち）。
-- ドメイン kurabelle.com はお名前.comで取得（2026年10月）、ネームサーバーを Cloudflare（joselyn / achiel）に切り替え済み。kurabelle.com・www.kurabelle.com とも Pages のカスタムドメインで有効。
+- ドメイン kurabelle.com はお名前.comで取得（2026年10月）、ネームサーバーを Cloudflare（joselyn / achiel）に切り替え済み。kurabelle.com・www.kurabelle.com とも Pages のカスタムドメインで有効。www は Cloudflare のリダイレクトルールで kurabelle.com へ301転送（2026年10月23日）。
 - 反映の確認：`https://kurabelle.com/version.txt` にビルドした日時とコミットが出る。GitHub のコミットに「Cloudflare Pages」のチェックが付けばビルドが動いている。
 - 自動の反映が止まったとき（2026年10月16日に一度あった）：GitHub の Settings → Applications →「Cloudflare Workers and Pages」→ Configure で、kurabelle を外して保存し、もう一度追加して保存すると直った。Cloudflare の「切断」は押さない。
 - 商品データは `data/products.json` の1ファイル。ページはすべて `src/gen.js` が作る（商品・成分・ブランド・目的別・カテゴリ）。
@@ -45,9 +45,13 @@ status：doing／review（B）／ask（C）／ok（反映待ち）／hold／done
   3. `python3 tools/check.py` で照合（一字一句・JANのチェックデジット・有効成分・重複・先頭の水）。`--write` で一致したものを登録、止まったものは `data/skipped.json` に理由つきで記録される。
   4. 新しいカテゴリの商品は `data/pending.json` に入り、そのカテゴリが10件たまったら自動で公開側（products.json）へ移る。
   5. 香り違いだけで成分が同じ商品は、重複ページになるので登録しない。
+  5-2. 保存するときは `npm run build` のあとの `data/published-pages.json` の変更も一緒に入れる。
   6. 全成分が載っている出典の目安：花王 製品カタログ、ツルハ、マツキヨココカラ、セイムス（クリエイトSDは成分欄がない商品が多い）。
   7. 週50件（2026年10月17日にユーザーが決定）。足す順番は `.claude/spec.md` の9章。定期実行「クラベル｜商品の追加」が火・木・土に約17件ずつ足す。
 - 中身の薄いページを作らない：成分ページは商品2件以上かつ辞書に説明がある成分だけ、ブランドページは商品3件以上。
+- **消えたページの扱い（2026年10月27日、ユーザーのOK）**：ページは作り直すたびに条件で選び直すので、商品の取り直しや辞書の直しで消えることがある。一度公開したURLは `data/published-pages.json` に貯め、なくなったURLは `gen.js` が近い移り先へ301で自動転送する（成分→まとめた先の成分ページか成分の一覧、商品→同じブランドのページかカテゴリ、比較→比較の一覧）。手で書いた `data/redirects.txt` があればそちらが優先。
+  - `npm run build` で `data/published-pages.json` が変わったら、**必ず一緒に保存する**（Cloudflare のビルドでは書き戻せないため、手元で保存しないと記録が残らない）。この記録から行を消さない。
+  - ビルドの出力に `[消えたページ]` が出て、**今回の作業で新しく消えたもの**があったら、ボードに `tier: "A"`・`status: "done"` で「◯◯のページがなくなりました（転送先：◯◯）」と載せる。検索に出ていた成分なら、説明（`points`・`faq`）を書いて1商品でもページを残すことを `ask` で提案する。
 
 ## 確かめ方
 - `npm run build` が通ること。リンク切れ0件。スマホ幅（390px）で商品ページを開いて見る。

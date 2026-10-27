@@ -151,6 +151,9 @@ body.has-qbar{padding-bottom:88px}
 .buybox .pr-note{margin:0}
 .px{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .rk-credit{font-size:13px}
+.offnote{background:var(--hl);border:1.5px solid var(--line);border-radius:16px;padding:14px 18px;margin:14px 0}
+.offnote .off-h{font-weight:700;font-size:17px;margin:0 0 4px}
+.offnote p{margin:4px 0}
 .maker{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px 18px}
 .maker .lbl{font-size:13px;letter-spacing:.06em;color:var(--ink3)}
 .maker p{margin:4px 0}

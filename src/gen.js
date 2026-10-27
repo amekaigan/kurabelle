@@ -54,7 +54,7 @@ const TAG_EXPLAIN = {
 const FLAGS = [["fragrance", "香料", "香りをつける成分"], ["silicone", "シリコーン", "髪の表面をおおって、指通りをなめらかにする成分"], ["strongSurf", "硫酸系など強めの洗浄成分", "泡立ちがよく、洗う力が強めの洗浄成分（ラウレス硫酸Naなど）"], ["paraben", "パラベン", "中身の品質を保つための防腐剤の一種"], ["alcohol", "アルコール", "さっぱり感を出したり、ほかの成分を溶かしたりする成分（エタノールなど）"], ["menthol", "メントール", "スーッとした清涼感を出す成分"], ["colorant", "着色料", "中身に色をつける成分"], ["mineral", "鉱物油", "石油からつくる油（ミネラルオイルなど）"]];
 
 /* ---------- 解析 ---------- */
-const P = PRODUCTS.map(p => {
+const PA = PRODUCTS.map(p => {
   const a = C.analyzeText(p.ingredients);
   const names = [...new Set(a.items.map(i => i.name))];
   const tags = new Set(a.items.flatMap(i => i.tags));
@@ -63,7 +63,11 @@ const P = PRODUCTS.map(p => {
   const ev = cat && cat.scored ? C.evaluate([p], p.category, null, () => a)[0] : null;
   return { p, a, names, tags, sc, match: ev ? ev.match : null, grade: ev ? ev.grade : null, url: `products/${slug(p.id)}/` };
 });
-const byId = new Map(P.map(x => [x.p.id, x]));
+/* 製造終了品（discontinued）：ページは残し、いま買える近い商品へ案内する（2026-10-27、ユーザーの指示）。
+   一覧・点数の順位・比較・成分の集計・比較ツールには入れない（買えない商品をすすめないため） */
+const P = PA.filter(x => !x.p.discontinued), OFF = PA.filter(x => x.p.discontinued);
+OFF.forEach(x => { x.off = true; });
+const byId = new Map(PA.map(x => [x.p.id, x]));
 
 /* 成分：表示名ごとに集計 */
 const ING = new Map();
@@ -479,7 +483,11 @@ function reviewBlock(x) {
 }
 
 /* ---------- 商品ページ ---------- */
-P.forEach(x => {
+const jpDate = d => { const m = String(d || "").match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${+m[1]}年${+m[2]}月${+m[3]}日` : esc(d || ""); };
+const offBlock = (x, r) => { const d = x.p.discontinued || {};
+  return `<div class="offnote"><p class="off-h">製造終了品</p><p>${d.date ? `メーカーの発表では、${jpDate(d.date)}に生産を終えています。` : "メーカーの発表で、製造を終えた商品です。"}店頭の在庫がなくなり次第、販売終了です。成分表は販売していたときのものです。${d.url ? `（出典：<a href="${esc(d.url)}" rel="nofollow noopener" target="_blank">${esc(d.label || d.url)}</a>${d.checked ? `、${esc(d.checked)}確認` : ""}）` : ""}</p></div>
+  <section><h2>成分が近い、いま買える${esc(CAT_N[x.p.category] || "商品")}</h2><p class="small muted">この商品の成分表と、共通する成分の多い順です。</p><div class="plist">${similar(x, 6).map(({ y, s }) => productCard(y, r, `共通の成分 ${Math.round(s * 100)}%`)).join("")}</div></section>`; };
+[...P, ...OFF].forEach(x => {
   const p = x.p, catN = CAT_N[p.category] || p.category;
   const crumbs = [["トップ", ""], [catN, `categories/${p.category}/`]];
   if (brandUrl.has(p.brand)) crumbs.push([p.brand, brandUrl.get(p.brand)]);
@@ -492,10 +500,11 @@ P.forEach(x => {
   <div class="phead"><div class="pfig">${imgSlot(x, "pimg")}<button class="fav-btn star" type="button" hidden aria-pressed="false" aria-label="お気に入りに追加" title="お気に入りに追加" data-fav="${esc(JSON.stringify({ id: p.id, name: p.name, brand: p.brand || "", url: x.url, match: x.match, grade: x.grade, type: x.sc ? typeOf(x).title : "", ph: PH[p.category] || "ph-bottle", img: ownImg(x) ? REL_IMG(ownImg(x)) : "", rk: useRk(x) && !ownImg(x) ? rkKey(x) : "", jan: p.jan ? 1 : 0 }))}"></button></div><div>
   <h1>${wb(p.name)} <span class="w">の成分</span></h1>
   <div class="row">${chips(x)}</div>
-  ${isDirect(x) ? buyBox(x, r) : ""}${useRk(x) ? `<div class="acts"><span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a></div>` : ""}
-  ${useRk(x) ? `<p class="rk-rv" data-rk-rv="${esc(rkKey(x))}" hidden></p>` : ""}
-  ${useRk(x) ? `<p class="rk-price" data-rk-price="${esc(rkKey(x))}" hidden></p><p class="pr-note" data-rk-pr="${esc(rkKey(x))}" hidden>価格・評価は<span data-rk-at="${esc(rkKey(x))}"></span>時点の楽天市場の情報です。リンクは広告で、点数や順位には影響しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
+  ${x.off ? "" : isDirect(x) ? buyBox(x, r) : ""}${!x.off && useRk(x) ? `<div class="acts"><span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a></div>` : ""}
+  ${!x.off && useRk(x) ? `<p class="rk-rv" data-rk-rv="${esc(rkKey(x))}" hidden></p>` : ""}
+  ${!x.off && useRk(x) ? `<p class="rk-price" data-rk-price="${esc(rkKey(x))}" hidden></p><p class="pr-note" data-rk-pr="${esc(rkKey(x))}" hidden>価格・評価は<span data-rk-at="${esc(rkKey(x))}"></span>時点の楽天市場の情報です。リンクは広告で、点数や順位には影響しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
   </div></div>
+  ${x.off ? offBlock(x, r) : ""}
   ${typeBlock(x, r)}
   <p class="lead">${esc(leadText(x))}</p>
   ${p.desc || p.scent ? `<div class="maker"><span class="lbl">メーカーの説明</span>${p.desc ? `<p>${esc(p.desc)}</p>` : ""}${p.scent ? `<p class="mk-scent"><b>香り</b>${esc(p.scent)}</p>` : ""}${p.infoSource && p.infoSource.url ? `<p class="small muted">出典：<a href="${esc(p.infoSource.url)}" rel="nofollow noopener" target="_blank">${esc((p.infoSource.url.split("/")[2] || "").replace(/^www\./, ""))}</a>（${esc(p.infoSource.date || "")}確認）の要約。効果を保証するものではありません。</p>` : ""}</div>` : ""}
@@ -514,7 +523,7 @@ P.forEach(x => {
     <ul class="flags">${flags.map(([n, on, d]) => `<li class="${on ? "on" : "off"}"><span aria-label="${on ? "入っている" : "入っていない"}">${on ? "●" : "－"}</span><b>${esc(n)}</b><small>${esc(d)}</small></li>`).join("")}</ul>
   </section>
   ${cmpOf(x).length ? `<section><h2>どっちが合う？近い商品と比べる</h2><div class="clist">${cmpOf(x).map(c => { const o = c.a === x ? c.b : c.a; return cmpCard(c, r, `${o.p.name}と比べる`); }).join("")}</div></section>` : ""}
-  <section><h2>成分が似ている${esc(catN)}</h2><div class="plist">${similar(x, 4).map(({ y, s }) => productCard(y, r, `共通の成分 ${Math.round(s * 100)}%`)).join("")}</div></section>
+  ${x.off ? "" : `<section><h2>成分が似ている${esc(catN)}</h2><div class="plist">${similar(x, 4).map(({ y, s }) => productCard(y, r, `共通の成分 ${Math.round(s * 100)}%`)).join("")}</div></section>`}
   <p class="src">出典：${s.url ? `<a href="${esc(s.url)}" rel="nofollow noopener" target="_blank">${esc(s.label || s.url)}</a>` : esc(s.label || "")}${s.date ? `（${esc(s.date)}確認）` : ""}${p.jan ? `　JAN ${esc(p.jan)}` : ""}${p.note ? `<br>${esc(p.note)}` : ""}</p>
 </article>`, { crumbs, cat: p.category });
 });
@@ -624,6 +633,7 @@ BRAND_PAGES.forEach(([b, list]) => {
 <h1>${esc(full)} の${esc(what)}と成分</h1><p class="lead">登録している${esc(b)}の商品は${list.length}件です。</p>
 ${common.length ? `<section><h2>全商品に共通する成分</h2><div class="tags">${common.map(n => `<a class="tagl" href="${r(ingUrl.get(n))}">${esc(n)}</a>`).join("")}</div></section>` : ""}
 <section><h2>商品</h2><div class="plist">${list.slice().sort((a, b) => (b.match || 0) - (a.match || 0)).map(x => productCard(x, r)).join("")}</div></section>
+${(() => { const L = OFF.filter(x => x.p.brand === b); return L.length ? `<section><h2>製造終了品</h2><p class="small muted">いまは作られていない商品です。成分表と、成分が近い商品を見られます。</p><div class="plist">${L.map(x => productCard(x, r, "製造終了品")).join("")}</div></section>` : ""; })()}
 ${(() => { const L = [...CMP.values()].filter(c => c.a.p.brand === b && c.b.p.brand === b); return L.length ? `<section><h2>${esc(b)}の商品どうし、どっちが合う？</h2><div class="clist">${L.map(c => cmpCard(c, r, "")).join("")}</div></section>` : ""; })()}`,
     { crumbs: [["トップ", ""], ["ブランド", "brands/"], [b, u]] });
 });
@@ -895,7 +905,7 @@ if (APP && fs.existsSync(APP)) {
   h = h.replace(/<!--KB:HEAD-->[\s\S]*?<!--\/KB:HEAD-->/, `<!--KB:HEAD-->${inject}<!--/KB:HEAD-->`).replace(/<!--KB:FOOT-->[\s\S]*?<!--\/KB:FOOT-->/, `<!--KB:FOOT-->${foot}<!--/KB:FOOT-->`);
   fs.mkdirSync(path.join(OUT, ap), { recursive: true });
   fs.writeFileSync(path.join(OUT, ap, "index.html"), h);
-  fs.copyFileSync(SRC, path.join(OUT, ap, "products.json"));
+  fs.writeFileSync(path.join(OUT, ap, "products.json"), JSON.stringify(Object.assign({}, DATA, { products: PRODUCTS.filter(p => !p.discontinued) })));
   PAGES.push(ap);
 }
 if (RK_ON) fs.copyFileSync(path.join(__dirname, "rk.js"), path.join(OUT, "assets/rk.js"));
@@ -911,7 +921,7 @@ if (SITE) {
   try { reg = JSON.parse(fs.readFileSync(REG_F, "utf8")); } catch (e) { }
   const now = new Set(PAGES), byUrl = new Map();
   ING_PAGES.forEach(g => byUrl.set(ingUrl.get(g.name), { k: "ingredient", n: g.name }));
-  P.forEach(x => byUrl.set(x.url, { k: "product", n: x.p.name, b: x.p.brand || "", c: x.p.category }));
+  PA.forEach(x => byUrl.set(x.url, { k: "product", n: x.p.name, b: x.p.brand || "", c: x.p.category }));
   CMP.forEach((c, k) => byUrl.set(c.url, { k: "compare", p: k }));
   PAGES.forEach(u => { if (!byUrl.has(u)) byUrl.set(u, { k: u.split("/")[0] || "top" }); });
   const dest = (u, o) => {

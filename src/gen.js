@@ -77,15 +77,19 @@ P.forEach(x => x.a.items.forEach((it, idx) => {
 /* 説明（data/ingredient-notes.json）に「知っておくと分かりやすいこと」「よくある疑問」まで書いた成分は、
    1商品でもページを作る（2026-10-26。検索に出ていたチャ乾留液のページが、商品の取り直しで1件になり消えていたため） */
 const RICH_NOTES = (() => { try { const j = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "data/ingredient-notes.json"), "utf8")); return new Set(Object.entries(j).filter(([k, v]) => v && typeof v === "object" && (v.faq || v.points)).map(([k]) => C.key(k))); } catch (e) { return new Set(); } })();
-/* ページを作る条件：辞書で役割が分かっていて、2商品以上に入っている（中身の薄いページを作らない） */
-const ING_PAGES = [...ING.values()].filter(g => g.src === "dict" && (g.uses.length >= 2 || RICH_NOTES.has(C.key(g.name))) && g.role !== "base")
+/* 一度公開したページ（data/published-pages.json）。2026-10-27、ユーザーの指示：ページは間違った情報でない限り消さない。
+   新しく作るときは下の条件（中身の薄いページを作らない）で選ぶが、一度公開したページは、その対象（成分・ブランド・2つの商品）が
+   サイトに残っている限り、条件を下回っても残す。消えたURLは検索での評価と「商品名＋成分」「AとBの違い」からの入口を失うため */
+const PUB = (() => { try { return new Set(Object.keys(JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "data/published-pages.json"), "utf8")).pages || {})); } catch (e) { return new Set(); } })();
+/* ページを作る条件：辞書で役割が分かっていて、2商品以上に入っている（中身の薄いページを作らない）。一度公開した成分は1商品でも残す */
+const ING_PAGES = [...ING.values()].filter(g => g.src === "dict" && (g.uses.length >= 2 || RICH_NOTES.has(C.key(g.name)) || PUB.has(`ingredients/${hid("i-", g.name)}/`)) && g.role !== "base")
   .sort((a, b) => b.uses.length - a.uses.length || a.name.localeCompare(b.name, "ja"));
 const ingUrl = new Map(ING_PAGES.map(g => [g.name, `ingredients/${hid("i-", g.name)}/`]));
 
-/* ブランド：3商品以上 */
+/* ブランド：3商品以上（一度公開したブランドは1商品でも残す） */
 const BR = new Map();
 P.forEach(x => { const b = x.p.brand || ""; if (!b) return; if (!BR.has(b)) BR.set(b, []); BR.get(b).push(x); });
-const BRAND_PAGES = [...BR.entries()].filter(([, l]) => l.length >= 3).sort((a, b) => b[1].length - a[1].length);
+const BRAND_PAGES = [...BR.entries()].filter(([b, l]) => l.length >= 3 || PUB.has(`brands/${hid("b-", b)}/`)).sort((a, b) => b[1].length - a[1].length);
 const brandUrl = new Map(BRAND_PAGES.map(([b]) => [b, `brands/${hid("b-", b)}/`]));
 
 /* 「AとBの違い」：同じカテゴリで、同じブランドか同じメーカー（商品名の先頭の語。例「花王」）の商品どうし。
@@ -103,6 +107,15 @@ P.forEach(x => {
       if (!CMP.has(k)) CMP.set(k, { a, b, s, url: `compare/${hid("c-", k)}/` });
     });
 });
+/* 一度公開した比較ページは、商品が増えて「近い3件」から外れても残す（2026-10-27、ユーザーの指示。
+   10月27日の追加で16件が入れ替わって消えていた）。2つの商品がどちらも残っていて、成分がまったく同じでない限り作り続ける */
+P.forEach((x, i) => P.slice(i + 1).forEach(y => {
+  if (y.p.category !== x.p.category || !((x.p.brand && y.p.brand === x.p.brand) || maker(y) === maker(x))) return;
+  const [a, b] = [x, y].sort((m, n) => m.p.id < n.p.id ? -1 : 1);
+  const k = a.p.id + "|" + b.p.id, url = `compare/${hid("c-", k)}/`;
+  if (CMP.has(k) || !PUB.has(url)) return;
+  const s = jac(a, b); if (s < 1) CMP.set(k, { a, b, s, url });
+}));
 const CAT_S = { shampoo: "シャンプー", conditioner: "コンディショナー", scalp: "頭皮用エッセンス", skincare: "", serum: "美容液", facewash: "洗顔料", handsoap: "ハンドソープ", colorrinse: "カラーリンス" };
 /* 見出し用の短い呼び名：同じブランドなら名前の違う部分だけ、違うブランドならブランド名 */
 const MAKERS = new Set(["花王", "ユニリーバ", "ロート製薬", "マンダム", "ライオン", "大塚製薬", "アンファー", "アムウェイ", "第一三共ヘルスケア", "持田ヘルスケア", "コーセー", "資生堂", "カネボウ", "クラシエ", "ファイントゥデイ", "P&G", "レキットベンキーザー", "牛乳石鹸"]);
@@ -899,6 +912,7 @@ if (SITE) {
   const now = new Set(PAGES), byUrl = new Map();
   ING_PAGES.forEach(g => byUrl.set(ingUrl.get(g.name), { k: "ingredient", n: g.name }));
   P.forEach(x => byUrl.set(x.url, { k: "product", n: x.p.name, b: x.p.brand || "", c: x.p.category }));
+  CMP.forEach((c, k) => byUrl.set(c.url, { k: "compare", p: k }));
   PAGES.forEach(u => { if (!byUrl.has(u)) byUrl.set(u, { k: u.split("/")[0] || "top" }); });
   const dest = (u, o) => {
     if (o.k === "ingredient" && o.n) { /* まとめた先の成分ページ（辞書で仲間に入った・表示名が同じ）があればそこへ */
@@ -916,10 +930,19 @@ if (SITE) {
   /* 新しく消えたものだけを知らせる。消えたと分かった日を gone に書いておき、次からは件数だけ出す。戻ったら gone を消す */
   const today = new Date(Date.now() + 9 * 36e5).toISOString().slice(0, 10);
   const fresh = gone.filter(([, o]) => !o.gone), back = Object.entries(reg.pages || {}).filter(([u, o]) => o.gone && now.has(u));
-  if (fresh.length) console.warn(`[消えたページ] 今回新しくなくなったページが${fresh.length}件あります（転送を自動で付けました）：\n` + fresh.map(([u, o]) => `  /${u}（${o.n || o.k}）→ ${manual.has("/" + u) ? "data/redirects.txt の転送" : "/" + dest(u, o)}`).join("\n"));
+  if (fresh.length) console.warn(`[消えたページ] 今回新しくなくなったページが${fresh.length}件あります（転送を自動で付けました）：\n` + fresh.map(([u, o]) => `  /${u}（${o.n || o.p || o.k}）→ ${manual.has("/" + u) ? "data/redirects.txt の転送" : "/" + dest(u, o)}`).join("\n"));
+  /* ページを消すのはCの扱い（2026-10-27、ユーザーの指示：消す前に理由を伝えて相談する）。手元のビルドでは、新しく消えるページがあると止める。
+     ユーザーのOKを得てから ALLOW_GONE=1 npm run build で記録する（Cloudflare のビルドは止めない） */
+  if (fresh.length && process.env.CF_PAGES !== "1" && process.env.ALLOW_GONE !== "1") {
+    console.error("[消えたページ] ページを消すには先にユーザーの確認が要ります（C）。理由を伝えてOKをもらってから ALLOW_GONE=1 npm run build を実行してください。記録はまだ書き換えていません");
+    process.exit(1);
+  }
   if (gone.length > fresh.length) console.log(`[消えたページ] 以前に消えたページ${gone.length - fresh.length}件は、転送を続けています`);
   const added = [...byUrl].filter(([u]) => !(reg.pages || {})[u]);
-  if ((added.length || fresh.length || back.length) && process.env.CF_PAGES !== "1") {
+  /* 前から記録にあるページにも、比較の組み合わせ（p）など今分かる情報を足しておく（あとで消えたときに何のページか分かるように） */
+  let filled = 0;
+  byUrl.forEach((o, u) => { const r = (reg.pages || {})[u]; if (r) Object.keys(o).forEach(f => { if (r[f] === undefined) { r[f] = o[f]; filled++; } }); });
+  if ((added.length || fresh.length || back.length || filled) && process.env.CF_PAGES !== "1") {
     fresh.forEach(([u, o]) => { o.gone = today; }); back.forEach(([u, o]) => { delete o.gone; });
     reg.pages = Object.fromEntries([...Object.entries(reg.pages || {}), ...added].sort(([a], [b]) => a < b ? -1 : 1));
     reg._about = reg._about || "一度公開したページのURL。作り直しで消えたURLは gen.js が近い移り先へ301で転送する（dist/_redirects-auto）。手元のビルドで新しいURLが足される。変わったら一緒に保存する。消さない。";

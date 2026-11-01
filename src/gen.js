@@ -568,8 +568,19 @@ ING_PAGES.forEach(g => {
     .filter(o => o.c >= 2 && o.lift > 0.1).sort((m, n) => n.lift - m.lift).slice(0, 8);
   const dataLead = best ? `クラベルに登録している${CAT_N[best.cat]}では、${best.n}件のうち${best.k}件（${best.pct}%）に入っています。` : "";
   const nf = noteOf(g.name), faqQ = nf && nf.faq ? nf.faq.map(o => o.q).join("／") : "";
-  const desc = `${g.name}とは何の成分か、何のために入っているか、化粧品基準での扱い。${faqQ ? `よくある疑問（${faqQ}）にも答えます。` : ""}${dataLead}入っている商品${g.uses.length}件と、よく一緒に入っている成分も。`;
-  write(u, `${g.name}とは｜何の成分か・入っている商品`, desc, r => `
+  /* 検索結果での見え方（2026-11-01）：成分名＋「美容」「コスメ」の検索で5位前後に出てもクリックが0だったため、
+     タイトルに役割（保湿など）と件数、説明文の先頭に「答え」（何の成分か）と、成分表での別の書かれ方を入れる。
+     「同じ成分」と言い切るのは notes の same だけ。まとめて数えている表示名は「仲間」と書く（本文と同じ扱い） */
+  const sameT = new Set(((nf && nf.same) || []).map(C.key));
+  const altSame = others.filter(a => sameT.has(C.key(a))), altGroup = others.filter(a => !sameT.has(C.key(a)));
+  const roleT = ["other", "unk"].includes(g.role) ? "" : `${ROLE_N(g.role)}の成分`;
+  const titleName = altSame.length && (g.name + altSame[0]).length <= 24 ? `${g.name}（${altSame[0]}）` : g.name;
+  const pageTitle = `${titleName}とは？${roleT ? roleT + "｜" : ""}化粧品での役割と入っている商品${g.uses.length}件`;
+  const answer = (nf ? nf.what + nf.why : `${g.desc}。`).replace(/\s+/g, "");
+  const altTxt = (altSame.length ? `「${altSame.slice(0, 3).join("」「")}」とも表示されます。` : "")
+    + (altGroup.length ? `成分表で「${altGroup.slice(0, 3).join("」「")}」と書かれる仲間の成分もまとめて数えています。` : "");
+  const desc = `${g.name}とは？${altTxt}${answer}入っている商品${g.uses.length}件を成分表での位置つきで紹介。${faqQ ? `よくある疑問（${faqQ}）にも。` : ""}`;
+  write(u, pageTitle, desc, r => `
 <article>
   <p class="eyebrow">成分</p>
   <h1>${esc(g.name)}<span class="sub">とは</span></h1>
@@ -582,6 +593,7 @@ ING_PAGES.forEach(g => {
     <p class="qa-src">出典：${srcs.map(o => `<a href="${esc(o.url)}" rel="nofollow noopener" target="_blank">${esc(o.label)}</a>`).join("・")}（${esc(srcs.map(o => o.date || KSRC.date).sort().pop())}確認）。効果や安全性を保証するものではありません。</p>
   </div>`; })()}
   <p class="lead">${esc(dataLead)}</p>
+  <p class="jump"><a class="btn solid wide" href="#ing-products">${esc(g.name)}が入っている商品（${g.uses.length}件）を見る<span aria-hidden="true">↓</span></a></p>
   ${(() => { /* 2026-10-26：辞書は似た働きの成分を1つにまとめて数えているので、「別の表示名」と言い切れるのは
        説明に same として書いたものだけ。ほかは「まとめて数えている表示名」と書く */
     const n = noteOf(g.name) || {}, sameK = new Set((n.same || []).map(C.key));
@@ -603,7 +615,7 @@ ING_PAGES.forEach(g => {
     ${co.length ? `<h3>よく一緒に入っている成分</h3><div class="tags">${co.map(o => `<a class="tagl" href="${r(ingUrl.get(o.n))}">${esc(o.n)}<span class="mono">${o.pct}%</span></a>`).join("")}</div><p class="small muted">${esc(g.name)}が入っている商品のうち、その成分も入っている割合です。</p>` : ""}
   </section>
   ${(() => { const n = noteOf(g.name); return n && n.faq ? `<section class="ifaq"><h2>${esc(g.name)}のよくある疑問</h2>${n.faq.map(o => `<div class="qa-c"><h3 class="qa-q"><span class="qa-i" aria-hidden="true">Q</span>${esc(o.q)}</h3><p>${esc(o.a)}</p></div>`).join("")}</section>` : ""; })()}
-  <section><h2>${esc(g.name)}が入っている商品（${g.uses.length}件）</h2>
+  <section id="ing-products"><h2>${esc(g.name)}が入っている商品（${g.uses.length}件）</h2>
     <p class="small muted">「◯番目／全◯成分」は成分表での位置です。化粧品では前のほうほど配合量が多い目安になります。医薬部外品は配合量の順とは限りません。「有効成分として配合」は、医薬部外品の有効成分として表示されているものです（有効成分は成分表の先頭に別枠で書かれるため、位置は出していません）。</p>
     <div class="plist">${top.map(({ x, pos, of, active, raw }) => { const rn = raw ? C.norm(raw) : "", shown = rn && C.key(rn) !== C.key(g.name) ? `・表示名「${esc(rn)}」` : "";
       return productCard(x, r, (active ? `有効成分として配合（全${of}成分）` : `${pos}番目／全${of}成分`) + shown, { posOnly: true }); }).join("")}</div>

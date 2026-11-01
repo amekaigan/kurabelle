@@ -57,6 +57,8 @@ main section{display:block}
 .btn.wide{display:flex;width:100%}
 .btn.more::after{content:"→";font-weight:500}
 .btn.back::before{content:"←";font-weight:500}
+.jump{margin:16px 0 8px}
+#ing-products{scroll-margin-top:76px}
 
 /* 一覧のカード */
 .plist{display:grid;gap:10px}

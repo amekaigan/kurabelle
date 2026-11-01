@@ -134,7 +134,9 @@ function shortName(x) {
   const words = T => T.filter(w => !GENERIC.test(w));
   const W = words(toks(x)), sib = P.filter(y => y !== x && y.p.brand === x.p.brand && y.p.category === x.p.category).map(y => words(toks(y)));
   let k = 1; while (k < W.length && sib.some(S => S.slice(0, k).join(" ") === W.slice(0, k).join(" "))) k++;
-  const w = W.slice(0, k).join(" ");
+  let w = W.slice(0, k).join(" ");
+  /* 2026-11-02：種類の語（トリートメント／コンディショナーなど）だけが違う兄弟がいると同じ名前になるので、その語を足す */
+  if (sib.some(S => S.join(" ") === W.join(" "))) { const g = toks(x).filter(t => GENERIC.test(t)); if (g.length) w = [w, ...g].join(" "); }
   const v = (x.p.brand && !w.startsWith(x.p.brand) ? [x.p.brand, w] : [w]).filter(Boolean).join(" ") || toks(x).join(" ");
   SN.set(x, v); return v;
 }
@@ -144,7 +146,15 @@ function pairLabels(a, b) {
     let i = 0; while (i < A.length - 1 && i < B.length - 1 && A[i] === B[i]) i++;
     let j = 0; while (j < A.length - i - 1 && j < B.length - i - 1 && A[A.length - 1 - j] === B[B.length - 1 - j]) j++;
     const da = A.slice(i, A.length - j).join(" "), db = B.slice(i, B.length - j).join(" ");
-    if (da && db && da !== db) { const cs = CAT_S[a.p.category] || ""; return { h: `${a.p.brand} ${da}と${db}${!cs || (da + db).includes(cs.slice(0, 4)) ? "" : "の" + cs}`, la: da, lb: db, br: a.p.brand }; }
+    if (da && db && da !== db) {
+      /* 2026-11-02（SEO点検の指摘：比較ページのタイトル重複）：
+         ・違いが「トリートメント／コンディショナー」などの種類だけのときは、共通の商品名（例：ふんわり軽やか）を残す
+         ・共通の末尾が種類の語（例：トリートメント）のときは、カテゴリ名ではなくその語を付ける（トリートメントどうしを「コンディショナー」と書いていた） */
+      const pre = GENERIC.test(da) && GENERIC.test(db) ? A.slice(0, i).join(" ") : "";
+      const suf = j > 0 && GENERIC.test(A[A.length - 1]) ? A[A.length - 1] : "";
+      const cs = CAT_S[a.p.category] || "";
+      const tail = suf ? "の" + suf : (!cs || (da + db).includes(cs.slice(0, 4)) ? "" : "の" + cs);
+      return { h: `${a.p.brand} ${pre ? pre + " " : ""}${da}と${db}${tail}`, la: da, lb: db, br: a.p.brand }; }
   }
   const na = shortName(a), nb = shortName(b), cs = CAT_S[a.p.category] || "";
   return { h: `${na}と${nb}${!cs || na.includes(cs) || nb.includes(cs) ? "" : "の" + cs}`, la: na, lb: nb };
@@ -301,7 +311,7 @@ ${GA}${ICONS}
 <title>${esc(title)}${p ? "｜" + SITE_NAME : ""}</title>
 <meta name="description" content="${esc(desc)}">
 ${canon ? `<link rel="canonical" href="${esc(canon)}">` : ""}
-<meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:type" content="${p ? "article" : "website"}"><meta property="og:site_name" content="${SITE_NAME}">
+<meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:type" content="${p ? "article" : "website"}"><meta property="og:site_name" content="${SITE_NAME}">${SITE ? `<meta property="og:image" content="${SITE}/assets/icons/ogp.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">` : ""}
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Klee+One:wght@600&text=${encodeURIComponent("全成分ここ大事5.0やさしさ")}&display=swap">
@@ -920,6 +930,12 @@ if (APP && fs.existsSync(APP)) {
   const inject = `<link rel="stylesheet" href="${r("assets/chrome.css")}?v=${av("chrome.css")}">${rk}${sprite(head + foot, Object.values(PH))}${head}`;
   if (GA) h = h.replace("</head>", GA + "</head>");
   h = h.replace("</head>", ICONS + "</head>");
+  /* 2026-11-02（SEO点検の指摘）：比較ツールに説明文・正式なURL・SNSで共有したときの表示を付ける */
+  {
+    const D = "7つの質問に答えると、登録しているシャンプーなどを、成分表から数えたあなたに合う順に並べ替えます。点数は成分表の中身を決まったルールで数えたもので、効果や使い心地ではありません。";
+    const meta = `<meta name="description" content="${esc(D)}">` + (SITE ? `<link rel="canonical" href="${SITE}/app/"><meta property="og:title" content="比較ツール｜クラベル"><meta property="og:description" content="${esc(D)}"><meta property="og:type" content="website"><meta property="og:url" content="${SITE}/app/"><meta property="og:site_name" content="${SITE_NAME}"><meta property="og:image" content="${SITE}/assets/icons/ogp.png"><meta name="twitter:card" content="summary_large_image">` : "");
+    if (!/<meta name="description"/.test(h)) h = h.replace("</head>", meta + "</head>");
+  }
   h = h.replace(/<!--KB:HEAD-->[\s\S]*?<!--\/KB:HEAD-->/, `<!--KB:HEAD-->${inject}<!--/KB:HEAD-->`).replace(/<!--KB:FOOT-->[\s\S]*?<!--\/KB:FOOT-->/, `<!--KB:FOOT-->${foot}<!--/KB:FOOT-->`);
   fs.mkdirSync(path.join(OUT, ap), { recursive: true });
   fs.writeFileSync(path.join(OUT, ap, "index.html"), h);

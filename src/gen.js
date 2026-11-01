@@ -19,6 +19,7 @@ const PRODUCTS = DATA.products;
 const UPDATED = DATA.updated || "";
 const SITE_NAME = "クラベル";
 /* Googleアナリティクス4の測定ID。見本（--preview）では入れない。使っていることは「クラベルとは」の #analytics に書いている */
+const ICONS = `<link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/assets/icons/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">`;
 const GA4_ID = "G-DJ0D89ETX9";
 const GA = GA4_ID && !PREVIEW ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA4_ID}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","${GA4_ID}")</script>` : "";
 const OPERATOR_OK = false; // 「運営者より」の文章をユーザーが確かめたら true（それまでは見本にだけ出す）
@@ -296,7 +297,7 @@ function write(p, title, desc, body, opts = {}) {
   const html = `<!doctype html>
 <html lang="ja"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-${GA}
+${GA}${ICONS}
 <title>${esc(title)}${p ? "｜" + SITE_NAME : ""}</title>
 <meta name="description" content="${esc(desc)}">
 ${canon ? `<link rel="canonical" href="${esc(canon)}">` : ""}
@@ -883,6 +884,10 @@ fs.mkdirSync(path.join(OUT, "assets"), { recursive: true });
 fs.writeFileSync(path.join(OUT, "assets/site.css"), fs.readFileSync(path.join(__dirname, "site.css"), "utf8").split("__MKL__").join(HAND.markerLight).split("__MKD__").join(HAND.markerDark));
 fs.copyFileSync(path.join(__dirname, "kb.js"), path.join(OUT, "assets/kb.js"));
 fs.copyFileSync(path.join(__dirname, "chrome.css"), path.join(OUT, "assets/chrome.css"));
+/* サイトのアイコン（2026-11-01）：検索結果でタイトルの上に出る印。設定がなく、Googleが仮の地球のマークを出していた。
+   ヘッダーのロゴマーク（ノートの絵）から作ったもの（assets/icons/）。favicon.ico はブラウザが直下を探しに来るので直下にも置く */
+fs.cpSync(path.join(ROOT_DIR, "assets/icons"), path.join(OUT, "assets/icons"), { recursive: true });
+fs.copyFileSync(path.join(ROOT_DIR, "assets/icons/favicon.ico"), path.join(OUT, "favicon.ico"));
 /* メーカー直販の商品画像（assets/products/） */
 if (fs.existsSync(path.join(ROOT_DIR, "assets/products"))) fs.cpSync(path.join(ROOT_DIR, "assets/products"), path.join(OUT, "assets/products"), { recursive: true });
 
@@ -894,7 +899,7 @@ if (fs.existsSync(path.join(ROOT_DIR, "assets/products"))) fs.cpSync(path.join(R
   const r = to => "/" + to;
   const { head, foot } = chrome(r, "404");
   fs.writeFileSync(path.join(OUT, "404.html"), `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-${GA}<title>ページが見つかりません｜クラベル</title><meta name="robots" content="noindex">
+${GA}${ICONS}<title>ページが見つかりません｜クラベル</title><meta name="robots" content="noindex">
 <link rel="stylesheet" href="/assets/site.css?v=${av("site.css")}"><link rel="stylesheet" href="/assets/chrome.css?v=${av("chrome.css")}"></head>
 <body>${sprite(head + foot)}${head}<main class="wrap"><article class="ab"><section><h1>ページが見つかりません</h1>
 <p class="lead">URLが変わったか、まだ用意していないページです。</p></section>
@@ -914,6 +919,7 @@ if (APP && fs.existsSync(APP)) {
   const rk = RK_ON ? `<script>window.RK={api:${JSON.stringify(r("api/rk"))}}</script><script src="${r("assets/rk.js")}?v=${av("rk.js")}" defer></script>` : "";
   const inject = `<link rel="stylesheet" href="${r("assets/chrome.css")}?v=${av("chrome.css")}">${rk}${sprite(head + foot, Object.values(PH))}${head}`;
   if (GA) h = h.replace("</head>", GA + "</head>");
+  h = h.replace("</head>", ICONS + "</head>");
   h = h.replace(/<!--KB:HEAD-->[\s\S]*?<!--\/KB:HEAD-->/, `<!--KB:HEAD-->${inject}<!--/KB:HEAD-->`).replace(/<!--KB:FOOT-->[\s\S]*?<!--\/KB:FOOT-->/, `<!--KB:FOOT-->${foot}<!--/KB:FOOT-->`);
   fs.mkdirSync(path.join(OUT, ap), { recursive: true });
   fs.writeFileSync(path.join(OUT, ap, "index.html"), h);

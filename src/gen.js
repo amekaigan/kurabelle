@@ -86,6 +86,11 @@ const RICH_NOTES = (() => { try { const j = JSON.parse(fs.readFileSync(path.join
    新しく作るときは下の条件（中身の薄いページを作らない）で選ぶが、一度公開したページは、その対象（成分・ブランド・2つの商品）が
    サイトに残っている限り、条件を下回っても残す。消えたURLは検索での評価と「商品名＋成分」「AとBの違い」からの入口を失うため */
 const HAS_FEATURES = (() => { try { return (JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "data/features.json"), "utf8")).features || []).length > 0; } catch (e) { return false; } })();
+/* 商品 → その商品が載っている特集（2026-11-05、特集ページへのサイト内リンクを増やすため） */
+const FEAT_OF = (() => { const m = new Map(); try { (JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "data/features.json"), "utf8")).features || []).forEach(f => {
+  const n = (f.items || []).length; if (n < 3) return;
+  [...(f.items || []), ...((f.also && f.also.items) || [])].forEach(it => { if (!m.has(it.id)) m.set(it.id, []); m.get(it.id).push({ u: `features/${f.id}/`, short: f.short, title: f.title, n }); }); }); } catch (e) {} return m; })();
+const featOfBlock = (x, r) => { const l = FEAT_OF.get(x.p.id); return l && l.length ? `<section><h2>この商品が載っている特集</h2><div class="clist">${l.map(f => `<a class="cl" href="${r(f.u)}"><b>${esc(f.short)}の比較</b><span>${f.n}商品を、何役か・薬用か・香料の有無と全成分で</span></a>`).join("")}</div></section>` : ""; };
 const PUB = (() => { try { return new Set(Object.keys(JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "data/published-pages.json"), "utf8")).pages || {})); } catch (e) { return new Set(); } })();
 /* ページを作る条件：辞書で役割が分かっていて、2商品以上に入っている（中身の薄いページを作らない）。一度公開した成分は1商品でも残す */
 const ING_PAGES = [...ING.values()].filter(g => g.src === "dict" && (g.uses.length >= 2 || RICH_NOTES.has(C.key(g.name)) || PUB.has(`ingredients/${hid("i-", g.name)}/`)) && g.role !== "base")
@@ -521,6 +526,7 @@ const offBlock = (x, r) => { const d = x.p.discontinued || {};
   <p class="lead">${esc(leadText(x))}</p>
   ${p.desc || p.scent ? `<div class="maker"><span class="lbl">メーカーの説明</span>${p.desc ? `<p>${esc(p.desc)}</p>` : ""}${p.scent ? `<p class="mk-scent"><b>香り</b>${esc(p.scent)}</p>` : ""}${p.infoSource && p.infoSource.url ? `<p class="small muted">出典：<a href="${esc(p.infoSource.url)}" rel="nofollow noopener" target="_blank">${esc((p.infoSource.url.split("/")[2] || "").replace(/^www\./, ""))}</a>（${esc(p.infoSource.date || "")}確認）の要約。効果を保証するものではありません。</p>` : ""}</div>` : ""}
   ${reviewBlock(x)}
+  ${featOfBlock(x, r)}
   <section><h2>全成分と、それぞれの役割</h2>
     ${mix(x)}
     <p class="small muted">${p.kind === "quasi" ? `${x.a.items.some(i => i.active) ? '<span class="actkey"></span>青い行が有効成分。' : ""}その他の成分は、配合量の順とは限りません。` : "配合量の多い順です（1%以下は順不同）。"}</p>
@@ -812,7 +818,7 @@ FEATURES_ON.forEach(f => {
   const anyRk = all.some(it => useRk(it.x)), anyDirect = all.some(it => isDirect(it.x));
   const rowOf = (it, r) => `<tr><th scope="row"><a href="${r(it.x.url)}">${esc(shortOf(it.x.p))}</a></th><td>${esc(it.type)}</td><td class="mono">${it.n ? it.n + "役" : "―"}</td><td>${it.x.p.kind === "quasi" ? `<span class="fq">薬用</span>` : "化粧品"}</td><td class="fa">${activesOf(it.x).map(esc).join("<br>") || "―"}</td>${F_FLAGS.map(([t]) => `<td>${it.x.tags.has(t) ? "あり" : `<span class="fn">なし</span>`}</td>`).join("")}</tr>`;
   const roleRow = (it, r) => `<tr><th scope="row"><a href="${r(it.x.url)}">${esc(shortOf(it.x.p))}</a></th>${F_ROLE_COLS.map(([n, re]) => `<td>${it.roles.some(v => re.test(v)) ? `<span class="fd" title="${esc(n)}">●</span>` : it.roles.length ? `<span class="fe">・</span>` : ""}</td>`).join("")}<td class="mono">${it.n ? it.n + "役" : "―"}${it.roles.length ? "" : `<small>内訳の表示なし</small>`}</td></tr>`;
-  write(u, `${f.title}｜${L.length}商品`, `${f.lead.replace(/。.*$/, "。")}男性向けの${L.length}商品を、何役か・医薬部外品か・有効成分・香料やアルコールの有無と全成分で比べられます。`, r => `
+  write(u, f.seoTitle ? f.seoTitle.replace("{n}", L.length) : `${f.title}｜${L.length}商品`, f.seoDesc ? f.seoDesc.replace("{n}", L.length) : `${f.lead.replace(/。.*$/, "。")}男性向けの${L.length}商品を、何役か・医薬部外品か・有効成分・香料やアルコールの有無と全成分で比べられます。`, r => `
 <p class="eyebrow">特集・${esc(f.published)}</p>
 <h1>${esc(f.h1)}</h1><p class="lead">${esc(f.lead)}</p>
 <ul class="facts"><li><span>のせた商品</span><b class="mono">${L.length}</b><i>男性向け</i></li><li><span>医薬部外品</span><b class="mono">${nQ}</b><i>薬用</i></li><li><span>何役か</span><b class="mono">${nMin}〜${nMax}</b><i>メーカーの表示</i></li></ul>
@@ -948,6 +954,7 @@ write("", "クラベル｜成分でくらべるシャンプー・スキンケア
   ${worryTiles(r)}
   <p class="note">ボタンの言葉は、メーカーの表示に出てくる言葉に合わせています。効果を約束するものではありません。<a href="${r("concerns/")}">成分の条件から選ぶ（硫酸系なし・ノンシリコンなど）</a></p>
 </section>
+${featureLinks(r)}
 <section class="sticky" aria-labelledby="h-quiz">
   <h2 id="h-quiz">迷ったら、${QUIZ_N}つの質問で。</h2>
   <p>年代や頭皮・肌のタイプ、気になること、仕上がりの好みなどを選ぶと、成分表から合いそうな順に並べます。1分ほどで終わります。</p>

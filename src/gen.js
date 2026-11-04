@@ -85,6 +85,7 @@ const RICH_NOTES = (() => { try { const j = JSON.parse(fs.readFileSync(path.join
 /* 一度公開したページ（data/published-pages.json）。2026-10-27、ユーザーの指示：ページは間違った情報でない限り消さない。
    新しく作るときは下の条件（中身の薄いページを作らない）で選ぶが、一度公開したページは、その対象（成分・ブランド・2つの商品）が
    サイトに残っている限り、条件を下回っても残す。消えたURLは検索での評価と「商品名＋成分」「AとBの違い」からの入口を失うため */
+const HAS_FEATURES = (() => { try { return (JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "data/features.json"), "utf8")).features || []).length > 0; } catch (e) { return false; } })();
 const PUB = (() => { try { return new Set(Object.keys(JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "data/published-pages.json"), "utf8")).pages || {})); } catch (e) { return new Set(); } })();
 /* ページを作る条件：辞書で役割が分かっていて、2商品以上に入っている（中身の薄いページを作らない）。一度公開した成分は1商品でも残す */
 const ING_PAGES = [...ING.values()].filter(g => g.src === "dict" && (g.uses.length >= 2 || RICH_NOTES.has(C.key(g.name)) || PUB.has(`ingredients/${hid("i-", g.name)}/`)) && g.role !== "base")
@@ -257,7 +258,7 @@ ${menu}
 </div></header>`;
   const foot = `<footer class="kb-foot"><div class="in">
 ${logo}
-<nav aria-label="サイトの案内"><a href="${r("")}">トップ</a><a href="${r("concerns/")}">悩み・目的から選ぶ</a><a href="${r("app/")}">診断つきの比較ツール</a>${cats.map(c => `<a href="${r(`categories/${c}/`)}">${esc(CAT_N[c])}</a>`).join("")}<a href="${r("ingredients/")}">成分の一覧</a><a href="${r("brands/")}">ブランド</a><a href="${r("about/")}">クラベルとは</a><a href="${r("about/scoring/")}">点数のつけ方</a></nav>
+<nav aria-label="サイトの案内"><a href="${r("")}">トップ</a><a href="${r("concerns/")}">悩み・目的から選ぶ</a><a href="${r("app/")}">診断つきの比較ツール</a>${cats.map(c => `<a href="${r(`categories/${c}/`)}">${esc(CAT_N[c])}</a>`).join("")}${HAS_FEATURES ? `<a href="${r("features/")}">特集</a>` : ""}<a href="${r("ingredients/")}">成分の一覧</a><a href="${r("brands/")}">ブランド</a><a href="${r("about/")}">クラベルとは</a><a href="${r("about/scoring/")}">点数のつけ方</a></nav>
 <p>成分表示は、メーカーの製品ページ・販売ページ・パッケージの記載をそのまま写しています。リニューアルで成分が変わることがあるため、商品ごとに出典と確認日を載せています。</p>
 <p>点数は、成分表から読み取れる処方の傾向を、決まったルールで数えたものです。配合量・使い心地・効果を表すものではなく、髪や肌に合うかどうかには個人差があります。医薬部外品の効能は、各商品の表示で確かめてください。</p>
 ${RK_ON || PREVIEW ? `<p>商品画像と販売ページへのリンクは、楽天ウェブサービスから提供されています。<a href="https://webservice.rakuten.co.jp/" rel="noopener" target="_blank">Supported by Rakuten Developers</a></p>` : ""}
@@ -766,6 +767,83 @@ WORRIES.filter(w => !w.existing).forEach(w => {
     { crumbs: [["トップ", ""], ["悩み・目的から選ぶ", "concerns/"], [w.short, u]] });
 });
 
+/* ---------- 特集（企画ページ）：data/features.json（2026-11-04、ユーザーの依頼で新設。手順は spec.md 12章） ----------
+   需要がありそうなテーマ・流行りそうなテーマを先取りして、決まった型で比べるページ。
+   一覧に入れる根拠（メーカー・販売店の説明の言葉）と出典を商品ごとに載せ、効果は書かない。 */
+const FEATURES = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "data/features.json"), "utf8")).features || []; } catch (e) { return []; } })();
+const F_FAMOUS = [[/ナイアシンアミド|ニコチン酸アミド/, "ナイアシンアミド"], [/アスコルビ/, "ビタミンC誘導体"], [/トラネキサム/, "トラネキサム酸"], [/グリチルリチン/, "グリチルリチン酸2K"],
+  [/セチルpgヒドロキシエチルパルミタミド|セラミド/, "セラミド（擬似セラミドを含む）"], [/ヒアルロン/, "ヒアルロン酸"], [/コラーゲン/, "コラーゲン"], [/トコフェロール|ビタミンe/, "ビタミンE"],
+  [/ユビキノン|ユビデカレノン/, "コエンザイムQ10"], [/レチノ/, "レチノール"], [/サリチル酸/, "サリチル酸"], [/アラントイン/, "アラントイン"], [/パンテノール/, "パンテノール"], [/スクワラン/, "スクワラン"], [/尿素|ウレア/, "尿素"]];
+const F_ROLE_COLS = [["化粧水", /化粧水/], ["乳液", /乳液/], ["美容液", /美容液/], ["クリーム", /クリーム/], ["パック・マスク", /パック|マスク/]];
+const F_FLAGS = [["fragrance", "香料"], ["alcohol", "アルコール"], ["menthol", "メントール"]];
+const featureUrl = f => `features/${f.id}/`;
+const fItems = L => (L || []).map(it => ({ ...it, x: byId.get(it.id) })).filter(it => it.x && !it.x.off);
+FEATURES.forEach(f => { f.L = fItems(f.items); f.A = fItems(f.also && f.also.items); });
+const FEATURES_ON = FEATURES.filter(f => f.L.length >= 3);
+const shortOf = p => (p.name || "").replace(/^(花王|マンダム|ロート製薬|ファイントゥデイ|小林製薬|コーセー)\s*/, "");
+const activesOf = x => [...new Set(x.a.items.filter(i => i.active).map(i => C.norm(i.raw)))];
+FEATURES_ON.forEach(f => {
+  const u = featureUrl(f), L = f.L, all = L.concat(f.A);
+  const nQ = L.filter(it => it.x.p.kind === "quasi").length;
+  const nFree = L.filter(it => F_FLAGS.every(([t]) => !it.x.tags.has(t))).length;
+  const sorted = L.slice().sort((a, b) => (b.x.match || 0) - (a.x.match || 0));
+  const avg = l => l.length ? Math.round(l.reduce((s, it) => s + it.x.a.items.length, 0) / l.length) : 0;
+  const byN = [...new Set(L.map(it => it.n).filter(n => n))].sort((a, b) => b - a);
+  const nMin = Math.min(...byN), nMax = Math.max(...byN);
+  /* よく知られた成分が何件に入っているか（成分表にあるかどうかだけ。量や効果ではない） */
+  const fam = F_FAMOUS.map(([re, d]) => { const hit = L.filter(it => it.x.a.items.some(i => re.test(C.key(i.raw)) || re.test(C.key(i.name))));
+    const one = L.map(it => it.x.a.items.find(i => re.test(C.key(i.raw)) || re.test(C.key(i.name)))).find(Boolean);
+    return { d, hit, link: one && ingUrl.get(one.name) }; }).filter(o => o.hit.length).sort((a, b) => b.hit.length - a.hit.length).slice(0, 8);
+  const types = [...new Set(L.map(it => it.type))];
+  const light = L.filter(it => /ジェル|乳液|化粧水/.test(it.type) && !/クリーム/.test(it.type)), rich = L.filter(it => /クリーム/.test(it.type));
+  const free = L.filter(it => F_FLAGS.every(([t]) => !it.x.tags.has(t)));
+  const noFlag = F_FLAGS.map(([t, n]) => ({ n, l: L.filter(it => !it.x.tags.has(t)) })).filter(o => o.l.length && o.l.length < L.length);
+  const quasi = L.filter(it => it.x.p.kind === "quasi");
+  const mini = (l, r) => l.length ? `<div class="tags">${l.map(it => `<a class="tagl" href="${r(it.x.url)}">${esc(shortOf(it.x.p))}</a>`).join("")}</div>` : `<p class="small muted">当てはまる商品はありません。</p>`;
+  const faq = [
+    { q: "オールインワンは、化粧水や乳液と何が違うの？", a: `メーカーが「1品で化粧水・乳液・美容液などの役割をする」と表示している商品です。何役を兼ねるかは商品ごとに違い、このページの商品では${nMin}役から${nMax}役まででした。いくつの役割を兼ねるかは、各商品の表示で確かめてください。` },
+    { q: "「◯役」の数が多いほど、成分も多いの？", a: `このページの商品では、${byN.map(n => `${n}役の商品の成分数は平均${avg(L.filter(it => it.n === n))}`).join("、")}でした。役の数はメーカーの表示で、成分の量や効き目の順位を表すものではありません。` },
+    { q: "医薬部外品（薬用）と化粧品は、どう違うの？", a: `医薬部外品は、有効成分と、表示できる効能・効果が認められた商品です。このページでは${L.length}件中${nQ}件が医薬部外品で、有効成分は早見表と各商品のページに載せています。効能は、パッケージや公式ページの表示で確かめてください。` },
+    { q: "香料やアルコールが入っていないものはある？", a: `成分表で見ると、${F_FLAGS.map(([t, n]) => { const l = L.filter(it => !it.x.tags.has(t)); return `${n}が入っていないのは${l.length ? l.map(it => shortOf(it.x.p)).join("、") + `の${l.length}件` : "0件"}`; }).join("、")}です。${free.length ? `3つとも入っていないのは${free.length}件です。` : "3つとも入っていない商品はありませんでした。"}入っている・入っていないは良い悪いではなく、好みや肌に合わせて選ぶための目安です。` }
+  ];
+  const ld = { "@context": "https://schema.org", "@graph": [
+    { "@type": "FAQPage", mainEntity: faq.map(o => ({ "@type": "Question", name: o.q, acceptedAnswer: { "@type": "Answer", text: o.a } })) },
+    { "@type": "ItemList", name: f.title, itemListElement: sorted.map((it, i) => ({ "@type": "ListItem", position: i + 1, name: it.x.p.name, url: SITE ? `${SITE}/${it.x.url}` : undefined })) }] };
+  const anyRk = all.some(it => useRk(it.x)), anyDirect = all.some(it => isDirect(it.x));
+  const rowOf = (it, r) => `<tr><th scope="row"><a href="${r(it.x.url)}">${esc(shortOf(it.x.p))}</a></th><td>${esc(it.type)}</td><td class="mono">${it.n ? it.n + "役" : "―"}</td><td>${it.x.p.kind === "quasi" ? `<span class="fq">薬用</span>` : "化粧品"}</td><td class="fa">${activesOf(it.x).map(esc).join("<br>") || "―"}</td>${F_FLAGS.map(([t]) => `<td>${it.x.tags.has(t) ? "あり" : `<span class="fn">なし</span>`}</td>`).join("")}</tr>`;
+  const roleRow = (it, r) => `<tr><th scope="row"><a href="${r(it.x.url)}">${esc(shortOf(it.x.p))}</a></th>${F_ROLE_COLS.map(([n, re]) => `<td>${it.roles.some(v => re.test(v)) ? `<span class="fd" title="${esc(n)}">●</span>` : it.roles.length ? `<span class="fe">・</span>` : ""}</td>`).join("")}<td class="mono">${it.n ? it.n + "役" : "―"}${it.roles.length ? "" : `<small>内訳の表示なし</small>`}</td></tr>`;
+  write(u, `${f.title}｜${L.length}商品`, `${f.lead.replace(/。.*$/, "。")}男性向けの${L.length}商品を、何役か・医薬部外品か・有効成分・香料やアルコールの有無と全成分で比べられます。`, r => `
+<p class="eyebrow">特集・${esc(f.published)}</p>
+<h1>${esc(f.h1)}</h1><p class="lead">${esc(f.lead)}</p>
+<ul class="facts"><li><span>のせた商品</span><b class="mono">${L.length}</b><i>男性向け</i></li><li><span>医薬部外品</span><b class="mono">${nQ}</b><i>薬用</i></li><li><span>何役か</span><b class="mono">${nMin}〜${nMax}</b><i>メーカーの表示</i></li></ul>
+<section><h2>まず早見表で</h2><p class="small muted">「あり／なし」は成分表に入っているかどうかで、良い悪いではありません。商品名から全成分のページへ進めます。</p>
+<div class="scroll ftab"><table><thead><tr><th scope="col">商品</th><th scope="col">タイプ</th><th scope="col">何役</th><th scope="col">区分</th><th scope="col">有効成分</th>${F_FLAGS.map(([, n]) => `<th scope="col">${n}</th>`).join("")}</tr></thead><tbody>${sorted.map(it => rowOf(it, r)).join("")}</tbody></table></div></section>
+<section><h2>何の役割を1つにまとめている？</h2><p class="small muted">メーカー・販売店の説明に書かれた役割です。●が、その商品が兼ねるとしている役割です。</p>
+<div class="scroll ftab frole"><table><thead><tr><th scope="col">商品</th>${F_ROLE_COLS.map(([n]) => `<th scope="col">${esc(n)}</th>`).join("")}<th scope="col">合計</th></tr></thead><tbody>${L.slice().sort((a, b) => (b.n || 0) - (a.n || 0)).map(it => roleRow(it, r)).join("")}</tbody></table></div></section>
+<section><h2>選び方は3つ</h2><div class="fpick">
+<div class="fp"><b>1. つけ心地のタイプで</b><p>軽めのタイプ（ジェル・乳液・化粧水）と、クリームタイプがあります。タイプはメーカーの表示です。</p><p class="small"><b>ジェル・乳液・化粧水</b></p>${mini(light, r)}<p class="small"><b>クリーム</b></p>${mini(rich, r)}</div>
+<div class="fp"><b>2. 薬用（医薬部外品）かどうかで</b><p>有効成分が入った医薬部外品は${quasi.length}件です。効能は各商品の表示で確かめてください。</p>${quasi.length ? `<div class="tags">${quasi.map(it => `<a class="tagl" href="${r(it.x.url)}">${esc(shortOf(it.x.p))}<span class="mono">${esc(activesOf(it.x).join("・"))}</span></a>`).join("")}</div>` : ""}</div>
+<div class="fp"><b>3. 入っていない成分で</b><p>香りやスーッとする感じが苦手なら、成分表で確かめられます。良い悪いではありません。</p>${noFlag.map(o => `<p class="small"><b>${esc(o.n)}が入っていない（${o.l.length}件）</b></p>${mini(o.l, r)}`).join("") || `<p class="small muted">どの商品にも入っています。</p>`}</div>
+</div></section>
+${fam.length ? `<section><h2>よく知られた成分は、どれに入っている？</h2><p class="small muted">成分表に入っているかどうかだけを数えています。量や効果は分かりません。</p>
+<div class="fbars">${fam.map(o => `<div class="fbar"><div class="fb-h">${o.link ? `<a href="${r(o.link)}">${esc(o.d)}</a>` : esc(o.d)}<span class="mono">${o.hit.length}/${L.length}件</span></div><div class="fb-t" aria-hidden="true"><span style="width:${Math.round(o.hit.length / L.length * 100)}%"></span></div><p class="small muted">${o.hit.map(it => esc(shortOf(it.x.p))).join("・")}</p></div>`).join("")}</div></section>` : ""}
+<section><h2>成分の傾向スコアで並べると</h2><p class="small muted">${esc(CAT_N[f.category] || "")}の決まったルールで成分表を数えた点数です。効果や使い心地の順位ではありません。<a href="${r("about/scoring/")}">数え方</a>${QUIZ[f.category] ? `・<a href="${r("app/")}${QUIZ[f.category].hash}">診断で自分に合う順に並べる</a>` : ""}</p>
+<div class="plist">${sorted.map(it => productCard(it.x, r, `${it.n ? it.n + "役" : "オールインワン"}・${it.type}`)).join("")}</div></section>
+${f.A.length ? `<section><h2>${esc(f.also.h)}</h2><p class="small muted">${esc(f.also.note)}</p><div class="plist">${f.A.map(it => productCard(it.x, r, `${it.n ? it.n + "役" : "オールインワン"}・${it.type}`)).join("")}</div></section>` : ""}
+<section class="ifaq"><h2>よくある疑問</h2>${faq.map(o => `<div class="qa-c"><h3 class="qa-q"><span class="qa-i" aria-hidden="true">Q</span>${esc(o.q)}</h3><p>${esc(o.a)}</p></div>`).join("")}</section>
+<section><h2>この一覧に入れた条件と出典</h2><div class="rule"><b>条件</b><p>${esc(f.rule)}</p>${f.near ? `<p class="small muted">${esc(f.near.note)}</p>` : ""}</div>
+<div class="scroll ftab fsrc"><table><thead><tr><th scope="col">商品</th><th scope="col">説明に書かれていること（要約）</th><th scope="col">出典</th></tr></thead><tbody>${all.map(it => `<tr><th scope="row"><a href="${r(it.x.url)}">${esc(shortOf(it.x.p))}</a></th><td>${esc(it.say)}</td><td><a href="${esc(it.src.url)}" rel="nofollow noopener" target="_blank">${esc(it.src.label)}</a><br><small class="mono">${esc(it.src.date)}確認</small></td></tr>`).join("")}</tbody></table></div>
+<p class="small muted">全成分の出典は、各商品のページに載せています。表示が変わることがあるため、購入の前にパッケージや公式ページで確かめてください。</p></section>
+${anyRk || anyDirect ? `<p class="pr-note">「楽天市場で見る」などは広告のリンクです。紹介料の有無は、点数や順位に関係しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
+<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>`,
+    { crumbs: [["トップ", ""], ["特集", "features/"], [f.short, u]], cat: f.category });
+});
+if (FEATURES_ON.length) write("features/", "特集：テーマで成分をくらべる", `いま気になるテーマごとに、商品を集めて成分で比べた特集ページの一覧です。${FEATURES_ON.map(f => f.short).join("・")}。`, r => `
+<h1><span class="mk">特集</span>：テーマでくらべる</h1><p class="lead">「これが気になる」というテーマごとに商品を集めて、成分表と表示から比べたページです。一覧に入れた条件と出典は、各ページの最後に載せています。</p>
+<div class="clist">${FEATURES_ON.map(f => `<a class="cl cl-duo" href="${r(featureUrl(f))}"><span class="duo">${f.L.slice(0, 2).map(it => imgSlot(it.x, "thumb")).join("")}</span><span class="cl-t"><b>${esc(f.short)}</b><span>${esc(f.title)}・${f.L.length}商品・${esc(f.published)}</span></span></a>`).join("")}</div>`,
+  { crumbs: [["トップ", ""], ["特集", "features/"]] });
+const featureLinks = (r, cat) => { const l = FEATURES_ON.filter(f => !cat || f.category === cat); return l.length ? `<section><h2>特集</h2><div class="clist">${l.map(f => `<a class="cl" href="${r(featureUrl(f))}"><b>${esc(f.short)}</b><span>${esc(f.title)}</span><i>${f.L.length}件</i></a>`).join("")}</div></section>` : ""; };
+
 /* ---------- 目的別（成分の条件） ---------- */
 CONCERNS.forEach(c => {
   const u = concernUrl(c);
@@ -783,6 +861,7 @@ const worryTiles = r => `<div class="worries">${WORRIES.map(w => `<a class="worr
 write("concerns/", "悩み・目的から選ぶ", "頭皮のにおい・髪のボリューム・フケかゆみ・ベタつき・シミ・乾燥などの悩みや、硫酸系なし・ノンシリコンなどの条件から、商品を成分で選べます。", r => `
 <h1><span class="mk">悩み</span>・目的から選ぶ</h1><p class="lead">悩みの一覧は、メーカーの説明や表示に出てくる言葉で集めています。成分の条件の一覧は、成分表から決まったルールで選んでいます。どちらも効果を約束するものではありません。</p>
 <section><h2>悩みから選ぶ</h2>${worryTiles(r)}</section>
+${featureLinks(r)}
 <section><h2>成分の条件から選ぶ（シャンプー）</h2><div class="clist">${CONCERNS.filter(c => c.id !== "dandruff").map(c => `<a class="cl" href="${r(concernUrl(c))}"><b>${esc(c.short)}</b><span>${esc(c.n)}</span><i>${c.list.length}件</i></a>`).join("")}</div></section>`,
   { crumbs: [["トップ", ""], ["悩み・目的から選ぶ", "concerns/"]] });
 
@@ -792,6 +871,7 @@ CAT_ORDER.forEach(cat => {
   const u = `categories/${cat}/`;
   write(u, `${CAT_N[cat]}の成分を比べる`, `${CAT_N[cat]}${list.length}件の全成分を、役割つきで比べられます。`, r => `
 <h1>${esc(CAT_N[cat])}</h1><p class="lead">登録している${esc(CAT_N[cat])}は${list.length}件です。${C.CATS[cat] && C.CATS[cat].scored ? "成分の傾向スコアが高い順に並べています。" : "このカテゴリはまだ点数をつけていません。"}</p>
+${featureLinks(r, cat)}
 ${cat === "shampoo" ? `<div class="clist">${CONCERNS.map(c => `<a class="cl" href="${r(concernUrl(c))}"><b>${esc(c.short)}</b><i>${c.list.length}件</i></a>`).join("")}</div>` : ""}
 <div class="plist">${list.slice().sort((a, b) => (b.match || 0) - (a.match || 0)).map(x => productCard(x, r)).join("")}</div>`,
     { crumbs: [["トップ", ""], [CAT_N[cat], u]], cat });

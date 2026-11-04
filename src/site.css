@@ -511,3 +511,52 @@ ul.chk.dif li small{margin-left:6px;font-size:12px;color:var(--ink3)}
 .fb-t span{display:block;height:100%;background:var(--hl);border-radius:6px}
 .fbar p{margin:0}
 @media (min-width:720px){.fpick{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* 特集の書き直し（2026-11-05）：結論・目次・お手入れの図・ブランド・1商品ずつの紹介。罫線の片側だけに色を付けない */
+.fconc{background:var(--hl-soft);border-radius:18px;padding:16px;margin:18px 0}
+.fconc h2{margin-top:0}
+.fcg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.fci{display:flex;flex-direction:column;gap:4px;background:var(--card);border-radius:14px;padding:12px;color:var(--ink);text-decoration:none;min-width:0}
+.fci .fck{font-size:13px;font-weight:700;background:var(--hl);border-radius:6px;padding:2px 8px;align-self:flex-start}
+.fci .thumb{width:64px;height:64px;margin:4px 0}
+.fci b{font-size:15px;line-height:1.4}
+.fci small{font-size:12.5px;color:var(--ink2);line-height:1.5}
+.fnote{font-size:12.5px;color:var(--ink3);margin:10px 0 0}
+.ftoc{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px 16px;margin:0 0 8px}
+.ftoc b{font-size:14px;color:var(--ink3)}
+.ftoc ol{margin:6px 0 0;padding-left:1.4em;display:grid;gap:4px}
+.ftoc a{color:var(--ink);font-size:15.5px}
+.fstep{display:grid;gap:8px;margin:8px 0 14px}
+.fstep>div{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.fsl{font-size:13px;color:var(--ink3);min-width:7.5em}
+.fss{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.fss i{font-style:normal;background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:5px 12px;font-size:14px}
+.fss i.on{background:var(--hl);border-color:var(--hl);font-weight:700}
+.fss em{font-style:normal;color:var(--ink3)}
+.fbw{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:8px 0 18px}
+.fbi{display:flex;flex-direction:column;gap:4px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:10px;color:var(--ink);text-decoration:none}
+.fbi .thumb{width:56px;height:56px}
+.fbi b{font-size:14.5px;line-height:1.4}
+.fbi span{font-size:12.5px;color:var(--ink2)}
+.fit{margin:22px 0 28px}
+.fit h3{display:flex;align-items:center;gap:10px;font-size:19px;margin:0 0 10px}
+.fno{display:inline-grid;place-items:center;min-width:32px;height:32px;border-radius:50%;background:var(--hl);font-size:16px;font-weight:700}
+.fit>p{line-height:1.9;margin:10px 0}
+.fth{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 14px;background:var(--card);border-radius:12px;padding:10px 12px}
+.fth div{display:grid;grid-template-columns:5.5em 1fr 2em;align-items:center;gap:6px;font-size:12.5px;color:var(--ink2)}
+.fth i{height:8px;border-radius:4px;background:var(--grid);overflow:hidden}
+.fth i b{display:block;height:100%;background:var(--hl);border-radius:4px}
+.fth em{font-style:normal;text-align:right;color:var(--ink)}
+.fmore{margin:8px 0 0}
+.fhow{margin:20px 0;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:10px 14px}
+.fhow summary{cursor:pointer;font-weight:700;font-size:15px}
+.fhow ul{margin:8px 0 0;padding-left:1.2em;font-size:13.5px;color:var(--ink2);line-height:1.7}
+@media (min-width:720px){.fcg{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.ffx{margin:10px 0;background:var(--card);border-radius:12px;padding:4px 12px}
+.ffx>div{display:grid;grid-template-columns:7.5em 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14.5px;line-height:1.6}
+.ffx>div:last-child{border-bottom:0}
+.ffx dt{color:var(--ink3);font-size:13px}
+.ffx dd{margin:0}
+.ffl{display:flex;flex-wrap:wrap;gap:6px}
+.ffl span{border-radius:999px;padding:1px 10px;font-size:13px;background:var(--grid);color:var(--ink2)}
+.ffl span.on{background:var(--hl-soft);color:var(--ink)}
+@media (max-width:520px){.fth{grid-template-columns:1fr}.fth div{grid-template-columns:7.5em 1fr 2em}}

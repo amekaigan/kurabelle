@@ -540,6 +540,7 @@
 "concerns/volume/":{"k":"concerns"},
 "features/":{"k":"features"},
 "features/mens-all-in-one/":{"k":"features"},
+"features/mens-spot/":{"k":"features"},
 "ingredients/":{"k":"ingredients"},
 "ingredients/i-023e0f95/":{"k":"ingredient","n":"水添大豆リン脂質"},
 "ingredients/i-05caddfb/":{"k":"ingredient","n":"グルコシルヘスペリジン"},

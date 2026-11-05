@@ -82,6 +82,11 @@ for c in C:
         d = [l for l in difflib.unified_diff([key(x) for x in a], [key(x) for x in b], n=0, lineterm="") if l[:1] in "+-" and not l.startswith(("+++", "---"))]
         errs.append("2つの出典で成分が違う（" + " / ".join(d[:8]) + "）")
     if c.get("jan") and not jan_ok(c["jan"]): errs.append("JANのチェックデジットが合わない")
+    # 2026-11-05 ユーザーの指示：公式に全成分があれば公式（同じページの2回目の取得は写し間違いの確認）。
+    # 公式でない出典は、別々の2サイトを見比べる（同じサイトを2回見るだけの照合は認めない）
+    host = lambda u: re.sub(r"^www\.", "", (re.match(r"https?://([^/]+)", u or "") or [None, ""])[1])
+    if c["A"].get("type") != "brand" and host(c["A"].get("url")) == host(c["B"].get("url")):
+        errs.append("公式でない出典を、同じサイトの2回取得だけで照合している（別のサイトと見比べる）")
     act = [norm(x) for x in c["A"].get("active", [])]
     if c["kind"] == "quasi" and not act: errs.append("医薬部外品なのに有効成分がない")
     for x in act:

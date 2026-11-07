@@ -89,8 +89,8 @@ const HAS_FEATURES = (() => { try { return (JSON.parse(fs.readFileSync(path.join
 /* 商品 → その商品が載っている特集（2026-11-05、特集ページへのサイト内リンクを増やすため） */
 const FEAT_OF = (() => { const m = new Map(); try { (JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "data/features.json"), "utf8")).features || []).forEach(f => {
   const n = (f.items || []).length; if (n < 3) return;
-  [...(f.items || []), ...((f.also && f.also.items) || [])].forEach(it => { if (!m.has(it.id)) m.set(it.id, []); m.get(it.id).push({ u: `features/${f.id}/`, short: f.short, title: f.title, n }); }); }); } catch (e) {} return m; })();
-const featOfBlock = (x, r) => { const l = FEAT_OF.get(x.p.id); return l && l.length ? `<section><h2>この商品が載っている特集</h2><div class="clist">${l.map(f => `<a class="cl" href="${r(f.u)}"><b>${esc(f.short)}の比較</b><span>${f.n}商品を、何役か・薬用か・香料の有無と全成分で</span></a>`).join("")}</div></section>` : ""; };
+  [...(f.items || []), ...((f.also && f.also.items) || [])].forEach(it => { if (!m.has(it.id)) m.set(it.id, []); m.get(it.id).push({ u: f.path || `features/${f.id}/`, short: f.short, title: f.title, n }); }); }); } catch (e) {} return m; })();
+const featOfBlock = (x, r) => { const l = FEAT_OF.get(x.p.id); return l && l.length ? `<section><h2>この商品が載っている特集</h2><div class="clist">${l.map(f => `<a class="cl" href="${r(f.u)}"><b>${esc(f.short)}の比較</b><span>${f.n}商品を、有効成分・タイプ・香料の有無と全成分で</span></a>`).join("")}</div></section>` : ""; };
 const PUB = (() => { try { return new Set(Object.keys(JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "data/published-pages.json"), "utf8")).pages || {})); } catch (e) { return new Set(); } })();
 /* ページを作る条件：辞書で役割が分かっていて、2商品以上に入っている（中身の薄いページを作らない）。一度公開した成分は1商品でも残す */
 const ING_PAGES = [...ING.values()].filter(g => g.src === "dict" && (g.uses.length >= 2 || RICH_NOTES.has(C.key(g.name)) || PUB.has(`ingredients/${hid("i-", g.name)}/`)) && g.role !== "base")
@@ -225,6 +225,12 @@ const WORRIES = [
     pick: x => x.p.category === "skincare" && descHas(x, /乾燥|小じわ|うるお|潤い/) }
 ].filter(Boolean).map(w => w.existing ? w : { ...w, list: P.filter(w.pick) }).filter(w => w.list.length >= 2);
 const worryUrl = w => `concerns/${w.id}/`;
+/* 悩みのページを特集の型で作るもの（data/features.json の path。2026-11-07 シミ・ソバカスから）。
+   一覧に入れる商品は特集のデータ（説明の表示と出典つき）にそろえる */
+const FEATURE_AT = new Map((() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "data/features.json"), "utf8")).features || []; } catch (e) { return []; } })()
+  .filter(f => f.path && (f.items || []).length >= 3).map(f => [f.path, f]));
+const FEATURE_PATHS = new Set(FEATURE_AT.keys());
+WORRIES.forEach(w => { const f = FEATURE_AT.get(worryUrl(w)); if (f) w.list = f.items.map(it => byId.get(it.id)).filter(x => x && !x.off); });
 
 /* ---------- 書き出し ---------- */
 const PAGES = [];
@@ -785,6 +791,7 @@ write("brands/", "ブランドの一覧",`クラベルに登録した商品の�
 
 WORRIES.filter(w => !w.existing).forEach(w => {
   const u = `concerns/${w.id}/`;
+  if (FEATURE_PATHS.has(u)) return; // 特集の型で作る（下の特集の処理で書き出す。2026-11-07）
   const sorted = w.list.slice().sort((a, b) => (b.match == null) - (a.match == null) || (b.match || 0) - (a.match || 0));
   write(u, w.n, `${w.lead} 登録している商品のうち${w.list.length}件。全成分を役割つきで比べられます。`, r => `
 <div class="row" style="margin:0"><svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true"><use href="#${w.icon}"/></svg></div>
@@ -803,11 +810,12 @@ const F_FAMOUS = [[/ナイアシンアミド|ニコチン酸アミド/, "ナイ�
   [/ユビキノン|ユビデカレノン/, "コエンザイムQ10"], [/レチノ/, "レチノール"], [/サリチル酸/, "サリチル酸"], [/アラントイン/, "アラントイン"], [/パンテノール/, "パンテノール"], [/スクワラン/, "スクワラン"], [/尿素|ウレア/, "尿素"]];
 const F_ROLE_COLS = [["化粧水", /化粧水/], ["乳液", /乳液/], ["美容液", /美容液/], ["クリーム", /クリーム/], ["パック・マスク", /パック|マスク/]];
 const F_FLAGS = [["fragrance", "香料"], ["alcohol", "アルコール"], ["menthol", "メントール"]];
-const featureUrl = f => `features/${f.id}/`;
+const featureUrl = f => f.path || `features/${f.id}/`;
 const fItems = L => (L || []).map(it => ({ ...it, x: byId.get(it.id) })).filter(it => it.x && !it.x.off);
 FEATURES.forEach(f => { f.L = fItems(f.items); f.A = fItems(f.also && f.also.items); });
 const FEATURES_ON = FEATURES.filter(f => f.L.length >= 3);
-const shortOf = p => (p.name || "").replace(/^(花王|マンダム|ロート製薬|ファイントゥデイ|小林製薬|コーセー)\s*/, "");
+const FEATURES_LIST = FEATURES_ON.filter(f => f.inList !== false); // 悩みのページなど、特集の一覧に出さないもの（2026-11-07）
+const shortOf = p => (p.name || "").replace(/^(花王|カネボウ|マンダム|ロート製薬|第一三共ヘルスケア|クラシエ|ファイントゥデイ|小林製薬|コーセー)\s*/, "");
 const activesOf = x => [...new Set(x.a.items.filter(i => i.active).map(i => C.norm(i.raw)))];
 FEATURES_ON.forEach(f => {
   /* 2026-11-05 書き直し（ユーザーの依頼）：結論を先に・目次・「オールインワンとは」・選び方の説明・ブランドごとの違い・1商品ずつの紹介文・疑問を増やす。
@@ -879,7 +887,14 @@ FEATURES_ON.forEach(f => {
     { "@type": "FAQPage", mainEntity: faq.map(o => ({ "@type": "Question", name: o.q, acceptedAnswer: { "@type": "Answer", text: o.a } })) },
     { "@type": "ItemList", name: f.title, itemListElement: sorted.map((it, i) => ({ "@type": "ListItem", position: i + 1, name: it.x.p.name, url: SITE ? `${SITE}/${it.x.url}` : undefined })) }] };
   const anyRk = all.some(it => useRk(it.x)), anyDirect = all.some(it => isDirect(it.x));
-  const rowOf = (it, r) => `<tr><th scope="row">${link(it, r)}</th><td>${esc(it.type)}</td>${aio ? `<td class="mono">${it.n ? it.n + "役" : "―"}</td>` : ""}<td>${it.x.p.kind === "quasi" ? `<span class="fq">薬用</span>` : "化粧品"}</td><td class="fa">${activesOf(it.x).map(esc).join("<br>") || "―"}</td>${F_FLAGS.map(([t]) => `<td>${it.x.tags.has(t) ? "あり" : `<span class="fn">なし</span>`}</td>`).join("")}</tr>`;
+  /* 絞り込み（2026-11-07、比べたい人のため。compareFirst の特集だけ）：タイプ・有効成分・対象 */
+  const cmp = !!f.compareFirst, allQ = quasi.length === n;
+  const TG = [["化粧水", /化粧水|ローション/], ["乳液", /乳液|エマルジョン|ミルク/], ["ジェル", /ジェル|ゲル/], ["クリーム", /クリーム|バーム/], ["美容液", /美容液|セラム|エッセンス/]];
+  const tgOf = it => (TG.find(([, re]) => re.test(it.type)) || ["その他"])[0];
+  const tgs = TG.map(([nm]) => ({ nm, l: L.filter(it => tgOf(it) === nm) })).filter(o => o.l.length);
+  const whoOf = it => it.x.p.target === "men" ? "men" : "all";
+  const dat = it => cmp ? ` data-t="${esc(tgOf(it))}" data-w="${whoOf(it)}" data-a="${actGroups.map((o, i) => o.l.includes(it) ? "a" + i : "").filter(Boolean).join(" ")}"` : "";
+  const rowOf = (it, r) => `<tr${dat(it)}><th scope="row">${link(it, r)}</th><td>${esc(it.type)}</td>${cmp ? `<td>${whoOf(it) === "men" ? "メンズ" : "男女兼用"}</td>` : ""}${aio ? `<td class="mono">${it.n ? it.n + "役" : "―"}</td>` : ""}${cmp && allQ ? "" : `<td>${it.x.p.kind === "quasi" ? `<span class="fq">薬用</span>` : "化粧品"}</td>`}<td class="fa">${activesOf(it.x).map(esc).join("<br>") || "―"}</td>${F_FLAGS.map(([t]) => `<td>${it.x.tags.has(t) ? "あり" : `<span class="fn">なし</span>`}</td>`).join("")}</tr>`;
   const roleRow = (it, r) => `<tr><th scope="row">${link(it, r)}</th>${F_ROLE_COLS.map(([nm, re]) => `<td>${it.roles.some(v => re.test(v)) ? `<span class="fd" title="${esc(nm)}">●</span>` : it.roles.length ? `<span class="fe">・</span>` : ""}</td>`).join("")}<td class="mono">${it.n ? it.n + "役" : "―"}${it.roles.length ? "" : `<small>内訳の表示なし</small>`}</td></tr>`;
   /* 目的別の1本：同じ商品が重ならないよう、上から順に、まだ選んでいない中でいちばん当てはまるものを選ぶ */
   const used = new Set(), pick = (l, key) => { const c = l.filter(it => !used.has(it)).sort((a, b) => key(b) - key(a) || (b.x.match || 0) - (a.x.match || 0))[0]; if (c) used.add(c); return c; };
@@ -889,12 +904,22 @@ FEATURES_ON.forEach(f => {
   { const it = quasi.length < n && pick(quasi, it => it.x.match || 0); if (it) conc.push(["薬用で選ぶなら", it, `医薬部外品。有効成分は${activesOf(it.x).join("・")}`]); }
   { const it = pick(L.filter(it => it.x.sc), it => sv(it, "barrier") * 10 + sv(it, "moist")); if (it) conc.push(["しっとり重視なら", it, `「保護力（フタ）」が${sv(it, "barrier").toFixed(1)}、「うるおい補給」が${sv(it, "moist").toFixed(1)}`]); }
   { const it = pick(L.filter(it => !it.x.tags.has("fragrance")), it => it.x.match || 0); if (it && conc.length < 4) conc.push(["香りが苦手なら", it, "成分表に香料が入っていない"]); }
-  const toc = [["fc-what", aio ? "オールインワンとは" : (f.what ? f.what.h : "このテーマとは")], ["fc-table", "早見表"], ["fc-pick", "選び方は3つ"], ...(brands.length ? [["fc-brand", "ブランドごとの違い"]] : []), ["fc-ing", "よく知られた成分"], ["fc-list", `おすすめ${n}選`], ["fc-faq", "よくある疑問"]];
+  const toc = [...(cmp ? [["fc-table", `${n}商品を比べる`]] : []), ["fc-what", aio ? "オールインワンとは" : (f.what ? f.what.h : "このテーマとは")], ...(cmp ? [] : [["fc-table", "早見表"]]), ["fc-pick", "選び方は3つ"], ...(brands.length ? [["fc-brand", "ブランドごとの違い"]] : []), ["fc-ing", "よく知られた成分"], ["fc-list", `おすすめ${n}選`], ["fc-faq", "よくある疑問"]];
+  const fbtn = (g, v, t, k) => `<button type="button" class="fch" data-g="${g}" data-v="${esc(v)}" aria-pressed="${v === "" ? "true" : "false"}">${esc(t)}${k != null ? `<span class="mono">${k}</span>` : ""}</button>`;
+  const filterBar = () => `<div class="ffil" id="ffil"><div class="ffg" role="group" aria-label="タイプで絞り込む"><span class="ffl">タイプ</span>${fbtn("t", "", "すべて")}${tgs.map(o => fbtn("t", o.nm, o.nm, o.l.length)).join("")}</div>
+<div class="ffg" role="group" aria-label="有効成分で絞り込む"><span class="ffl">美白の有効成分</span>${fbtn("a", "", "すべて")}${actGroups.map((o, i) => /トラネキサム|ナイアシンアミド|ビタミンC|カモミラ/.test(o.d) ? fbtn("a", "a" + i, o.d.replace(/（.*）/, ""), o.l.length) : "").join("")}</div>
+<div class="ffg" role="group" aria-label="対象で絞り込む"><span class="ffl">対象</span>${fbtn("w", "", "すべて")}${fbtn("w", "men", "メンズ", L.filter(it => whoOf(it) === "men").length)}${fbtn("w", "all", "男女兼用", L.filter(it => whoOf(it) === "all").length)}</div>
+<p class="ffn" aria-live="polite"><b class="mono" id="ffc">${n}</b>件を表示中</p></div>`;
+  const tabSec = r => `<section><h2 id="fc-table">${cmp ? `${n}商品を比べる` : "まず早見表で"}</h2><p class="small muted">${cmp ? "タイプ・有効成分・対象で絞り込めます。" : ""}商品名から全成分のページへ進めます。${cmp ? "表は横にスクロールできます。" : ""}</p>
+${cmp ? filterBar() : ""}<div class="scroll ftab"><table><thead><tr><th scope="col">商品</th><th scope="col">タイプ</th>${cmp ? `<th scope="col">対象</th>` : ""}${aio ? `<th scope="col">何役</th>` : ""}${cmp && allQ ? "" : `<th scope="col">区分</th>`}<th scope="col">有効成分</th>${F_FLAGS.map(([, nm]) => `<th scope="col">${nm}</th>`).join("")}</tr></thead><tbody>${sorted.map(it => rowOf(it, r)).join("")}</tbody></table></div>${cmp ? `<p class="small"><a href="#fc-list">1商品ずつの説明を見る↓</a>　<a href="#fc-what">シミ対策の成分の違いを読む↓</a></p></section>` : ""}`;
+  const relLinks = r => (f.related || []).map(o => { const g = FEATURES_ON.find(v => v.id === o.id); return g ? `<a class="tagl" href="${r(featureUrl(g))}">${esc(o.text)}（${g.L.length}件）→</a>` : ""; }).join("");
   const h1 = (f.h1 || f.title).replace("{n}", n);
   write(u, f.seoTitle ? f.seoTitle.replace("{n}", n) : `${f.title}｜${n}商品`, f.seoDesc ? f.seoDesc.replace("{n}", n) : `${f.lead.replace(/。.*$/, "。")}男性向けの${n}商品を成分で比べられます。`, r => `
-<p class="eyebrow">特集・${esc(f.published)}</p>
+<p class="eyebrow">${esc(f.eyebrow || "特集")}・${esc(f.published)}</p>
 <h1>${esc(h1)}</h1><p class="lead">${esc(f.lead)}</p>
-<ul class="facts"><li><span>のせた商品</span><b class="mono">${n}</b><i>男性向け</i></li><li><span>医薬部外品</span><b class="mono">${quasi.length}</b><i>薬用</i></li>${aio ? `<li><span>何役か</span><b class="mono">${nMin}〜${nMax}</b><i>メーカーの表示</i></li>` : `<li><span>有効成分</span><b class="mono">${actGroups.length}</b><i>種類</i></li>`}</ul>
+${(f.related || []).length ? `<div class="tags">${relLinks(r)}</div>` : ""}
+<ul class="facts"><li><span>のせた商品</span><b class="mono">${n}</b><i>${esc(f.who || "男性向け")}</i></li><li><span>医薬部外品</span><b class="mono">${quasi.length}</b><i>薬用</i></li>${aio ? `<li><span>何役か</span><b class="mono">${nMin}〜${nMax}</b><i>メーカーの表示</i></li>` : `<li><span>有効成分</span><b class="mono">${actGroups.length}</b><i>種類</i></li>`}</ul>
+${cmp ? tabSec(r) : ""}
 <section class="fconc" aria-labelledby="fc-conc"><h2 id="fc-conc">先に結論：目的別の1本</h2>
 <div class="fcg">${conc.map(([k, it, why]) => `<a class="fci" href="${r(it.x.url)}"><span class="fck">${esc(k)}</span>${imgSlot(it.x, "thumb")}<b>${esc(nameOf(it))}</b><small>${esc(why)}</small></a>`).join("")}</div>
 <p class="fnote">点数は、成分表を決まったルールで数えた「成分の傾向スコア」です（<a href="${r("about/scoring/")}">数え方</a>）。</p></section>
@@ -903,10 +928,9 @@ ${aio ? `<section><h2 id="fc-what">そもそも、オールインワンとは</h
 <div class="fstep"><div><span class="fsl">ふつうのお手入れ</span><span class="fss"><i>化粧水</i><em aria-hidden="true">→</em><i>乳液</i><em aria-hidden="true">→</em><i>クリーム</i></span></div><div><span class="fsl">オールインワン</span><span class="fss"><i class="on">これ1つ</i></span></div></div>
 <p>洗顔のあとに化粧水・乳液・クリームと何本も重ねるのは面倒、という人のために、その役割を1つにまとめた商品です。メーカーは「1品で5役」のように、何の役割を兼ねるかを表示しています。</p>
 <p>このページの${n}商品は、${nMin}役から${nMax}役まで。形はジェル・クリーム・乳液・化粧水とさまざまで、同じ「オールインワン」でも、つけ心地や入っている成分はかなり違います。下の早見表と選び方で、自分に合いそうなものを絞り込めます。</p></section>` : f.what ? `<section><h2 id="fc-what">${esc(f.what.h)}</h2>${f.what.steps ? `<div class="fstep">${f.what.steps.map(([a, b]) => `<div><span class="fsl">${esc(a)}</span><span class="fss"><i class="${/薬用/.test(a) ? "on" : ""}">${esc(b)}</i></span></div>`).join("")}</div>` : ""}${f.what.paras.map(t => `<p>${esc(fill(t).replace("{acts}", actsTxt).replace("{nAct}", actGroups.length))}</p>`).join("")}</section>` : ""}
-<section><h2 id="fc-table">まず早見表で</h2><p class="small muted">商品名から全成分のページへ進めます。</p>
-<div class="scroll ftab"><table><thead><tr><th scope="col">商品</th><th scope="col">タイプ</th>${aio ? `<th scope="col">何役</th>` : ""}<th scope="col">区分</th><th scope="col">有効成分</th>${F_FLAGS.map(([, nm]) => `<th scope="col">${nm}</th>`).join("")}</tr></thead><tbody>${sorted.map(it => rowOf(it, r)).join("")}</tbody></table></div>
+${cmp ? "" : tabSec(r)}
 ${aio ? `<h3>何の役割を1つにまとめている？</h3><p class="small muted">●が、メーカー・販売店の説明で兼ねるとしている役割です。</p>
-<div class="scroll ftab frole"><table><thead><tr><th scope="col">商品</th>${F_ROLE_COLS.map(([nm]) => `<th scope="col">${esc(nm)}</th>`).join("")}<th scope="col">合計</th></tr></thead><tbody>${L.slice().sort((a, b) => (b.n || 0) - (a.n || 0)).map(it => roleRow(it, r)).join("")}</tbody></table></div>` : ""}</section>
+<div class="scroll ftab frole"><table><thead><tr><th scope="col">商品</th>${F_ROLE_COLS.map(([nm]) => `<th scope="col">${esc(nm)}</th>`).join("")}<th scope="col">合計</th></tr></thead><tbody>${L.slice().sort((a, b) => (b.n || 0) - (a.n || 0)).map(it => roleRow(it, r)).join("")}</tbody></table></div>` : ""}${cmp ? "" : "</section>"}
 <section><h2 id="fc-pick">選び方は3つ</h2><div class="fpick">
 <div class="fp"><b>1. つけ心地のタイプで</b><p>${esc(jn([...new Set(light.map(it => it.type))]))}は水分が多めで軽い使い心地、クリームは油分が多めでしっとりした使い心地の商品が多いタイプです。このページの商品の成分表で油性の成分を数えても、軽めのタイプは平均${oilL}種類、クリームは平均${oilR}種類でした。ベタつきが苦手なら軽めのタイプから見るのがおすすめです。</p><p class="small"><b>${esc([...new Set(light.map(it => it.type))].join("・"))}（${light.length}件）</b></p>${mini(light, r)}<p class="small"><b>クリーム（${rich.length}件）</b></p>${mini(rich, r)}</div>
 ${quasi.length < n ? `<div class="fp"><b>2. 薬用（医薬部外品）かどうかで</b><p>医薬部外品は、有効成分と、表示できる効能・効果が国に認められた商品です。気になる悩みがはっきりしているなら、まず薬用の${quasi.length}件から、パッケージに表示されている効能を見比べると選びやすくなります。</p>${actAll.length ? `<p class="small"><b>このページの有効成分</b></p><div class="tags">${actAll.map(a => actLink(a, r)).join("")}</div>` : ""}<p class="small"><b>薬用の商品</b></p>${mini(quasi, r)}</div>` : `<div class="fp"><b>2. 有効成分で</b><p>どの商品も医薬部外品で、有効成分は${esc(actsTxt)}の${actGroups.length}種類に分かれます（1つの商品に2つ以上入っていることもあります）。有効成分の種類で効き目の順位は決められないので、名前を聞いたことがある成分や、使い心地のタイプと合わせて選ぶ目印にしてください。</p>${actGroups.map(o => `<p class="small"><b>${esc(o.d)}（${o.l.length}件）</b></p>${mini(o.l, r)}`).join("")}</div>`}
@@ -916,7 +940,7 @@ ${brands.length ? `<section><h2 id="fc-brand">ブランドごとの違い</h2>${
 ${fam.length ? `<section><h2 id="fc-ing">よく知られた成分は、どれに入っている？</h2><p class="small muted">成分表に入っているかどうかを数えています。</p>
 <div class="fbars">${fam.map(o => `<div class="fbar"><div class="fb-h">${o.link ? `<a href="${r(o.link)}">${esc(o.d)}</a>` : esc(o.d)}<span class="mono">${o.hit.length}/${n}件</span></div><div class="fb-t" aria-hidden="true"><span style="width:${Math.round(o.hit.length / n * 100)}%"></span></div><p class="small muted">${o.hit.map(it => esc(nameOf(it))).join("・")}</p></div>`).join("")}</div></section>` : ""}
 <section><h2 id="fc-list">${esc(fill(f.listH || "おすすめ{n}選"))}</h2><p class="small muted">成分の傾向スコアの高い順です。${QUIZ[f.category] ? `<a href="${r("app/")}${QUIZ[f.category].hash}">7つの質問で、自分に合う順に並べ替える</a>` : ""}</p>
-${sorted.map((it, i) => `<article class="fit"><h3><span class="fno mono">${i + 1}</span><span class="fnm">${esc(nameOf(it))}</span></h3>${productCard(it.x, r, aio ? `${it.n ? it.n + "役" : "オールインワン"}・${it.type}` : it.type)}<p>${esc(sumOf(it))}</p>${factsOf(it, r)}${bars(it)}<p class="fmore"><a href="${r(it.x.url)}">全成分${it.x.a.items.length}種類と、それぞれの役割を見る</a></p></article>`).join("")}
+${sorted.map((it, i) => `<article class="fit"${dat(it)}><h3><span class="fno mono">${i + 1}</span><span class="fnm">${esc(nameOf(it))}</span></h3>${productCard(it.x, r, aio ? `${it.n ? it.n + "役" : "オールインワン"}・${it.type}` : it.type)}<p>${esc(sumOf(it))}</p>${factsOf(it, r)}${bars(it)}<p class="fmore"><a href="${r(it.x.url)}">全成分${it.x.a.items.length}種類と、それぞれの役割を見る</a></p></article>`).join("")}
 ${anyRk || anyDirect ? `<p class="pr-note">商品ページの「楽天市場で見る」などは広告のリンクです。紹介料の有無は、点数や順位に関係しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}</section>
 ${f.A.length ? `<section><h2>${esc(f.also.h)}</h2><p class="small muted">${esc(f.also.note)}</p><div class="plist">${f.A.map(it => productCard(it.x, r, aio ? `${it.n ? it.n + "役" : "オールインワン"}・${it.type}` : it.type)).join("")}</div></section>` : ""}
 <section class="ifaq"><h2 id="fc-faq">よくある疑問</h2>${faq.map(o => `<div class="qa-c"><h3 class="qa-q"><span class="qa-i" aria-hidden="true">Q</span>${esc(o.q)}</h3><p>${esc(o.a)}</p></div>`).join("")}</section>
@@ -927,14 +951,18 @@ ${f.A.length ? `<section><h2>${esc(f.also.h)}</h2><p class="small muted">${esc(f
 <li>「あり／なし」は成分表に入っているかどうかで、良い悪いではありません。量や効き目は成分表からは分かりません。</li>
 <li>何役か・タイプは、メーカーや販売店の表示です。表示が変わることがあるため、購入の前にパッケージや公式ページで確かめてください。全成分の出典は各商品のページにあります。</li>
 </ul></details>
-<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>`,
-    { crumbs: [["トップ", ""], ["特集", "features/"], [f.short, u]], cat: f.category });
+<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>
+${cmp ? `<script>(function(){var s={t:"",a:"",w:""},b=document.querySelectorAll("#ffil .fch"),c=document.getElementById("ffc"),
+rows=document.querySelectorAll("tr[data-t],article[data-t]");function ok(e){return(!s.t||e.dataset.t===s.t)&&(!s.w||e.dataset.w===s.w)&&(!s.a||(" "+e.dataset.a+" ").indexOf(" "+s.a+" ")>=0)}
+function go(){var k=0;rows.forEach(function(e){var v=ok(e);e.hidden=!v;if(v&&e.tagName==="TR")k++});c.textContent=k;b.forEach(function(x){x.setAttribute("aria-pressed",s[x.dataset.g]===x.dataset.v?"true":"false")})}
+b.forEach(function(x){x.addEventListener("click",function(){s[x.dataset.g]=x.dataset.v;go()})})})();</script>` : ""}`,
+    { crumbs: f.crumb ? [["トップ", ""], [f.crumb[0], f.crumb[1]], [f.short, u]] : [["トップ", ""], ["特集", "features/"], [f.short, u]], cat: f.category });
 });
-if (FEATURES_ON.length) write("features/", "特集：テーマで成分をくらべる", `いま気になるテーマごとに、商品を集めて成分で比べた特集ページの一覧です。${FEATURES_ON.map(f => f.short).join("・")}。`, r => `
+if (FEATURES_LIST.length) write("features/", "特集：テーマで成分をくらべる", `いま気になるテーマごとに、商品を集めて成分で比べた特集ページの一覧です。${FEATURES_LIST.map(f => f.short).join("・")}。`, r => `
 <h1><span class="mk">特集</span>：テーマでくらべる</h1><p class="lead">「これが気になる」というテーマごとに商品を集めて、成分表と表示から比べたページです。一覧に入れた条件と出典は、各ページの最後に載せています。</p>
-<div class="clist">${FEATURES_ON.map(f => `<a class="cl cl-duo" href="${r(featureUrl(f))}"><span class="duo">${f.L.slice(0, 2).map(it => imgSlot(it.x, "thumb")).join("")}</span><span class="cl-t"><b>${esc(f.short)}</b><span>${esc(f.title)}・${f.L.length}商品・${esc(f.published)}</span></span></a>`).join("")}</div>`,
+<div class="clist">${FEATURES_LIST.map(f => `<a class="cl cl-duo" href="${r(featureUrl(f))}"><span class="duo">${f.L.slice(0, 2).map(it => imgSlot(it.x, "thumb")).join("")}</span><span class="cl-t"><b>${esc(f.short)}</b><span>${esc(f.title)}・${f.L.length}商品・${esc(f.published)}</span></span></a>`).join("")}</div>`,
   { crumbs: [["トップ", ""], ["特集", "features/"]] });
-const featureLinks = (r, cat) => { const l = FEATURES_ON.filter(f => !cat || f.category === cat); return l.length ? `<section><h2>特集</h2><div class="clist">${l.map(f => `<a class="cl" href="${r(featureUrl(f))}"><b>${esc(f.short)}</b><span>${esc(f.title)}</span><i>${f.L.length}件</i></a>`).join("")}</div></section>` : ""; };
+const featureLinks = (r, cat) => { const l = FEATURES_LIST.filter(f => !cat || f.category === cat); return l.length ? `<section><h2>特集</h2><div class="clist">${l.map(f => `<a class="cl" href="${r(featureUrl(f))}"><b>${esc(f.short)}</b><span>${esc(f.title)}</span><i>${f.L.length}件</i></a>`).join("")}</div></section>` : ""; };
 
 /* ---------- 目的別（成分の条件） ---------- */
 CONCERNS.forEach(c => {

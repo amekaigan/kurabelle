@@ -81,6 +81,7 @@ main section{display:block}
 .tagl{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:0 14px;font-size:15px;min-height:44px}
 .tagl:hover{border-color:var(--ink)}.tagl.plain{color:var(--ink2)}
 .tagl span{font-size:12.5px;color:var(--ink3)}
+.explore .ex-row{margin:0 0 16px}.explore .ex-h{margin:0 0 8px;font-weight:700;font-size:15px}
 .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
 .rule{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:16px 18px}
 .rule b{display:block;margin-bottom:4px}

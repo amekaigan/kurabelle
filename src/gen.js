@@ -499,6 +499,26 @@ function reviewBlock(x) {
     <p class="small muted">${esc(v.by || "運営者")}の個人の感想です${v.date ? `（${esc(v.date)}）` : ""}。髪質や好みによって感じ方は違います。</p></div>`).join("")}</section>`;
 }
 
+/* この商品から、ほかの商品を探す（2026-11-07、ユーザーの依頼）：商品ページから、同じブランド・当てはまる悩みと条件・
+   入っている成分の一覧ページへつなぐ。商品を足すたびに、つながりが自動で増える。数字はその一覧に入っている商品の数 */
+function exploreBlock(x, r) {
+  const p = x.p, catN = CAT_N[p.category] || p.category, rows = [];
+  const tag = (u, t, n) => `<a class="tagl" href="${r(u)}">${esc(t)}${n != null ? `<span class="mono">${n}件</span>` : ""}</a>`;
+  const bl = (BR.get(p.brand) || []).filter(y => y !== x).sort((a, b) => (b.match || 0) - (a.match || 0));
+  if (bl.length) rows.push(["同じブランド", (brandUrl.has(p.brand) ? tag(brandUrl.get(p.brand), `${p.brand}の商品をすべて`, BR.get(p.brand).length) : "") + bl.slice(0, 4).map(y => tag(y.url, toks(y).join(" ") || y.p.name)).join("")]); // 名前はメーカー名・ブランド名を省いて短く
+  const seen = new Set(), cw = [];
+  WORRIES.forEach(w => { if (w.list.includes(x) && !seen.has(worryUrl(w))) { seen.add(worryUrl(w)); cw.push(tag(worryUrl(w), w.short, w.list.length)); } });
+  CONCERNS.forEach(c => { if (c.list.includes(x) && !seen.has(concernUrl(c))) { seen.add(concernUrl(c)); cw.push(tag(concernUrl(c), c.short, c.list.length)); } });
+  if (cw.length) rows.push(["当てはまる悩み・条件", cw.join("")]);
+  /* 成分は、有効成分 → 美容・補修 → 洗浄 → 保湿 → 指通り → 油性 …の順。同じ役割の中は成分表の順（多く入っている順の目安） */
+  const RK = { beauty: 1, clean: 2, hum: 3, cond: 4, oil: 5, uv: 6, emul: 7, pres: 8, other: 9 };
+  const ings = []; x.a.items.forEach((it, i) => { if (ingUrl.has(it.name) && !ings.some(o => o.n === it.name)) ings.push({ n: it.name, rk: it.active ? 0 : (RK[ING.get(it.name).role] || 9), i, k: ING.get(it.name).uses.length }); });
+  ings.sort((a, b) => (a.rk - b.rk) || (a.i - b.i));
+  if (ings.length) rows.push(["入っている成分から", ings.slice(0, 8).map(o => tag(ingUrl.get(o.n), o.n, o.k)).join("")]);
+  if (!x.off) rows.push(["同じカテゴリ", tag(`categories/${p.category}/`, `${catN}をすべて`, P.filter(y => y.p.category === p.category).length)]);
+  return `<section class="explore"><h2>この商品から、ほかの商品を探す</h2>${rows.map(([h, b]) => `<div class="ex-row"><p class="ex-h">${esc(h)}</p><div class="tags">${b}</div></div>`).join("")}<p class="small muted">数字は、その一覧に入っている商品の数です。</p></section>`;
+}
+
 /* ---------- 商品ページ ---------- */
 const jpDate = d => { const m = String(d || "").match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${+m[1]}年${+m[2]}月${+m[3]}日` : esc(d || ""); };
 const offBlock = (x, r) => { const d = x.p.discontinued || {};
@@ -542,6 +562,7 @@ const offBlock = (x, r) => { const d = x.p.discontinued || {};
   </section>
   ${cmpOf(x).length ? `<section><h2>どっちが合う？近い商品と比べる</h2><div class="clist">${cmpOf(x).map(c => { const o = c.a === x ? c.b : c.a; return cmpCard(c, r, `${o.p.name}と比べる`); }).join("")}</div></section>` : ""}
   ${x.off ? "" : `<section><h2>成分が似ている${esc(catN)}</h2><div class="plist">${similar(x, 4).map(({ y, s }) => productCard(y, r, `共通の成分 ${Math.round(s * 100)}%`)).join("")}</div></section>`}
+  ${exploreBlock(x, r)}
   <p class="src">出典：${s.url ? `<a href="${esc(s.url)}" rel="nofollow noopener" target="_blank">${esc(s.label || s.url)}</a>` : esc(s.label || "")}${s.date ? `（${esc(s.date)}確認）` : ""}${p.jan ? `　JAN ${esc(p.jan)}` : ""}${p.note ? `<br>${esc(p.note)}` : ""}</p>
 </article>`, { crumbs, cat: p.category });
 });

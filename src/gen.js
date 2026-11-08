@@ -1006,7 +1006,7 @@ ${featureLinks(r)}
 CAT_ORDER.forEach(cat => {
   const list = P.filter(x => x.p.category === cat); if (!list.length) return;
   const u = `categories/${cat}/`;
-  write(u, `${CAT_N[cat]}の成分を比べる`, `${CAT_N[cat]}${list.length}件の全成分を、役割つきで比べられます。`, r => `
+  write(u, list.length >= 2 ? `${CAT_N[cat]}の成分比較${list.length}選｜全成分を役割つきでくらべる` : `${CAT_N[cat]}の成分を比べる`, `${CAT_N[cat]}${list.length}件の全成分を、役割つきで比べられます。`, r => `
 <h1>${esc(CAT_N[cat])}</h1><p class="lead">登録している${esc(CAT_N[cat])}は${list.length}件です。${C.CATS[cat] && C.CATS[cat].scored ? "成分の傾向スコアが高い順に並べています。" : "このカテゴリはまだ点数をつけていません。"}</p>
 ${featureLinks(r, cat)}
 ${cat === "shampoo" ? `<div class="clist">${CONCERNS.map(c => `<a class="cl" href="${r(concernUrl(c))}"><b>${esc(c.short)}</b><i>${c.list.length}件</i></a>`).join("")}</div>` : ""}

@@ -571,3 +571,27 @@ ul.chk.dif li small{margin-left:6px;font-size:12px;color:var(--ink3)}
 .fch[aria-pressed="true"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
 .fch[aria-pressed="true"] span{color:inherit;opacity:.8}
 .ffn{margin:0;font-size:14px;color:var(--ink2)}
+/* 成分ページ：ひと言・働き・使用感・気をつけること（2026-11-09）。罫線の片側だけに色を付けない */
+.ig{display:grid;gap:10px;margin:16px 0 8px}
+.ig-c{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px}
+.ig-c p:last-child{margin-bottom:0}
+.ig-h{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--ink3);margin:0 0 6px}
+.ig-big{font-size:19px;font-weight:700;line-height:1.6;margin:0}
+.ig-tt{margin:10px 0 0;padding:10px 12px;background:var(--hl-soft);border-radius:10px;line-height:1.7}
+.ig-tt span{display:inline-block;font-size:12.5px;font-weight:700;background:var(--ink);color:var(--paper);border-radius:6px;padding:2px 7px;margin-right:8px;vertical-align:1px}
+.ig-acts{list-style:none;margin:0;padding:0;display:flex;justify-content:center;gap:8px}
+.ig-acts li{flex:1 1 0;max-width:33.4%;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;font-size:14px;font-weight:700;line-height:1.45}
+.ig-ic{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;color:var(--c);background:color-mix(in srgb,var(--c) 14%,var(--card))}
+.ig-ic svg{width:28px;height:28px}
+.ig-why{margin:12px 0 0;color:var(--ink2)}
+.ig-tr{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;height:14px}
+.ig-tr i{border-radius:7px;background:var(--line)}
+.ig-tr i:nth-child(1){background:color-mix(in srgb,var(--r-clean) 25%,var(--line))}
+.ig-tr i:nth-child(5){background:color-mix(in srgb,var(--r-oil) 25%,var(--line))}
+.ig-tr i.on{background:var(--ink);transform:scaleY(1.5)}
+.ig-fl{display:flex;justify-content:space-between;font-size:13.5px;color:var(--ink2);margin-top:8px}
+.ig-lv{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:700;margin:0 0 4px}
+.ig-dot{width:14px;height:14px;border-radius:50%;flex:none;background:var(--lv)}
+.ig-care.lv0{--lv:var(--r-hum)}.ig-care.lv1{--lv:var(--r-beauty);background:var(--hl-soft)}.ig-care.lv2{--lv:var(--r-uv);background:var(--hl-soft)}
+.ig-reg{margin:8px 0}
+.ig-reg b{display:block;font-size:13px}

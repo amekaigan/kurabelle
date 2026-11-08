@@ -594,14 +594,97 @@ const REG = new Map([
   ["ラウロイルサルコシンNa", { t: "化粧品の種類や使い方によって、配合の制限がある成分です（化粧品基準 別表第2の2「ラウロイルサルコシンナトリウム」）。" }],
   ["ユビキノン", { t: "化粧品の種類によって、配合の制限がある成分です（化粧品基準 別表第2の3「ユビデカレノン」）。" }]
 ].map(([k, v]) => [C.key(k), v]));
-const regOf = name => REG.get(C.key(name)) || { t: "化粧品基準で、配合できる量の上限が決められた成分ではありません（この表示名で確認）。", none: true };
+const regOf = name => REG.get(C.key(name)) || { none: true };
 const noteOf = name => NOTES.get(C.key(name));
+/* 成分ページの作り直し（2026-11-09、ユーザーと決定）：名前を言い換えただけ・役割を繰り返すだけの文をやめ、
+   ひと言（分かりづらい時はたとえ）→ 働き（アイコン3つまで）→ 使用感（さっぱり⇔しっとり）→ 気をつけること（3段階）にする。
+   notes に one・tatoe・acts・feel・care・like を書いた成分はその内容、書いていない成分は辞書の役割とタグから組み立てる（タグにない主張は足さない） */
+const ICO = {
+  bubble: '<circle cx="9" cy="14" r="5"/><circle cx="16.5" cy="8.5" r="3.5"/><circle cx="17" cy="17" r="2"/>',
+  comb: '<path d="M3 8h18v3H3z"/><path d="M5 11v7M8.5 11v7M12 11v7M15.5 11v7M19 11v7"/>',
+  hair: '<path d="M6 21c0-7 2-12 6-17"/><path d="M12 21c0-6 1.5-11 5-16"/><path d="M18 21c0-4 .5-7 2-10"/>',
+  drop: '<path d="M12 3c3.5 4.5 6 8 6 11a6 6 0 0 1-12 0c0-3 2.5-6.5 6-11z"/>',
+  shield: '<path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z"/>',
+  wave: '<path d="M3 9c3-3 6 3 9 0s6 3 9 0"/><path d="M3 15c3-3 6 3 9 0s6 3 9 0"/>',
+  feather: '<path d="M20 4C11 4 6 10 6 18"/><path d="M20 4c0 8-5 12-11 12"/><path d="M4 20l3-3"/>',
+  spark: '<path d="M12 3v5M12 16v5M3 12h5M16 12h5"/><path d="M12 8l1.5 2.5L16 12l-2.5 1.5L12 16l-1.5-2.5L8 12l2.5-1.5z"/>',
+  leaf: '<path d="M5 19C5 10 10 5 20 4c0 9-5 15-13 15"/><path d="M5 19l8-8"/>',
+  mix: '<path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="8" cy="17" r="1.6"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
+  lock: '<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  flower: '<circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="12" r="3"/>',
+  snow: '<path d="M12 3v18M4 7.5l16 9M20 7.5l-16 9"/>',
+  palette: '<path d="M12 3a9 9 0 1 0 0 18c1.5 0 2-1 2-2s-1-2 0-3h2a5 5 0 0 0 5-5c0-4.5-4-8-9-8z"/><circle cx="8" cy="10" r="1.2"/><circle cx="12" cy="7.5" r="1.2"/><circle cx="16" cy="10" r="1.2"/>',
+  star: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>'
+};
+const icoSvg = k => `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[k] || ICO.spark}</svg>`;
+const ACT = {
+  wash: ["bubble", "汚れを落とす"], mildSurf: ["bubble", "やさしく洗う"], strongSurf: ["bubble", "泡立てて洗う"], sebum: ["bubble", "皮脂を落とす"],
+  cond: ["comb", "指通りをよくする"], silicone: ["comb", "すべりをよくする"], repair: ["hair", "髪の補修"],
+  hum1: ["drop", "うるおいを与える"], hum2: ["drop", "うるおいを保つ"],
+  occS: ["shield", "膜で水分を守る"], occM: ["wave", "なめらかにする"], light: ["feather", "軽い仕上がり"],
+  beauty: ["spark", "ケア成分"], extract: ["leaf", "植物などのエキス"], emul: ["mix", "混ぜる・とろみ"], uv: ["sun", "紫外線をカット"],
+  pres: ["lock", "品質を保つ"], fragrance: ["flower", "香りをつける"], essoil: ["flower", "香りをつける"], menthol: ["snow", "スーッとさせる"],
+  alcohol: ["snow", "さっぱりさせる"], colorant: ["palette", "色をつける"], scalp: ["leaf", "頭皮をすこやかに保つ"], active: ["star", "医薬部外品の有効成分"], base: ["drop", "全体のベース"]
+};
+function actsOf(g, n) {
+  if (n && n.acts) return n.acts.slice(0, 3).map(a => typeof a === "string" ? ACT[a] : [a.i, a.t]).filter(Boolean);
+  const t = new Set(g.tags), k = [];
+  const first = { clean: t.has("mildSurf") ? "mildSurf" : t.has("strongSurf") ? "strongSurf" : "wash", cond: "cond", hum: t.has("hum2") ? "hum2" : "hum1",
+    oil: t.has("occS") ? "occS" : t.has("light") ? "light" : "occM", emul: "emul", uv: "uv", pres: "pres", beauty: "beauty", active: "active", base: "base" }[g.role];
+  if (first) k.push(first);
+  ["silicone", "repair", "cond", "light", "sebum", "scalp", "hum2", "beauty", "extract", "fragrance", "essoil", "menthol", "alcohol", "colorant"].forEach(x => { if (t.has(x)) k.push(x); });
+  return [...new Set(k)].map(x => ACT[x]).filter((a, i, L) => a && L.findIndex(b => b && b[1] === a[1]) === i).slice(0, 3);
+}
+/* 使用感（0 さっぱり〜4 しっとり）：保湿・油性・清涼の成分だけ。辞書の分類から出す目安 */
+function feelOf(g, n) {
+  if (n && typeof n.feel === "number") return n.feel;
+  const t = new Set(g.tags);
+  if (t.has("menthol") || t.has("alcohol")) return 0;
+  if (t.has("light")) return 1;
+  if (t.has("occS")) return 4;
+  if (g.role === "oil" && t.has("silicone")) return 2;
+  if (g.role === "oil" || g.role === "hum") return 3;
+  return null;
+}
+const TATOE = {
+  clean: "台所の洗剤と同じように、油汚れを水で流せるようにする仕組みです。",
+  occS: "ラップのように表面をおおって、水分を逃がしにくくします。",
+  hum1: "スポンジのように、水分を引き寄せて抱えこみます。",
+  pres: "食品の保存料のように、使っているあいだに中身が傷むのを防ぎます。",
+  silicone: "髪の表面に薄いコートをかけるように、すべりをよくします。",
+  uv: "日傘のように、紫外線が肌に届くのをさえぎります。"
+};
+const tatoeOf = (g, n) => (n && n.tatoe) || TATOE[["occS", "silicone", "hum1"].find(t => g.tags.includes(t))] || TATOE[g.role] || "";
+/* 気をつけること（0 特になし／1 人によっては注意／2 注意が必要）。notes の care は成分ごとに確かめたもの。
+   ないときは辞書のタグ（香料・精油・清涼剤・アルコール・強めの洗浄成分・少量で効く防腐剤・エキス）から出す。
+   「危険」「有害」など、規制の中身より強い言葉は使わない */
+const CARE_T = [
+  ["strongpres", "少ない量で働く防腐剤です。肌に合わないと感じる人もいます。"],
+  ["menthol", "スーッとする清涼感が出る成分です。人によっては刺激に感じることがあります。"],
+  ["fragrance", "香りをつける成分です。香りが苦手な人や刺激を感じやすい人は、香料の入っていない商品を選ぶ方法もあります。"],
+  ["essoil", "植物から取った香りの油（精油）です。香りが苦手な人や刺激を感じやすい人は、気になることがあります。"],
+  ["alcohol", "さっぱり感を出す成分です。アルコールに敏感な人は、刺激を感じることがあります。"],
+  ["strongSurf", "洗う力が強めの洗浄成分です。乾燥しやすい人は、洗い上がりのつっぱりが気になることがあります。"],
+  ["extract", "植物などから取ったエキスです。もとの植物にアレルギーがある人は、使う前に確かめてください。"]
+];
+const CARE_LV = ["特になし", "人によっては注意", "注意が必要"];
+function careOf(g, n) {
+  if (n && n.care) return { lv: n.care.lv, t: n.care.t, own: true };
+  const hit = CARE_T.filter(([k]) => g.tags.includes(k)).map(([, t]) => t);
+  if (hit.length) return { lv: 1, t: hit.slice(0, 2).join("") };
+  return { lv: 0, t: "一般的な使い方では、特に知られた注意点はありません。香料・清涼剤・アルコール・強めの洗浄成分など、気にする人が多い成分にも当たりません。" };
+}
 
 ING_PAGES.forEach(g => {
   const u = ingUrl.get(g.name);
   const others = [...g.aliases].filter(a => C.key(a) !== C.key(g.name));
   const tagTxt = g.tags.map(t => TAG_EXPLAIN[t]).filter(Boolean);
-  const same = ING_PAGES.filter(h => h !== g && h.role === g.role).slice(0, 12);
+  /* 似た働きの成分（2026-11-09）：notes の like を先に、ほかは同じ役割でタグが多く重なる順 */
+  const likeK = new Set(((noteOf(g.name) || {}).like || []).map(C.key));
+  const same = ING_PAGES.filter(h => h !== g && (likeK.has(C.key(h.name)) || h.role === g.role))
+    .map(h => ({ h, s: (likeK.has(C.key(h.name)) ? 100 : 0) + h.tags.filter(t => g.tags.includes(t)).length * 10 + Math.min(9, h.uses.length / 10) }))
+    .sort((a, b) => b.s - a.s).slice(0, 12).map(o => o.h);
   const top = g.uses.slice().sort((a, b) => a.pos / a.of - b.pos / b.of);
   /* 数字で見る（2026年10月22日）：手元の商品データから計算できることだけを出す。新しい主張は書かない */
   const catStat = CAT_ORDER.map(cat => { const n = P.filter(x => x.p.category === cat).length, k = g.uses.filter(u => u.x.p.category === cat).length; return { cat, n, k, pct: n ? Math.round(k / n * 100) : 0 }; }).filter(o => o.k > 0);
@@ -621,7 +704,7 @@ ING_PAGES.forEach(g => {
   const roleT = ["other", "unk"].includes(g.role) ? "" : `${ROLE_N(g.role)}の成分`;
   const titleName = altSame.length && (g.name + altSame[0]).length <= 24 ? `${g.name}（${altSame[0]}）` : g.name;
   const pageTitle = `${titleName}とは？${roleT ? roleT + "｜" : ""}化粧品での役割と入っている商品${g.uses.length}件`;
-  const answer = (nf ? nf.what + nf.why : `${g.desc}。`).replace(/\s+/g, "");
+  const answer = (nf ? (nf.one || nf.what) + (nf.why || "") : `${g.desc}。${actsOf(g, nf).length ? `主な働きは「${actsOf(g, nf).map(a => a[1]).join("」「")}」。` : ""}`).replace(/\s+/g, "");
   const altTxt = (altSame.length ? `「${altSame.slice(0, 3).join("」「")}」とも表示されます。` : "")
     + (altGroup.length ? `成分表で「${altGroup.slice(0, 3).join("」「")}」と書かれる仲間の成分もまとめて数えています。` : "");
   const desc = `${g.name}とは？${altTxt}${answer}入っている商品${g.uses.length}件を成分表での位置つきで紹介。${faqQ ? `よくある疑問（${faqQ}）にも。` : ""}`;
@@ -630,12 +713,15 @@ ING_PAGES.forEach(g => {
   <p class="eyebrow">成分</p>
   <h1>${esc(g.name)}<span class="sub">とは</span></h1>
   <div class="row"><span class="role big" style="--c:var(${ROLE_C(g.role)})">${esc(ROLE_N(g.role))}</span>${tagTxt.map(t => `<span class="chip">${esc(t)}</span>`).join("")}</div>
-  ${(() => { const n = noteOf(g.name), rg = regOf(g.name), srcs = [...(n && n.src || []), KSRC];
-    return `<div class="qa">
-    <div class="qa-c"><p class="qa-q"><span class="qa-i" aria-hidden="true">?</span>何の成分？</p><p>${esc(n ? n.what : g.desc + "。")}</p></div>
-    <div class="qa-c"><p class="qa-q"><span class="qa-i" aria-hidden="true">◎</span>何のために入っている？</p><p>${esc(n ? n.why : `「${ROLE_N(g.role)}」の役割で配合されます。`)}</p></div>
-    <div class="qa-c${rg.none ? "" : " reg"}"><p class="qa-q"><span class="qa-i" aria-hidden="true">!</span>気をつけることは？</p><p>${esc(rg.t)}</p></div>
-    <p class="qa-src">出典：${srcs.map(o => `<a href="${esc(o.url)}" rel="nofollow noopener" target="_blank">${esc(o.label)}</a>`).join("・")}（${esc(srcs.map(o => o.date || KSRC.date).sort().pop())}確認）。効果や安全性を保証するものではありません。</p>
+  ${(() => { const n = noteOf(g.name), rg = regOf(g.name), acts = actsOf(g, n), feel = feelOf(g, n), care = careOf(g, n), tt = tatoeOf(g, n);
+    const srcs = [...(n && n.src || []), ...(rg.none ? [] : [KSRC])];
+    const derived = !(n && n.acts && n.care);
+    return `<div class="ig">
+    <div class="ig-c ig-one"><p class="ig-h">ひと言でいうと</p><p class="ig-big">${esc(n ? (n.one || n.what) : g.desc + "。")}</p>${tt ? `<p class="ig-tt"><span>たとえると</span>${esc(tt)}</p>` : ""}</div>
+    ${acts.length ? `<div class="ig-c"><p class="ig-h">髪・肌への働き</p><ul class="ig-acts" style="--c:var(${ROLE_C(g.role)})">${acts.map(([i, t]) => `<li><span class="ig-ic">${icoSvg(i)}</span>${esc(t)}</li>`).join("")}</ul>${n && n.why ? `<p class="small ig-why">${esc(n.why)}</p>` : ""}</div>` : n && n.why ? `<div class="ig-c"><p class="ig-h">何のために入っている？</p><p>${esc(n.why)}</p></div>` : ""}
+    ${feel === null ? "" : `<div class="ig-c"><p class="ig-h">使用感</p><div class="ig-feel" role="img" aria-label="さっぱり0〜しっとり4のうち${feel}"><span class="ig-tr">${[0, 1, 2, 3, 4].map(k => `<i class="${k === feel ? "on" : ""}"></i>`).join("")}</span><span class="ig-fl"><span>さっぱり</span><span>しっとり</span></span></div></div>`}
+    <div class="ig-c ig-care lv${care.lv}"><p class="ig-h">気をつけること</p><p class="ig-lv"><span class="ig-dot" aria-hidden="true"></span>${esc(CARE_LV[care.lv])}</p><p>${esc(care.t)}</p>${rg.none ? "" : `<p class="small ig-reg"><b>配合量のきまり</b>${esc(rg.t)}</p>`}<p class="small muted">どの成分でも、肌や頭皮に合わないと感じたら使うのをやめてください。</p></div>
+    <p class="qa-src">${derived ? "働き・使用感・気をつけることは、クラベルの成分辞書の分類から出した目安です。" : ""}${srcs.length ? `出典：${srcs.map(o => `<a href="${esc(o.url)}" rel="nofollow noopener" target="_blank">${esc(o.label)}</a>`).join("・")}（${esc(srcs.map(o => o.date || KSRC.date).sort().pop())}確認）。` : ""}効果や安全性を保証するものではありません。</p>
   </div>`; })()}
   <p class="lead">${esc(dataLead)}</p>
   <p class="jump"><a class="btn solid wide" href="#ing-products">${esc(g.name)}が入っている商品（${g.uses.length}件）を見る<span aria-hidden="true">↓</span></a></p>
@@ -665,7 +751,7 @@ ING_PAGES.forEach(g => {
     <div class="plist">${top.map(({ x, pos, of, active, raw }) => { const rn = raw ? C.norm(raw) : "", shown = rn && C.key(rn) !== C.key(g.name) ? `・表示名「${esc(rn)}」` : "";
       return productCard(x, r, (active ? `有効成分として配合（全${of}成分）` : `${pos}番目／全${of}成分`) + shown, { posOnly: true }); }).join("")}</div>
   </section>
-  ${same.length ? `<section><h2>同じ「${esc(ROLE_N(g.role))}」の成分</h2><div class="tags">${same.map(h => `<a class="tagl" href="${r(ingUrl.get(h.name))}">${esc(h.name)}<span class="mono">${h.uses.length}</span></a>`).join("")}</div></section>` : ""}
+  ${same.length ? `<section><h2>似た働きの成分</h2><div class="tags">${same.map(h => `<a class="tagl" href="${r(ingUrl.get(h.name))}">${esc(h.name)}<span class="mono">${h.uses.length}</span></a>`).join("")}</div></section>` : ""}
 </article>`, { crumbs: [["トップ", ""], ["成分", "ingredients/"], [g.name, u]] });
 });
 

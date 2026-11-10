@@ -599,7 +599,7 @@ const REG = new Map([
   ["ブチルカルバミン酸ヨウ化プロピニル", { t: "防腐剤として、化粧品の種類ごとに配合できる量が決められています（化粧品基準 別表第3の2）。" }],
   ["メチルイソチアゾリノン", { t: "防腐剤として、化粧品の種類ごとに配合できる量が決められています（化粧品基準 別表第3の2）。" }],
   ["ラウロイルサルコシンNa", { t: "化粧品の種類や使い方によって、配合の制限がある成分です（化粧品基準 別表第2の2「ラウロイルサルコシンナトリウム」）。" }],
-  ["ユビキノン", { t: "化粧品の種類によって、配合の制限がある成分です（化粧品基準 別表第2の3「ユビデカレノン」）。" }]
+  ["ユビキノン", { t: "化粧品に配合できる量は、100g中0.03gまでと決められています（粘膜に使われることがない化粧品。洗い流すもの・洗い流さないものとも）。粘膜に使われることがある化粧品には配合できません（化粧品基準 別表第2の3「ユビデカレノン」）。" }]
 ].map(([k, v]) => [C.key(k), v]));
 const regOf = name => REG.get(C.key(name)) || { none: true };
 const noteOf = name => NOTES.get(C.key(name));
@@ -709,16 +709,22 @@ ING_PAGES.forEach(g => {
   const sameT = new Set(((nf && nf.same) || []).map(C.key));
   const altSame = others.filter(a => sameT.has(C.key(a))), altGroup = others.filter(a => !sameT.has(C.key(a)));
   const roleT = ["other", "unk"].includes(g.role) ? "" : `${ROLE_N(g.role)}の成分`;
-  const titleName = altSame.length && (g.name + altSame[0]).length <= 24 ? `${g.name}（${altSame[0]}）` : g.name;
-  const pageTitle = `${titleName}とは？${roleT ? roleT + "｜" : ""}化粧品での役割と入っている商品${g.uses.length}件`;
-  const answer = (nf ? (nf.one || nf.what) + (nf.why || "") : `${g.desc}。${actsOf(g, nf).length ? `主な働きは「${actsOf(g, nf).map(a => a[1]).join("」「")}」。` : ""}`).replace(/\s+/g, "");
+  /* 2026-11-10：成分表の名前より、よく知られた呼び名で検索される成分（ユビキノン＝コエンザイムQ10 など）は、notes の aka を題名・見出し・説明文の先頭に出す */
+  const aka = (nf && nf.aka) || "";
+  const fullName = aka ? `${g.name}（${aka}）` : g.name;
+  const titleName = aka ? `${aka}（${g.name}）` : altSame.length && (g.name + altSame[0]).length <= 24 ? `${g.name}（${altSame[0]}）` : g.name;
+  /* 医薬部外品での扱い：有効成分として入っているか、その他の成分か（商品データから数えるだけ） */
+  const qU = g.uses.filter(u => u.x.p.kind === "quasi"), qAct = qU.filter(u => u.active).length;
+  /* notes の ask は、検索する人のいちばんの疑問（例：「肌に良いの？」）。あれば、題名の役割の言葉の代わりに出す。desc は検索結果の説明文の「答え」の部分 */
+  const pageTitle = `${titleName}とは？${nf && nf.ask ? nf.ask + "｜" : roleT ? roleT + "｜" : ""}化粧品での役割と入っている商品${g.uses.length}件`;
+  const answer = (nf && nf.desc ? nf.desc : nf ? (nf.one || nf.what) + (nf.why || "") : `${g.desc}。${actsOf(g, nf).length ? `主な働きは「${actsOf(g, nf).map(a => a[1]).join("」「")}」。` : ""}`).replace(/\s+/g, "");
   const altTxt = (altSame.length ? `「${altSame.slice(0, 3).join("」「")}」とも表示されます。` : "")
     + (altGroup.length ? `成分表で「${altGroup.slice(0, 3).join("」「")}」と書かれる仲間の成分もまとめて数えています。` : "");
-  const desc = `${g.name}とは？${altTxt}${answer}入っている商品${g.uses.length}件を成分表での位置つきで紹介。${faqQ ? `よくある疑問（${faqQ}）にも。` : ""}`;
+  const desc = `${fullName}とは？${altTxt}${answer}入っている商品${g.uses.length}件を成分表での位置つきで紹介。${faqQ ? `よくある疑問（${faqQ}）にも。` : ""}`;
   write(u, pageTitle, desc, r => `
 <article>
   <p class="eyebrow">成分</p>
-  <h1>${esc(g.name)}<span class="sub">とは</span></h1>
+  <h1>${esc(g.name)}${aka ? `<span class="aka">（${esc(aka)}）</span>` : ""}<span class="sub">とは</span></h1>
   <div class="row"><span class="role big" style="--c:var(${ROLE_C(g.role)})">${esc(ROLE_N(g.role))}</span>${tagTxt.map(t => `<span class="chip">${esc(t)}</span>`).join("")}</div>
   ${(() => { const n = noteOf(g.name), rg = regOf(g.name), acts = actsOf(g, n), feel = feelOf(g, n), care = careOf(g, n), tt = tatoeOf(g, n);
     const srcs = [...(n && n.src || []), ...(rg.none ? [] : [KSRC])];
@@ -747,12 +753,13 @@ ING_PAGES.forEach(g => {
       if (m.size < 2) return "";
       const L = [...m.values()].sort((a, b) => b.c - a.c), mx = L[0].c;
       return `<h3>成分表での書かれ方</h3><div class="cbars names">${L.map(o => `<div class="cbar"><span class="cl-n">${esc(o.nm)}</span><span class="st"><i style="width:${Math.round(o.c / mx * 100)}%"></i></span><b class="mono">${o.c}件</b></div>`).join("")}</div><p class="small muted">商品の成分表に書かれている名前ごとの件数です。</p>`; })()}
+    ${qU.length >= 2 ? `<h3>医薬部外品（薬用）での扱い</h3><p>医薬部外品${qU.length}件のうち、<b>有効成分として配合が${qAct}件</b>、その他の成分として配合が${qU.length - qAct}件です。</p><p class="small muted">有効成分は、その商品の効能（パッケージに表示されるもの）のもとになる成分です。その他の成分は、保湿や使い心地などのために入っています。</p>` : ""}
     ${posU.length >= 2 ? `<h3>成分表での位置</h3><div class="pbar" role="img" aria-label="前のほう${bk[0]}件、真ん中${bk[1]}件、後ろのほう${bk[2]}件"><i class="p0" style="flex:${bk[0]}"></i><i class="p1" style="flex:${bk[1]}"></i><i class="p2" style="flex:${bk[2]}"></i></div>
       <div class="pleg"><span><b class="mono">${bk[0]}</b>前のほう</span><span><b class="mono">${bk[1]}</b>真ん中</span><span><b class="mono">${bk[2]}</b>後ろのほう</span></div>
       <p class="small muted">化粧品${posU.length}件で数えています。化粧品の成分表は配合量の多い順（1%以下は順不同）です。</p>` : ""}
     ${co.length ? `<h3>よく一緒に入っている成分</h3><div class="tags">${co.map(o => `<a class="tagl" href="${r(ingUrl.get(o.n))}">${esc(o.n)}<span class="mono">${o.pct}%</span></a>`).join("")}</div><p class="small muted">${esc(g.name)}が入っている商品のうち、その成分も入っている割合です。</p>` : ""}
   </section>
-  ${(() => { const n = noteOf(g.name); return n && n.faq ? `<section class="ifaq"><h2>${esc(g.name)}のよくある疑問</h2>${n.faq.map(o => `<div class="qa-c"><h3 class="qa-q"><span class="qa-i" aria-hidden="true">Q</span>${esc(o.q)}</h3><p>${esc(o.a)}</p></div>`).join("")}</section>` : ""; })()}
+  ${(() => { const n = noteOf(g.name); return n && n.faq ? `<section class="ifaq"><h2>${esc(aka || g.name)}のよくある疑問</h2>${n.faq.map(o => `<div class="qa-c"><h3 class="qa-q"><span class="qa-i" aria-hidden="true">Q</span>${esc(o.q)}</h3><p>${esc(o.a)}</p></div>`).join("")}</section><script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: n.faq.map(o => ({ "@type": "Question", name: o.q, acceptedAnswer: { "@type": "Answer", text: o.a } })) }).replace(/</g, "\\u003c")}</script>` : ""; })()}
   <section id="ing-products"><h2>${esc(g.name)}が入っている商品（${g.uses.length}件）</h2>
     <p class="small muted">「◯番目／全◯成分」は成分表での位置です。化粧品では前のほうほど配合量が多い目安になります。医薬部外品は配合量の順とは限りません。「有効成分として配合」は、医薬部外品の有効成分として表示されているものです（有効成分は成分表の先頭に別枠で書かれるため、位置は出していません）。</p>
     <div class="plist">${top.map(({ x, pos, of, active, raw }) => { const rn = raw ? C.norm(raw) : "", shown = rn && C.key(rn) !== C.key(g.name) ? `・表示名「${esc(rn)}」` : "";
@@ -1156,7 +1163,7 @@ write("about/", "クラベルとは", "クラベルは、シャンプーやス�
 /* ---------- トップ ---------- */
 const searchIndex = [
   ...P.map(x => [x.p.name, x.p.brand || "", CAT_N[x.p.category] || "", x.url]),
-  ...ING_PAGES.map(g => [g.name, [...g.aliases].filter(a => C.key(a) !== C.key(g.name)).join(" "), "成分", ingUrl.get(g.name)])
+  ...ING_PAGES.map(g => { const n = noteOf(g.name) || {}; return [g.name, [...new Set([...g.aliases].filter(a => C.key(a) !== C.key(g.name)).concat(n.aka || [], n.same || []))].join(" "), "成分", ingUrl.get(g.name)]; })
 ];
 const latestDate = PRODUCTS.map(p => (p.source && p.source.date) || "").sort().pop() || "";
 const latest = P.filter(x => ((x.p.source && x.p.source.date) || "") === latestDate).slice(0, 6);

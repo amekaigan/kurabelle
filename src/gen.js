@@ -21,7 +21,9 @@ const SITE_NAME = "クラベル";
 /* Googleアナリティクス4の測定ID。見本（--preview）では入れない。使っていることは「クラベルとは」の #analytics に書いている */
 const ICONS = `<link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/assets/icons/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">`;
 const GA4_ID = "G-DJ0D89ETX9";
-const GA = GA4_ID && !PREVIEW ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA4_ID}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","${GA4_ID}")</script>` : "";
+/* 購入ボタン（広告リンク）が押されたときに、ページの種類・商品・飛び先を記録する（2026-11-10。どのページ・どの商品から押されたかを見るため。個人は特定しない） */
+const BUY_TRACK = `document.addEventListener("click",function(e){var a=e.target&&e.target.closest&&e.target.closest('a[rel~="sponsored"]');if(!a)return;var h=a.hostname||"";gtag("event","buy_click",{page_type:location.pathname.split("/")[1]||"top",item_id:a.getAttribute("data-buy")||"",shop:/rakuten/.test(h)?"rakuten":/amazon|amzn/.test(h)?"amazon":"direct",transport_type:"beacon"})},true)`;
+const GA = GA4_ID && !PREVIEW ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA4_ID}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","${GA4_ID}");${BUY_TRACK}</script>` : "";
 const OPERATOR_OK = false; // 「運営者より」の文章をユーザーが確かめたら true（それまでは見本にだけ出す）
 
 /* 手書き風の絵（src/hand.json。作り直しは npm run hand）。ページで使っているものだけを埋め込む */
@@ -363,11 +365,16 @@ const destOf = s => DEST[s && s.dest] || DEST_OFFICIAL;
 const dest = x => destOf(x.p.shop);
 /* 2026-10-24：1商品に広告リンクを2つ（公式サイトとAmazonなど）出せるようにした。2つ目以降は shop.also に {asp, url, pixel, dest} で書く */
 const shops = x => isDirect(x) ? [x.p.shop, ...(x.p.shop.also || []).filter(s => s && s.url)].sort((a, b) => (b.dest === "amazon") - (a.dest === "amazon")) : [];   /* Amazonを先に（2026-10-24 ユーザーの指定） */
-const shopBtns = x => `<span class="pr-tag">PR</span>` + shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("");
+/* 楽天の返事を待たずに押せるよう、JAN（なければ商品名）で楽天市場の検索結果へ飛ぶ広告リンクを最初から入れておく。
+   返事が来たら assets/rk.js が商品ページへのリンクに差し替える（2026-11-10。混み合って返事が来ないとボタンが出なかったため）。楽天から取得した情報は使っていない */
+const RK_AFF = process.env.RAKUTEN_AFFILIATE_ID || "588643c2.b560f3b3.588643c3.4dd69634";
+const rkSearch = x => { const u = encodeURIComponent(`https://search.rakuten.co.jp/search/mall/${encodeURIComponent(rkKey(x))}/`); return `https://hb.afl.rakuten.co.jp/hgc/${RK_AFF}/?pc=${u}&m=${u}`; };
+const rkBtn = x => `<span class="pr-tag">PR</span><a class="rk-buy" href="${esc(rkSearch(x))}" data-rk-link="${esc(rkKey(x))}" data-buy="${esc(x.p.id)}" rel="sponsored noopener" target="_blank">楽天市場で見る</a>`;
+const shopBtns = x => `<span class="pr-tag">PR</span>` + shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" data-buy="${esc(x.p.id)}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("");
 const shopTag = x => shops(x).map(s => destOf(s).tag).filter((v, i, a) => a.indexOf(v) === i).join("・");
 const shopNote = () => `広告リンクです。紹介料は点数・順位に関係しません。価格は各サイトでご確認ください。`;   /* 2026-10-24 ユーザーの指定で短くした */
 /* 商品ページの購入ボックス：PRの札・ボタン（縦に並べる）・説明文をひとつの枠に入れる（2026-10-24 ユーザーの指定） */
-const buyBox = (x, r) => `<div class="buybox"><span class="pr-tag">PR</span>${shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("")}<p class="pr-note">${shopNote(x)}<a href="${r("about/")}#ad">広告について</a></p></div>`;
+const buyBox = (x, r) => `<div class="buybox"><span class="pr-tag">PR</span>${shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" data-buy="${esc(x.p.id)}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("")}<p class="pr-note">${shopNote(x)}<a href="${r("about/")}#ad">広告について</a></p></div>`;
 const useRk = x => (RK_ON || PREVIEW) && !isDirect(x);
 const rkKey = x => x.p.jan || `${x.p.brand || ""} ${x.p.name}`.trim();
 const ownImg = x => (isDirect(x) && x.p.shop.img) || x.p.img || "";   /* 運営者が用意した商品画像（メーカー直販の素材、または差し替え用） */
@@ -543,9 +550,9 @@ const offBlock = (x, r) => { const d = x.p.discontinued || {};
   <div class="phead"><div class="pfig">${imgSlot(x, "pimg")}<button class="fav-btn star" type="button" hidden aria-pressed="false" aria-label="お気に入りに追加" title="お気に入りに追加" data-fav="${esc(JSON.stringify({ id: p.id, name: p.name, brand: p.brand || "", url: x.url, match: x.match, grade: x.grade, type: x.sc ? typeOf(x).title : "", ph: PH[p.category] || "ph-bottle", img: ownImg(x) ? REL_IMG(ownImg(x)) : "", rk: useRk(x) && !ownImg(x) ? rkKey(x) : "", jan: p.jan ? 1 : 0 }))}"></button></div><div>
   <h1>${wb(p.name)} <span class="w">の成分</span></h1>
   <div class="row">${chips(x)}</div>
-  ${x.off ? "" : isDirect(x) ? buyBox(x, r) : ""}${!x.off && useRk(x) ? `<div class="acts"><span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a></div>` : ""}
+  ${x.off ? "" : isDirect(x) ? buyBox(x, r) : ""}${!x.off && useRk(x) ? `<div class="acts">${rkBtn(x)}</div>` : ""}
   ${!x.off && useRk(x) ? `<p class="rk-rv" data-rk-rv="${esc(rkKey(x))}" hidden></p>` : ""}
-  ${!x.off && useRk(x) ? `<p class="rk-price" data-rk-price="${esc(rkKey(x))}" hidden></p><p class="pr-note" data-rk-pr="${esc(rkKey(x))}" hidden>価格・評価は<span data-rk-at="${esc(rkKey(x))}"></span>時点の楽天市場の情報です。リンクは広告で、点数や順位には影響しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
+  ${!x.off && useRk(x) ? `<p class="rk-price" data-rk-price="${esc(rkKey(x))}" hidden></p><p class="pr-note"><span data-rk-pr="${esc(rkKey(x))}" hidden>価格・評価は<span data-rk-at="${esc(rkKey(x))}"></span>時点の楽天市場の情報です。</span>リンクは広告で、点数や順位には影響しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
   </div></div>
   ${x.off ? offBlock(x, r) : ""}
   ${typeBlock(x, r)}
@@ -785,7 +792,7 @@ ${(() => { const L = [...CMP.values()].filter(c => c.a.p.brand === b && c.b.p.br
    「で、どっちが合うの？」に答える（成分表から見た向き・不向きを言い切る。効果は約束しない） */
 const buyLink = (x, r) => isDirect(x)
   ? shopBtns(x)
-  : useRk(x) ? `<span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : "";
+  : useRk(x) ? rkBtn(x) : "";
 const ingList = (L, r) => L.length ? `<div class="tags">${L.map(it => { const u = ingUrl.get(it.name); const nm = esc(C.norm(it.raw)); return u ? `<a class="tagl" href="${r(u)}">${nm}</a>` : `<span class="tagl plain">${nm}</span>`; }).join("")}</div>` : `<p class="small muted">ありません。</p>`;
 /* 観点ごとに「こんな人に」。成分表から見た処方の傾向として書き、効果は書かない */
 const REC = {
@@ -1023,8 +1030,8 @@ ${(f.related || []).length || (f.links || []).length ? `<div class="tags">${relL
 <ul class="facts"><li><span>のせた商品</span><b class="mono">${n}</b><i>${esc(f.who || "男性向け")}</i></li><li><span>医薬部外品</span><b class="mono">${quasi.length}</b><i>薬用</i></li>${aio ? `<li><span>何役か</span><b class="mono">${nMin}〜${nMax}</b><i>メーカーの表示</i></li>` : hairF ? `<li><span>やさしい洗浄成分が主</span><b class="mono">${L.filter(mildOf).length}</b><i>件</i></li>` : `<li><span>有効成分</span><b class="mono">${actGroups.length}</b><i>種類</i></li>`}</ul>
 ${cmp ? tabSec(r) : ""}
 <section class="fconc" aria-labelledby="fc-conc"><h2 id="fc-conc">先に結論：目的別の1本</h2>
-<div class="fcg">${conc.map(([k, it, why]) => `<a class="fci" href="${r(it.x.url)}"><span class="fck">${esc(k)}</span>${imgSlot(it.x, "thumb")}<b>${esc(nameOf(it))}</b><small>${esc(why)}</small></a>`).join("")}</div>
-<p class="fnote">点数は、成分表を決まったルールで数えた「成分の傾向スコア」です（<a href="${r("about/scoring/")}">数え方</a>）。</p></section>
+<div class="fcg">${conc.map(([k, it, why]) => `<div class="fcw"><a class="fci" href="${r(it.x.url)}"><span class="fck">${esc(k)}</span>${imgSlot(it.x, "thumb")}<b>${esc(nameOf(it))}</b><small>${esc(why)}</small></a>${buyLink(it.x, r) ? `<div class="acts">${buyLink(it.x, r)}</div>` : ""}</div>`).join("")}</div>
+<p class="fnote">${anyRk || anyDirect ? "「楽天市場で見る」などは広告のリンクで、紹介料の有無は点数や順位に関係しません。" : ""}点数は、成分表を決まったルールで数えた「成分の傾向スコア」です（<a href="${r("about/scoring/")}">数え方</a>）。</p></section>
 <nav class="ftoc" aria-label="このページの目次"><b>目次</b><ol>${toc.map(([id, t]) => `<li><a href="#${id}">${esc(t)}</a></li>`).join("")}</ol></nav>
 ${aio ? `<section><h2 id="fc-what">そもそも、オールインワンとは</h2>
 <div class="fstep"><div><span class="fsl">ふつうのお手入れ</span><span class="fss"><i>化粧水</i><em aria-hidden="true">→</em><i>乳液</i><em aria-hidden="true">→</em><i>クリーム</i></span></div><div><span class="fsl">オールインワン</span><span class="fss"><i class="on">これ1つ</i></span></div></div>
@@ -1043,8 +1050,8 @@ ${brands.length ? `<section><h2 id="fc-brand">ブランドごとの違い</h2>${
 ${fam.length ? `<section><h2 id="fc-ing">よく知られた成分は、どれに入っている？</h2><p class="small muted">成分表に入っているかどうかを数えています。</p>
 <div class="fbars">${fam.map(o => `<div class="fbar"><div class="fb-h">${o.link ? `<a href="${r(o.link)}">${esc(o.d)}</a>` : esc(o.d)}<span class="mono">${o.hit.length}/${n}件</span></div><div class="fb-t" aria-hidden="true"><span style="width:${Math.round(o.hit.length / n * 100)}%"></span></div><p class="small muted">${o.hit.map(it => esc(nameOf(it))).join("・")}</p></div>`).join("")}</div></section>` : ""}
 <section><h2 id="fc-list">${esc(fill(f.listH || "おすすめ{n}選"))}</h2><p class="small muted">成分の傾向スコアの高い順です。${QUIZ[f.category] ? `<a href="${r("app/")}${QUIZ[f.category].hash}">7つの質問で、自分に合う順に並べ替える</a>` : ""}</p>
-${sorted.map((it, i) => `<article class="fit"${dat(it)}><h3><span class="fno mono">${i + 1}</span><span class="fnm">${esc(nameOf(it))}</span></h3>${productCard(it.x, r, aio ? `${it.n ? it.n + "役" : "オールインワン"}・${it.type}` : it.type)}<p>${esc(sumOf(it))}</p>${factsOf(it, r)}${bars(it)}<p class="fmore"><a href="${r(it.x.url)}">全成分${it.x.a.items.length}種類と、それぞれの役割を見る</a></p></article>`).join("")}
-${anyRk || anyDirect ? `<p class="pr-note">商品ページの「楽天市場で見る」などは広告のリンクです。紹介料の有無は、点数や順位に関係しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}</section>
+${sorted.map((it, i) => `<article class="fit"${dat(it)}><h3><span class="fno mono">${i + 1}</span><span class="fnm">${esc(nameOf(it))}</span></h3>${productCard(it.x, r, aio ? `${it.n ? it.n + "役" : "オールインワン"}・${it.type}` : it.type)}<p>${esc(sumOf(it))}</p>${factsOf(it, r)}${bars(it)}${buyLink(it.x, r) ? `<div class="acts fbuy">${buyLink(it.x, r)}</div>` : ""}<p class="fmore"><a href="${r(it.x.url)}">全成分${it.x.a.items.length}種類と、それぞれの役割を見る</a></p></article>`).join("")}
+${anyRk || anyDirect ? `<p class="pr-note">「楽天市場で見る」などは広告のリンクです。紹介料の有無は、点数や順位に関係しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}</section>
 ${f.A.length ? `<section><h2>${esc(f.also.h)}</h2><p class="small muted">${esc(f.also.note)}</p><div class="plist">${f.A.map(it => productCard(it.x, r, aio ? `${it.n ? it.n + "役" : "オールインワン"}・${it.type}` : it.type)).join("")}</div></section>` : ""}
 <section class="ifaq"><h2 id="fc-faq">よくある疑問</h2>${faq.map(o => `<div class="qa-c"><h3 class="qa-q"><span class="qa-i" aria-hidden="true">Q</span>${esc(o.q)}</h3><p>${esc(o.a)}</p></div>`).join("")}</section>
 <section><h2>この一覧に入れた条件と出典</h2><div class="rule"><b>条件</b><p>${esc(f.rule)}</p>${f.near ? `<p class="small muted">${esc(f.near.note)}</p>` : ""}</div>
@@ -1230,7 +1237,7 @@ if (APP && fs.existsSync(APP)) {
   const cs = h.indexOf("var SKCore = (function(){"), ce = h.indexOf("\n})();", cs);
   if (cs < 0 || ce < 0) throw new Error("app/index.html に採点ロジックの位置が見つかりません");
   h = h.slice(0, cs) + core.trim() + h.slice(ce + "\n})();".length);
-  const rk = RK_ON ? `<script>window.RK={api:${JSON.stringify(r("api/rk"))}}</script><script src="${r("assets/rk.js")}?v=${av("rk.js")}" defer></script>` : "";
+  const rk = RK_ON ? `<script>window.RK={api:${JSON.stringify(r("api/rk"))},aff:${JSON.stringify(RK_AFF)}}</script><script src="${r("assets/rk.js")}?v=${av("rk.js")}" defer></script>` : "";
   const inject = `<link rel="stylesheet" href="${r("assets/chrome.css")}?v=${av("chrome.css")}">${rk}${sprite(head + foot, Object.values(PH))}${head}`;
   if (GA) h = h.replace("</head>", GA + "</head>");
   h = h.replace("</head>", ICONS + "</head>");
@@ -1300,6 +1307,6 @@ if (SITE) {
 }
 if (SITE) {
   fs.writeFileSync(path.join(OUT, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${PAGES.map(p => `  <url><loc>${SITE}/${encodeURI(p)}</loc>${UPDATED ? `<lastmod>${UPDATED}</lastmod>` : ""}</url>`).join("\n")}\n</urlset>\n`);
-  fs.writeFileSync(path.join(OUT, "robots.txt"), `User-agent: *\nAllow: /\nSitemap: ${SITE}/sitemap.xml\n`);
+  fs.writeFileSync(path.join(OUT, "robots.txt"), `User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: ${SITE}/sitemap.xml\n`);
 }
 console.log(JSON.stringify({ pages: PAGES.length, products: P.length, ingredients: ING_PAGES.length, brands: BRAND_PAGES.length, concerns: CONCERNS.map(c => [c.id, c.list.length]) }));

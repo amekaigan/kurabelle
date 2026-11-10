@@ -1,4 +1,10 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}.pc-buy{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0 4px}
+.pc-buy .rk-buy{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:1;min-height:48px;font-size:16px;font-weight:700;text-decoration:none;color:var(--paper);background:var(--ink);border-radius:12px;padding:0 16px}
+.pc-buy .rk-buy::after{content:"↗";font-weight:500}
+.pc-buy .pr-tag{display:inline-grid;place-items:center;min-width:34px;height:24px;padding:0 6px;border:1.5px solid var(--ink3);border-radius:6px;font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--ink2);line-height:1}
+.pc-buy .px{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.pc-buy-n{margin:0 0 8px}
+</style></head><body>
 <!--KB:HEAD--><!--/KB:HEAD-->
 <title>比較ツール｜クラベル</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1348,6 +1354,14 @@ function card(e, inCmp, isNg){
   const ownI = (p.shop && p.shop.img) || p.img; const own = ownI ? `<span class="thumb"><img src="/${esc(ownI)}" alt="" loading="lazy"></span>` : ''; /* メーカー直販の商品画像 */
   const pic = own ? `<div class="pc-pic">${own}${rankHtml}</div>` : `<div class="pc-pic">${key?`<span class="thumb" data-rk="${esc(key)}"${p.jan?' data-jan="1"':''}>`:'<span class="thumb">'}<svg viewBox="0 0 120 120" aria-hidden="true"><use href="#${PH[p.category]||'ph-bottle'}"/></svg></span>${rankHtml}</div>`;
   const surf = sc.mainSurf ? `　主洗浄 <strong>${esc(sc.mainSurf.name)}</strong>` : '';
+  /* 上位3件には購入ボタンを出す（2026-11-10）。楽天は、JAN・商品名で検索結果へ飛ぶ広告リンクを最初から入れ、返事が来たら assets/rk.js が商品ページへ差し替える */
+  let buy = '';
+  if(!isNg && e.rank!=null && e.rank<=3 && isShared(p)){
+    const DB = {amazon:'Amazonで見る'};
+    if(p.shop && p.shop.url) buy = [p.shop, ...(p.shop.also||[]).filter(x=>x&&x.url)].sort((x,y)=>(y.dest==='amazon')-(x.dest==='amazon')).map(x=>`<a class="rk-buy" href="${esc(x.url)}" data-buy="${esc(p.id)}" rel="sponsored noopener" target="_blank">${DB[x.dest]||'公式サイトで見る'}</a>${x.pixel?`<img class="px" src="${esc(x.pixel)}" width="1" height="1" alt="">`:''}`).join('');
+    else if(key && RK.aff){ const u = encodeURIComponent(`https://search.rakuten.co.jp/search/mall/${encodeURIComponent(key)}/`); buy = `<a class="rk-buy" href="https://hb.afl.rakuten.co.jp/hgc/${esc(RK.aff)}/?pc=${u}&m=${u}" data-rk-link="${esc(key)}" data-buy="${esc(p.id)}" rel="sponsored noopener" target="_blank">楽天市場で見る</a>`; }
+    if(buy) buy = `<div class="pc-buy"><span class="pr-tag">PR</span>${buy}</div>${e.rank===1?'<p class="xs muted pc-buy-n">広告リンクです。紹介料は点数・順位に関係しません。</p>':''}`;
+  }
   return `<article class="card pcard${isNg?' dim':''}" data-pid="${esc(p.id)}">
     <div class="pc-head">
       ${pic}
@@ -1358,6 +1372,7 @@ function card(e, inCmp, isNg){
     </div>
     ${mixBar(a.items)}
     <p class="summary">強み <strong>${top.map(t=>`${t.s} ${f1(sc.v[t.k])}`).join('・')}</strong>　弱み <strong>${low.s} ${f1(sc.v[low.k])}</strong>${surf}${a.unknown.length?`　<span style="color:var(--warn)">未分類${a.unknown.length}</span>`:''}</p>
+    ${buy}
     <div class="themes">${T.map(t=>`<div class="th${heavy.includes(t.k)?' hi':''}${S.sort===t.k?' sk':''}"><span class="tn">${t.n}</span>${pips(sc.v[t.k])}<span class="tv">${f1(sc.v[t.k])}</span></div>`).join('')}</div>
     ${open?`<div class="detail">${labelHtml(p,a)}${aiBox(p,a)}<div class="whys">${T.map(t=>`<div><span>${t.n} ${f1(sc.v[t.k])}</span><span>${esc(sc.why[t.k])}</span></div>`).join('')}</div>${srcLine(p)}<p class="xs muted">${p.kind==='quasi'?'医薬部外品は表示順が配合量の順とは限りません。':'化粧品は1%を超える成分が配合量の多い順に並びます。'}</p>${delRow(p)}</div>`:''}
     <div class="pc-foot">

@@ -25,6 +25,12 @@ const GA4_ID = "G-DJ0D89ETX9";
 const BUY_TRACK = `document.addEventListener("click",function(e){var a=e.target&&e.target.closest&&e.target.closest('a[rel~="sponsored"]');if(!a)return;var h=a.hostname||"";gtag("event","buy_click",{page_type:location.pathname.split("/")[1]||"top",item_id:a.getAttribute("data-buy")||"",shop:/rakuten/.test(h)?"rakuten":/amazon|amzn/.test(h)?"amazon":"direct",transport_type:"beacon"})},true)`;
 const GA = GA4_ID && !PREVIEW ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA4_ID}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","${GA4_ID}");${BUY_TRACK}</script>` : "";
 const OPERATOR_OK = false; // 「運営者より」の文章をユーザーが確かめたら true（それまでは見本にだけ出す）
+/* プライバシーポリシー・免責事項（2026-11-12 ユーザーの依頼。アフィリエイトの審査で見られるページ）
+   CONTACT_URL：お問い合わせ先（Googleフォームなど）。空のあいだは、お問い合わせの節を出さない。
+   POLICY_DATE：制定日・改定日。文面を変えたら日付を足す。 */
+const CONTACT_URL = "";
+const OPERATOR_NAME = "クラベル運営者";
+const POLICY_DATE = "2026年11月12日 制定";
 
 /* 手書き風の絵（src/hand.json。作り直しは npm run hand）。ページで使っているものだけを埋め込む */
 const HAND = JSON.parse(fs.readFileSync(path.join(__dirname, "hand.json"), "utf8"));
@@ -264,6 +270,9 @@ function chrome(r, cur) {
 <a class="mi" href="${r("about/scoring/")}"${on("about/scoring/")}>点数のつけ方</a>
 <a class="mi" href="${r("about/")}#ad">広告について</a>
 <a class="mi" href="${r("about/")}#analytics">アクセス解析について</a>
+<a class="mi" href="${r("privacy/")}"${on("privacy/")}>プライバシーポリシー</a>
+<a class="mi" href="${r("disclaimer/")}"${on("disclaimer/")}>免責事項</a>
+${CONTACT_URL ? `<a class="mi" href="${esc(CONTACT_URL)}" rel="noopener" target="_blank">お問い合わせ</a>` : ""}
 </div></details>`;
   const head = `<header class="kb-top"><div class="in">${logo}
 <nav class="kb-nav" aria-label="おもなページ"><a href="${r("concerns/")}"${on("concerns/")}>悩みから選ぶ</a><a href="${r("app/")}"${on("app/")}>診断</a><a href="${r("ingredients/")}"${on("ingredients/")}>成分</a><a href="${r("about/")}"${on("about/")}>クラベルとは</a></nav>
@@ -271,7 +280,7 @@ ${menu}
 </div></header>`;
   const foot = `<footer class="kb-foot"><div class="in">
 ${logo}
-<nav aria-label="サイトの案内"><a href="${r("")}">トップ</a><a href="${r("concerns/")}">悩み・目的から選ぶ</a><a href="${r("app/")}">診断つきの比較ツール</a>${cats.map(c => `<a href="${r(`categories/${c}/`)}">${esc(CAT_N[c])}</a>`).join("")}${HAS_FEATURES ? `<a href="${r("features/")}">特集</a>` : ""}<a href="${r("ingredients/")}">成分の一覧</a><a href="${r("brands/")}">ブランド</a><a href="${r("about/")}">クラベルとは</a><a href="${r("about/scoring/")}">点数のつけ方</a></nav>
+<nav aria-label="サイトの案内"><a href="${r("")}">トップ</a><a href="${r("concerns/")}">悩み・目的から選ぶ</a><a href="${r("app/")}">診断つきの比較ツール</a>${cats.map(c => `<a href="${r(`categories/${c}/`)}">${esc(CAT_N[c])}</a>`).join("")}${HAS_FEATURES ? `<a href="${r("features/")}">特集</a>` : ""}<a href="${r("ingredients/")}">成分の一覧</a><a href="${r("brands/")}">ブランド</a><a href="${r("about/")}">クラベルとは</a><a href="${r("about/scoring/")}">点数のつけ方</a><a href="${r("privacy/")}">プライバシーポリシー</a><a href="${r("disclaimer/")}">免責事項</a>${CONTACT_URL ? `<a href="${esc(CONTACT_URL)}" rel="noopener" target="_blank">お問い合わせ</a>` : ""}</nav>
 <p>成分表示は、メーカーの製品ページ・販売ページ・パッケージの記載をそのまま写しています。リニューアルで成分が変わることがあるため、商品ごとに出典と確認日を載せています。</p>
 <p>点数は、成分表から読み取れる処方の傾向を、決まったルールで数えたものです。配合量・使い心地・効果を表すものではなく、髪や肌に合うかどうかには個人差があります。医薬部外品の効能は、各商品の表示で確かめてください。</p>
 ${RK_ON || PREVIEW ? `<p>商品画像と販売ページへのリンクは、楽天ウェブサービスから提供されています。<a href="https://webservice.rakuten.co.jp/" rel="noopener" target="_blank">Supported by Rakuten Developers</a></p>` : ""}
@@ -1160,6 +1169,70 @@ write("about/", "クラベルとは", "クラベルは、シャンプーやス�
     <small>Googleによるデータの使われ方は「<a href="https://policies.google.com/technologies/partner-sites?hl=ja" rel="noopener" target="_blank">Googleのサービスを使用するサイトやアプリから収集した情報のGoogleによる使用</a>」をご覧ください。</small></div></section>
   <a class="btn wide back" href="${r("")}">トップに戻る</a>
 </article>`, { crumbs: [["トップ", ""], ["クラベルとは", "about/"]] });
+
+/* ---------- プライバシーポリシー・免責事項（2026-11-12） ---------- */
+const contactSec = n => CONTACT_URL ? `<section class="ab-sec" id="contact"><h2><b>${n}</b><span>お問い合わせ</span></h2><div class="ab-box">
+    <p>このページの内容や、掲載している情報の誤りについてのお問い合わせは、<a href="${esc(CONTACT_URL)}" rel="noopener" target="_blank">お問い合わせフォーム</a>からお送りください。</p></div></section>` : "";
+write("privacy/", "プライバシーポリシー", "クラベル（kurabelle.com）での、アクセス解析・広告（アフィリエイト）・ブラウザへの保存など、情報の取り扱いについて。", r => `
+<article class="ab">
+  <section><h1>プライバシーポリシー</h1>
+    <p class="lead">クラベル（kurabelle.com、以下「当サイト」）で、どんな情報を、何のために、どう扱っているかをまとめています。当サイトには会員登録はなく、お名前やメールアドレスを入力していただく場面もありません。</p></section>
+  <section class="ab-sec"><h2><b>1</b><span>集めている情報</span></h2><ul>
+    <li><b>アクセス解析</b>：Googleが提供する「Googleアナリティクス」を使い、クッキー（Cookie）で、閲覧したページ・滞在時間・おおまかな地域・端末やブラウザの種類などを集めています。あわせて、クッキーを使わないCloudflareのアクセス解析（Cloudflare Web Analytics）で、ページごとの閲覧数を数えています。</li>
+    <li><b>購入ボタンが押された記録</b>：「楽天市場で見る」などのボタンが押されたときに、ページの種類・商品・飛び先の種類（楽天市場・Amazon・公式サイト）をGoogleアナリティクスに記録しています。</li>
+    <li>どれも、お名前・メールアドレス・住所など、個人を特定する情報は含みません。</li></ul></section>
+  <section class="ab-sec"><h2><b>2</b><span>使う目的</span></h2><ul>
+    <li>よく読まれているページや、分かりにくいページを知り、サイトを良くするため。</li>
+    <li>どのページ・どの商品のリンクが使われているかを知り、ページの作りを見直すため。</li>
+    <li>集めた情報を、これ以外の目的には使いません。</li></ul></section>
+  <section class="ab-sec"><h2><b>3</b><span>広告（アフィリエイト）について</span></h2><ul>
+    <li>当サイトは、楽天アフィリエイト、A8.net・もしもアフィリエイト・アクセストレード・afbなどのアフィリエイトの仲介サービスに参加しています。商品ページなどの「楽天市場で見る」「公式サイトで見る」「Amazonで見る」は広告のリンクで、ここから購入されると、運営者が紹介料を受け取ることがあります。</li>
+    <li>広告のリンクを押すと、購入があったかどうかを確かめるために、楽天や各仲介サービス・販売先がクッキーを使うことがあります。そこで扱われる情報は、各社のプライバシーポリシーに基づいて管理され、当サイトの運営者が受け取ることはありません。</li>
+    <li>紹介料の有無は、点数や並び順に一切影響しません。<a href="${r("about/")}#ad">広告についての考え方</a></li></ul></section>
+  <section class="ab-sec"><h2><b>4</b><span>ブラウザへの保存</span></h2><ul>
+    <li>お気に入りに入れた商品、比較ツールで選んだ条件、楽天市場の商品情報（ページを速く表示するための一時的なもの）を、お使いのブラウザの中（ローカルストレージ）に保存しています。</li>
+    <li>これらはお使いの端末の中だけにあり、運営者を含め、ほかの誰にも送られません。ブラウザの設定から、いつでも消せます。</li></ul></section>
+  <section class="ab-sec"><h2><b>5</b><span>外部のサービス</span></h2><ul>
+    <li>商品画像と販売ページへのリンクは、楽天ウェブサービスから提供されています。ページを開いたときに、当サイトのサーバーを通して、商品のJANコードなどで楽天に問い合わせています（お使いの方の情報は送りません）。</li>
+    <li>文字の表示に、Googleが提供する「Google Fonts」を使っています。文字のデータを読み込むときに、お使いの端末からGoogleのサーバーへ接続します。</li>
+    <li>Googleによるデータの使われ方は「<a href="https://policies.google.com/technologies/partner-sites?hl=ja" rel="noopener" target="_blank">Googleのサービスを使用するサイトやアプリから収集した情報のGoogleによる使用</a>」をご覧ください。</li></ul></section>
+  <section class="ab-sec"><h2><b>6</b><span>計測を止めたいとき</span></h2><div class="ab-box">
+    <p>ブラウザの設定でクッキーを無効にするか、Googleが配布している「<a href="https://tools.google.com/dlpage/gaoptout?hl=ja" rel="noopener" target="_blank">Googleアナリティクス オプトアウト アドオン</a>」をお使いください。クッキーを無効にしても、当サイトのページはそのままお読みいただけます。</p></div></section>
+  <section class="ab-sec"><h2><b>7</b><span>第三者への提供</span></h2><ul>
+    <li>法令に基づいて求められた場合を除き、集めた情報を第三者に渡すことはありません。</li></ul></section>
+  ${contactSec(8)}
+  <section class="ab-sec"><h2><b>${CONTACT_URL ? 9 : 8}</b><span>このポリシーの変更</span></h2><ul>
+    <li>使うサービスが変わったときなどに、このページの内容を改めることがあります。改めたときは、このページでお知らせします。</li></ul>
+    <p class="small muted">運営者：${esc(OPERATOR_NAME)}（kurabelle.com）<br>${esc(POLICY_DATE)}</p></section>
+  <p class="small muted"><a href="${r("disclaimer/")}">免責事項</a>・<a href="${r("about/")}">クラベルとは</a></p>
+  <a class="btn wide back" href="${r("")}">トップに戻る</a>
+</article>`, { crumbs: [["トップ", ""], ["プライバシーポリシー", "privacy/"]] });
+
+write("disclaimer/", "免責事項", "クラベル（kurabelle.com）に載せている成分表・点数・価格・リンク先などの情報についての注意点と、著作権について。", r => `
+<article class="ab">
+  <section><h1>免責事項</h1>
+    <p class="lead">クラベル（kurabelle.com、以下「当サイト」）の情報をお使いいただくときの注意点です。</p></section>
+  <section class="ab-sec"><h2><b>1</b><span>成分表について</span></h2><ul>
+    <li>全成分は、メーカーの公式ページ・販売店のページ・パッケージの表示を、確認した日の内容のまま写しています。商品ごとに出典と確認日を載せています。</li>
+    <li>リニューアルなどで、成分が変わることがあります。お買い求めの際は、お手元の商品のパッケージの表示をご確認ください。</li></ul></section>
+  <section class="ab-sec"><h2><b>2</b><span>点数について</span></h2><ul>
+    <li>点数は、成分表に何が入っているかを決まったルールで数えたものです。配合量・使い心地・効果を表すものではありません。<a href="${r("about/scoring/")}">点数のつけ方</a></li>
+    <li>髪や肌に合うかどうかには個人差があります。使っていて髪や肌に合わないと感じたときは使うのをやめ、気になる症状があれば医師にご相談ください。</li>
+    <li>医薬部外品の効能は、各商品のパッケージやメーカーの表示でご確認ください。</li></ul></section>
+  <section class="ab-sec"><h2><b>3</b><span>価格・在庫・購入について</span></h2><ul>
+    <li>価格・在庫・送料・キャンペーンの内容は変わることがあります。購入の前に、各販売サイトでご確認ください。</li>
+    <li>商品の購入は、リンク先の各販売サイトとの取引になります。購入や配送、返品などについては、各販売サイトにお問い合わせください。</li></ul></section>
+  <section class="ab-sec"><h2><b>4</b><span>情報の正確さとリンク先</span></h2><ul>
+    <li>正確な情報を載せるよう努めていますが、内容の正確さや最新であることを保証するものではありません。当サイトの情報を使ったことで生じた損害について、運営者は責任を負いかねます。</li>
+    <li>当サイトからリンクしているほかのサイトの内容について、運営者は責任を負いかねます。</li>
+    <li>誤りに気づいたときは、確かめたうえで速やかに直します。</li></ul></section>
+  <section class="ab-sec"><h2><b>5</b><span>著作権・商標</span></h2><ul>
+    <li>当サイトの文章・図・点数のルールの説明などの著作権は、運営者にあります。引用の範囲を超えて、無断で転載することはご遠慮ください。</li>
+    <li>商品名・ブランド名は、各社の商標または登録商標です。楽天市場の商品画像は、楽天ウェブサービスから提供されているものを表示しています。</li></ul>
+    <p class="small muted">運営者：${esc(OPERATOR_NAME)}（kurabelle.com）<br>${esc(POLICY_DATE)}</p></section>
+  <p class="small muted"><a href="${r("privacy/")}">プライバシーポリシー</a>・<a href="${r("about/")}#ad">広告について</a>${CONTACT_URL ? `・<a href="${esc(CONTACT_URL)}" rel="noopener" target="_blank">お問い合わせ</a>` : ""}</p>
+  <a class="btn wide back" href="${r("")}">トップに戻る</a>
+</article>`, { crumbs: [["トップ", ""], ["免責事項", "disclaimer/"]] });
 
 /* ---------- トップ ---------- */
 const searchIndex = [

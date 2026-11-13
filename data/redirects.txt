@@ -2,3 +2,7 @@
 # 書き方：古いURL 新しいURL 301
 /products/lucido-q10-perfect-skin-cream/ /products/jan-4902806121483/ 301
 /products/lucido-scalp-deo-shampoo-w/ /products/jan-4902806437348/ 301
+/products/jan-4580688635191/ /products/jan-4580688635160/ 301
+/compare/c-6c1accf5/ /compare/c-ab55da8a/ 301
+/compare/c-7238c991/ /compare/c-de034fdc/ 301
+/compare/c-cd737f17/ /compare/c-f88eedf6/ 301

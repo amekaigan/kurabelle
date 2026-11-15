@@ -367,7 +367,7 @@ const DEST_OFFICIAL = { btn: "公式サイトで見る", page: "メーカーの�
 const destOf = s => DEST[s && s.dest] || DEST_OFFICIAL;
 const dest = x => destOf(x.p.shop);
 /* 2026-10-24：1商品に広告リンクを2つ（公式サイトとAmazonなど）出せるようにした。2つ目以降は shop.also に {asp, url, pixel, dest} で書く */
-const shops = x => isDirect(x) ? [x.p.shop, ...(x.p.shop.also || []).filter(s => s && s.url)].sort((a, b) => (b.dest === "amazon") - (a.dest === "amazon")) : [];   /* Amazonを先に（2026-10-24 ユーザーの指定） */
+const shops = x => isDirect(x) ? [x.p.shop, ...(x.p.shop.also || []).filter(s => s && s.url)].sort((a, b) => x.p.shop.amazonFirst ? (b.dest === "amazon") - (a.dest === "amazon") : 0) : [];   /* 既定は公式サイトが先。shop.amazonFirst のある商品（U-MA）だけAmazonを先に（2026-11-15 ユーザーの指定） */
 /* 楽天の返事を待たずに押せるよう、JAN（なければ商品名）で楽天市場の検索結果へ飛ぶ広告リンクを最初から入れておく。
    返事が来たら assets/rk.js が商品ページへのリンクに差し替える（2026-11-10。混み合って返事が来ないとボタンが出なかったため）。楽天から取得した情報は使っていない */
 const RK_AFF = process.env.RAKUTEN_AFFILIATE_ID || "588643c2.b560f3b3.588643c3.4dd69634";

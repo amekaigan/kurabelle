@@ -16,13 +16,16 @@ const ROOT_DIR = path.join(__dirname, "..");
 const PREVIEW = rest.includes("--preview"); // ファイルを直接開く見本用：リンクの末尾に index.html を付ける
 const DATA = JSON.parse(fs.readFileSync(SRC, "utf8"));
 const PRODUCTS = DATA.products;
+/* Amazonの商品番号（ASIN）の確かめ（2026-11-15）。楽天の商品に並べるボタン用。メーカー直販（shop）の商品には付けない */
+{ const bad = PRODUCTS.filter(p => p.amazon != null && (!/^[A-Z0-9]{10}$/.test(p.amazon) || (p.shop && p.shop.url)));
+  if (bad.length) { console.error("amazon（ASIN）の書き方が違うか、メーカー直販の商品に付いています：" + bad.map(p => p.id).join(", ")); process.exit(1); } }
 const UPDATED = DATA.updated || "";
 const SITE_NAME = "クラベル";
 /* Googleアナリティクス4の測定ID。見本（--preview）では入れない。使っていることは「クラベルとは」の #analytics に書いている */
 const ICONS = `<link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/assets/icons/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">`;
 const GA4_ID = "G-DJ0D89ETX9";
 /* 購入ボタン（広告リンク）が押されたときに、ページの種類・商品・飛び先を記録する（2026-11-10。どのページ・どの商品から押されたかを見るため。個人は特定しない） */
-const BUY_TRACK = `document.addEventListener("click",function(e){var a=e.target&&e.target.closest&&e.target.closest('a[rel~="sponsored"]');if(!a)return;var h=a.hostname||"";gtag("event","buy_click",{page_type:location.pathname.split("/")[1]||"top",item_id:a.getAttribute("data-buy")||"",shop:/rakuten/.test(h)?"rakuten":/amazon|amzn/.test(h)?"amazon":"direct",transport_type:"beacon"})},true)`;
+const BUY_TRACK = `document.addEventListener("click",function(e){var a=e.target&&e.target.closest&&e.target.closest('a[rel~="sponsored"]');if(!a)return;var h=a.hostname||"";gtag("event","buy_click",{page_type:location.pathname.split("/")[1]||"top",item_id:a.getAttribute("data-buy")||"",shop:a.getAttribute("data-shop")||(/rakuten/.test(h)?"rakuten":/amazon|amzn/.test(h)?"amazon":"direct"),transport_type:"beacon"})},true)`;
 const GA = GA4_ID && !PREVIEW ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA4_ID}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","${GA4_ID}");${BUY_TRACK}</script>` : "";
 const OPERATOR_OK = false; // 「運営者より」の文章をユーザーが確かめたら true（それまでは見本にだけ出す）
 
@@ -369,12 +372,18 @@ const shops = x => isDirect(x) ? [x.p.shop, ...(x.p.shop.also || []).filter(s =>
    返事が来たら assets/rk.js が商品ページへのリンクに差し替える（2026-11-10。混み合って返事が来ないとボタンが出なかったため）。楽天から取得した情報は使っていない */
 const RK_AFF = process.env.RAKUTEN_AFFILIATE_ID || "588643c2.b560f3b3.588643c3.4dd69634";
 const rkSearch = x => { const u = encodeURIComponent(`https://search.rakuten.co.jp/search/mall/${encodeURIComponent(rkKey(x))}/`); return `https://hb.afl.rakuten.co.jp/hgc/${RK_AFF}/?pc=${u}&m=${u}`; };
-const rkBtn = x => `<span class="pr-tag">PR</span><a class="rk-buy" href="${esc(rkSearch(x))}" data-rk-link="${esc(rkKey(x))}" data-buy="${esc(x.p.id)}" rel="sponsored noopener" target="_blank">楽天市場で見る</a>`;
-const shopBtns = x => `<span class="pr-tag">PR</span>` + shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" data-buy="${esc(x.p.id)}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("");
+/* Amazon（A8.net「Amazon.co.jp成果反映用」、2026-11-15）：楽天の商品に、楽天のボタンと並べて出す。
+   リンクは A8.net のツールが出すものと同じ形で、商品番号（ASIN）だけが商品ごとに変わる。ASIN はクラベルで調べたもの（楽天から取った情報では作らない）。
+   Amazonの値段・画像は出さない。決まりは spec.md 10章「楽天と他社のアフィリエイトを並べる」 */
+const AMZ_MAT = "1NWF4S+B5AGJE+249K+BWGDT", AMZ_TAG = "a8-affi-322705-22";
+const amzUrl = asin => `https://px.a8.net/svt/ejp?a8mat=${AMZ_MAT}&a8ejpredirect=${encodeURIComponent(`https://www.amazon.co.jp/dp/${asin}?tag=${AMZ_TAG}`)}`;
+const amzBtn = x => x.p.amazon ? `<a class="rk-buy" href="${esc(amzUrl(x.p.amazon))}" data-buy="${esc(x.p.id)}" data-shop="amazon" rel="sponsored noopener" target="_blank">Amazonで見る</a><img class="px" src="https://www17.a8.net/0.gif?a8mat=${AMZ_MAT}" width="1" height="1" alt="">` : "";
+const rkBtn = x => `<span class="pr-tag">PR</span>${amzBtn(x)}<a class="rk-buy" href="${esc(rkSearch(x))}" data-rk-link="${esc(rkKey(x))}" data-buy="${esc(x.p.id)}" data-shop="rakuten" rel="sponsored noopener" target="_blank">楽天市場で見る</a>`;
+const shopBtns = x => `<span class="pr-tag">PR</span>` + shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" data-buy="${esc(x.p.id)}" data-shop="${s.dest === "amazon" ? "amazon" : "direct"}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("");
 const shopTag = x => shops(x).map(s => destOf(s).tag).filter((v, i, a) => a.indexOf(v) === i).join("・");
 const shopNote = () => `広告リンクです。紹介料は点数・順位に関係しません。価格は各サイトでご確認ください。`;   /* 2026-10-24 ユーザーの指定で短くした */
 /* 商品ページの購入ボックス：PRの札・ボタン（縦に並べる）・説明文をひとつの枠に入れる（2026-10-24 ユーザーの指定） */
-const buyBox = (x, r) => `<div class="buybox"><span class="pr-tag">PR</span>${shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" data-buy="${esc(x.p.id)}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("")}<p class="pr-note">${shopNote(x)}<a href="${r("about/")}#ad">広告について</a></p></div>`;
+const buyBox = (x, r) => `<div class="buybox"><span class="pr-tag">PR</span>${shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" data-buy="${esc(x.p.id)}" data-shop="${s.dest === "amazon" ? "amazon" : "direct"}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("")}<p class="pr-note">${shopNote(x)}<a href="${r("about/")}#ad">広告について</a></p></div>`;
 const useRk = x => (RK_ON || PREVIEW) && !isDirect(x);
 const rkKey = x => x.p.jan || `${x.p.brand || ""} ${x.p.name}`.trim();
 const ownImg = x => (isDirect(x) && x.p.shop.img) || x.p.img || "";   /* 運営者が用意した商品画像（メーカー直販の素材、または差し替え用） */

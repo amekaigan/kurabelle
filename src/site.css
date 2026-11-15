@@ -143,6 +143,10 @@ body.has-qbar{padding-bottom:88px}
 .rk-buy::after{content:"↗";font-weight:500}
 .rk-buy[hidden]{display:none}
 .acts{align-items:center}
+/* スマホの商品ページ：Amazonと楽天のボタンを1行に並べる（2026-11-15） */
+@media (max-width:520px){.prod .acts{flex-wrap:nowrap}.prod .acts .rk-buy{flex:1 1 0;justify-content:center;padding:0 10px;font-size:15px;white-space:nowrap}}
+@media (max-width:380px){.prod .acts{gap:6px}.prod .acts .rk-buy{font-size:14px;padding:0 6px;gap:4px}}
+@media (max-width:340px){.prod .acts{flex-wrap:wrap}}
 .pr-tag{display:inline-grid;place-items:center;min-width:34px;height:24px;padding:0 6px;border:1.5px solid var(--ink3);border-radius:6px;font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--ink2);line-height:1}
 .pr-tag[hidden],.pr-note[hidden]{display:none}
 .pr-note{margin:6px 0 0;font-size:13px;line-height:1.6;color:var(--ink3)}

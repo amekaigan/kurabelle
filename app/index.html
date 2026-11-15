@@ -1361,7 +1361,7 @@ function card(e, inCmp, isNg){
   let buy = '';
   if(!isNg && e.rank!=null && e.rank<=3 && isShared(p)){
     const DB = {amazon:'Amazonで見る'};
-    if(p.shop && p.shop.url) buy = [p.shop, ...(p.shop.also||[]).filter(x=>x&&x.url)].sort((x,y)=>(y.dest==='amazon')-(x.dest==='amazon')).map(x=>`<a class="rk-buy" href="${esc(x.url)}" data-buy="${esc(p.id)}" data-shop="${x.dest==='amazon'?'amazon':'direct'}" rel="sponsored noopener" target="_blank">${DB[x.dest]||'公式サイトで見る'}</a>${x.pixel?`<img class="px" src="${esc(x.pixel)}" width="1" height="1" alt="">`:''}`).join('');
+    if(p.shop && p.shop.url) buy = [p.shop, ...(p.shop.also||[]).filter(x=>x&&x.url)].sort((x,y)=>p.shop.amazonFirst?(y.dest==='amazon')-(x.dest==='amazon'):0).map(x=>`<a class="rk-buy" href="${esc(x.url)}" data-buy="${esc(p.id)}" data-shop="${x.dest==='amazon'?'amazon':'direct'}" rel="sponsored noopener" target="_blank">${DB[x.dest]||'公式サイトで見る'}</a>${x.pixel?`<img class="px" src="${esc(x.pixel)}" width="1" height="1" alt="">`:''}`).join('');
     else if(key && RK.aff){ const u = encodeURIComponent(`https://search.rakuten.co.jp/search/mall/${encodeURIComponent(key)}/`); buy = `${amzBtn(p)}<a class="rk-buy" href="https://hb.afl.rakuten.co.jp/hgc/${esc(RK.aff)}/?pc=${u}&m=${u}" data-rk-link="${esc(key)}" data-buy="${esc(p.id)}" data-shop="rakuten" rel="sponsored noopener" target="_blank">楽天市場で見る</a>`; }
     if(buy) buy = `<div class="pc-buy"><span class="pr-tag">PR</span>${buy}</div>${e.rank===1?'<p class="xs muted pc-buy-n">広告リンクです。紹介料は点数・順位に関係しません。</p>':''}`;
   }

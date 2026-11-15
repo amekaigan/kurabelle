@@ -1832,6 +1832,14 @@
     "asp": "a8",
     "url": "https://px.a8.net/svt/ejp?a8mat=4BEIPE+929UBE+2TZO+U43S2",
     "pixel": "https://www19.a8.net/0.gif?a8mat=4BEIPE+929UBE+2TZO+U43S2",
+    "also": [
+     {
+      "asp": "a8",
+      "dest": "amazon",
+      "url": "https://px.a8.net/svt/ejp?a8mat=1NWF4S+B5AGJE+249K+BWGDT&a8ejpredirect=https%3A%2F%2Fwww.amazon.co.jp%2Fdp%2FB09DP1ZJV2%3Ftag%3Da8-affi-322705-22",
+      "pixel": "https://www19.a8.net/0.gif?a8mat=1NWF4S+B5AGJE+249K+BWGDT"
+     }
+    ],
     "img": "assets/products/chapup-shampoo.webp"
    }
   },
@@ -1856,6 +1864,7 @@
     "asp": "accesstrade",
     "url": "https://h.accesstrade.net/sp/cc?rk=0100hntw00p103",
     "pixel": "https://h.accesstrade.net/sp/rr?rk=0100hntw00p103",
+    "amazonFirst": true,
     "img": "assets/products/uma-shampoo-premium.webp",
     "also": [
      {
@@ -1914,6 +1923,14 @@
     "asp": "a8",
     "url": "https://px.a8.net/svt/ejp?a8mat=4BEIPF+5URQYI+2GP2+BWVTE",
     "pixel": "https://www11.a8.net/0.gif?a8mat=4BEIPF+5URQYI+2GP2+BWVTE",
+    "also": [
+     {
+      "asp": "a8",
+      "dest": "amazon",
+      "url": "https://px.a8.net/svt/ejp?a8mat=1NWF4S+B5AGJE+249K+BWGDT&a8ejpredirect=https%3A%2F%2Fwww.amazon.co.jp%2Fdp%2FB0D4QQQ299%3Ftag%3Da8-affi-322705-22",
+      "pixel": "https://www17.a8.net/0.gif?a8mat=1NWF4S+B5AGJE+249K+BWGDT"
+     }
+    ],
     "img": "assets/products/mynature-shampoo.webp"
    }
   },

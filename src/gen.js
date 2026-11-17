@@ -16,12 +16,17 @@ const ROOT_DIR = path.join(__dirname, "..");
 const PREVIEW = rest.includes("--preview"); // ファイルを直接開く見本用：リンクの末尾に index.html を付ける
 const DATA = JSON.parse(fs.readFileSync(SRC, "utf8"));
 const PRODUCTS = DATA.products;
+/* Amazonの商品番号（ASIN）の確かめ（2026-11-15）。楽天の商品に並べるボタン用。メーカー直販（shop）の商品には付けない */
+{ const bad = PRODUCTS.filter(p => p.amazon != null && (!/^[A-Z0-9]{10}$/.test(p.amazon) || (p.shop && p.shop.url)));
+  if (bad.length) { console.error("amazon（ASIN）の書き方が違うか、メーカー直販の商品に付いています：" + bad.map(p => p.id).join(", ")); process.exit(1); } }
 const UPDATED = DATA.updated || "";
 const SITE_NAME = "クラベル";
 /* Googleアナリティクス4の測定ID。見本（--preview）では入れない。使っていることは「クラベルとは」の #analytics に書いている */
 const ICONS = `<link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/assets/icons/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">`;
 const GA4_ID = "G-DJ0D89ETX9";
-const GA = GA4_ID && !PREVIEW ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA4_ID}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","${GA4_ID}")</script>` : "";
+/* 購入ボタン（広告リンク）が押されたときに、ページの種類・商品・飛び先を記録する（2026-11-10。どのページ・どの商品から押されたかを見るため。個人は特定しない） */
+const BUY_TRACK = `document.addEventListener("click",function(e){var a=e.target&&e.target.closest&&e.target.closest('a[rel~="sponsored"]');if(!a)return;var h=a.hostname||"";gtag("event","buy_click",{page_type:location.pathname.split("/")[1]||"top",item_id:a.getAttribute("data-buy")||"",shop:a.getAttribute("data-shop")||(/rakuten/.test(h)?"rakuten":/amazon|amzn/.test(h)?"amazon":"direct"),transport_type:"beacon"})},true)`;
+const GA = GA4_ID && !PREVIEW ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA4_ID}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","${GA4_ID}");${BUY_TRACK}</script>` : "";
 const OPERATOR_OK = false; // 「運営者より」の文章をユーザーが確かめたら true（それまでは見本にだけ出す）
 
 /* 手書き風の絵（src/hand.json。作り直しは npm run hand）。ページで使っているものだけを埋め込む */
@@ -352,7 +357,7 @@ const chips = x => `<span class="chip">${KIND_N[x.p.kind] || ""}</span>${TARGET_
 const mix = x => { const cnt = {}; x.a.items.forEach(i => { const r = C.compRole(i); cnt[r] = (cnt[r] || 0) + 1; });
   return `<div class="mix" aria-hidden="true">${C.ROLE_ORDER.filter(r => cnt[r]).map(r => `<span style="flex:${cnt[r]};background:var(${ROLE_C(r)})"></span>`).join("")}</div>`; };
 /* メーカー直販の商品（アフィリエイトの仲介サービス経由）は、楽天の情報（画像・価格・リンク）を使わない。
-   楽天ウェブサービスの規約で、楽天の情報を使う商品に楽天以外のアフィリエイトを付けられないため。 */
+   楽天の情報を使う商品に他社のリンクを並べるときの決まりは spec.md 10章「楽天と他社のアフィリエイトを並べる」（2026-11-15）。 */
 const SHOP_N = { a8: "A8.net", moshimo: "もしもアフィリエイト", accesstrade: "アクセストレード", afb: "afb" };
 const REL_IMG = p => "/" + p;
 const isDirect = x => !!(x.p.shop && x.p.shop.url);
@@ -362,12 +367,23 @@ const DEST_OFFICIAL = { btn: "公式サイトで見る", page: "メーカーの�
 const destOf = s => DEST[s && s.dest] || DEST_OFFICIAL;
 const dest = x => destOf(x.p.shop);
 /* 2026-10-24：1商品に広告リンクを2つ（公式サイトとAmazonなど）出せるようにした。2つ目以降は shop.also に {asp, url, pixel, dest} で書く */
-const shops = x => isDirect(x) ? [x.p.shop, ...(x.p.shop.also || []).filter(s => s && s.url)].sort((a, b) => (b.dest === "amazon") - (a.dest === "amazon")) : [];   /* Amazonを先に（2026-10-24 ユーザーの指定） */
-const shopBtns = x => `<span class="pr-tag">PR</span>` + shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("");
+const shops = x => isDirect(x) ? [x.p.shop, ...(x.p.shop.also || []).filter(s => s && s.url)].sort((a, b) => x.p.shop.amazonFirst ? (b.dest === "amazon") - (a.dest === "amazon") : 0) : [];   /* 既定は公式サイトが先。shop.amazonFirst のある商品（U-MA）だけAmazonを先に（2026-11-15 ユーザーの指定） */
+/* 楽天の返事を待たずに押せるよう、JAN（なければ商品名）で楽天市場の検索結果へ飛ぶ広告リンクを最初から入れておく。
+   返事が来たら assets/rk.js が商品ページへのリンクに差し替える（2026-11-10。混み合って返事が来ないとボタンが出なかったため）。楽天から取得した情報は使っていない */
+const RK_AFF = process.env.RAKUTEN_AFFILIATE_ID || "588643c2.b560f3b3.588643c3.4dd69634";
+const rkSearch = x => { const u = encodeURIComponent(`https://search.rakuten.co.jp/search/mall/${encodeURIComponent(rkKey(x))}/`); return `https://hb.afl.rakuten.co.jp/hgc/${RK_AFF}/?pc=${u}&m=${u}`; };
+/* Amazon（A8.net「Amazon.co.jp成果反映用」、2026-11-15）：楽天の商品に、楽天のボタンと並べて出す。
+   リンクは A8.net のツールが出すものと同じ形で、商品番号（ASIN）だけが商品ごとに変わる。ASIN はクラベルで調べたもの（楽天から取った情報では作らない）。
+   Amazonの値段・画像は出さない。決まりは spec.md 10章「楽天と他社のアフィリエイトを並べる」 */
+const AMZ_MAT = "1NWF4S+B5AGJE+249K+BWGDT", AMZ_TAG = "a8-affi-322705-22";
+const amzUrl = asin => `https://px.a8.net/svt/ejp?a8mat=${AMZ_MAT}&a8ejpredirect=${encodeURIComponent(`https://www.amazon.co.jp/dp/${asin}?tag=${AMZ_TAG}`)}`;
+const amzBtn = x => x.p.amazon ? `<a class="rk-buy" href="${esc(amzUrl(x.p.amazon))}" data-buy="${esc(x.p.id)}" data-shop="amazon" rel="sponsored noopener" target="_blank">Amazonで見る</a><img class="px" src="https://www17.a8.net/0.gif?a8mat=${AMZ_MAT}" width="1" height="1" alt="">` : "";
+const rkBtn = x => `<span class="pr-tag">PR</span>${amzBtn(x)}<a class="rk-buy" href="${esc(rkSearch(x))}" data-rk-link="${esc(rkKey(x))}" data-buy="${esc(x.p.id)}" data-shop="rakuten" rel="sponsored noopener" target="_blank">楽天市場で見る</a>`;
+const shopBtns = x => `<span class="pr-tag">PR</span>` + shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" data-buy="${esc(x.p.id)}" data-shop="${s.dest === "amazon" ? "amazon" : "direct"}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("");
 const shopTag = x => shops(x).map(s => destOf(s).tag).filter((v, i, a) => a.indexOf(v) === i).join("・");
 const shopNote = () => `広告リンクです。紹介料は点数・順位に関係しません。価格は各サイトでご確認ください。`;   /* 2026-10-24 ユーザーの指定で短くした */
 /* 商品ページの購入ボックス：PRの札・ボタン（縦に並べる）・説明文をひとつの枠に入れる（2026-10-24 ユーザーの指定） */
-const buyBox = (x, r) => `<div class="buybox"><span class="pr-tag">PR</span>${shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("")}<p class="pr-note">${shopNote(x)}<a href="${r("about/")}#ad">広告について</a></p></div>`;
+const buyBox = (x, r) => `<div class="buybox"><span class="pr-tag">PR</span>${shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" data-buy="${esc(x.p.id)}" data-shop="${s.dest === "amazon" ? "amazon" : "direct"}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("")}<p class="pr-note">${shopNote(x)}<a href="${r("about/")}#ad">広告について</a></p></div>`;
 const useRk = x => (RK_ON || PREVIEW) && !isDirect(x);
 const rkKey = x => x.p.jan || `${x.p.brand || ""} ${x.p.name}`.trim();
 const ownImg = x => (isDirect(x) && x.p.shop.img) || x.p.img || "";   /* 運営者が用意した商品画像（メーカー直販の素材、または差し替え用） */
@@ -543,9 +559,9 @@ const offBlock = (x, r) => { const d = x.p.discontinued || {};
   <div class="phead"><div class="pfig">${imgSlot(x, "pimg")}<button class="fav-btn star" type="button" hidden aria-pressed="false" aria-label="お気に入りに追加" title="お気に入りに追加" data-fav="${esc(JSON.stringify({ id: p.id, name: p.name, brand: p.brand || "", url: x.url, match: x.match, grade: x.grade, type: x.sc ? typeOf(x).title : "", ph: PH[p.category] || "ph-bottle", img: ownImg(x) ? REL_IMG(ownImg(x)) : "", rk: useRk(x) && !ownImg(x) ? rkKey(x) : "", jan: p.jan ? 1 : 0 }))}"></button></div><div>
   <h1>${wb(p.name)} <span class="w">の成分</span></h1>
   <div class="row">${chips(x)}</div>
-  ${x.off ? "" : isDirect(x) ? buyBox(x, r) : ""}${!x.off && useRk(x) ? `<div class="acts"><span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a></div>` : ""}
+  ${x.off ? "" : isDirect(x) ? buyBox(x, r) : ""}${!x.off && useRk(x) ? `<div class="acts">${rkBtn(x)}</div>` : ""}
   ${!x.off && useRk(x) ? `<p class="rk-rv" data-rk-rv="${esc(rkKey(x))}" hidden></p>` : ""}
-  ${!x.off && useRk(x) ? `<p class="rk-price" data-rk-price="${esc(rkKey(x))}" hidden></p><p class="pr-note" data-rk-pr="${esc(rkKey(x))}" hidden>価格・評価は<span data-rk-at="${esc(rkKey(x))}"></span>時点の楽天市場の情報です。リンクは広告で、点数や順位には影響しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
+  ${!x.off && useRk(x) ? `<p class="rk-price" data-rk-price="${esc(rkKey(x))}" hidden></p><p class="pr-note"><span data-rk-pr="${esc(rkKey(x))}" hidden>価格・評価は<span data-rk-at="${esc(rkKey(x))}"></span>時点の楽天市場の情報です。</span>リンクは広告で、点数や順位には影響しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}
   </div></div>
   ${x.off ? offBlock(x, r) : ""}
   ${typeBlock(x, r)}
@@ -578,7 +594,8 @@ const offBlock = (x, r) => { const d = x.p.discontinued || {};
    2026年10月23日、ユーザーのOK。安全性・規制は一次資料（厚生労働省「化粧品基準」平成12年厚生省告示第331号）の範囲で、
    「危険」「有害」など規制の中身より強い言葉は使わない。表示名と告示の名前が違うものは対応を書いておく */
 const NOTES = (() => { try { const j = JSON.parse(fs.readFileSync(path.join(ROOT_DIR, "data/ingredient-notes.json"), "utf8")); delete j._about; return new Map(Object.entries(j).map(([k, v]) => [C.key(k), v])); } catch (e) { return new Map(); } })();
-const KSRC = { label: "厚生労働省「化粧品基準」", url: "https://www.mhlw.go.jp/file/06-Seisakujouhou-11120000-Iyakushokuhinkyoku/keshouhin-standard.pdf", date: "2026-10-23" };
+const KSRC = { label: "厚生労働省「化粧品基準」", url: "https://www.mhlw.go.jp/file/06-Seisakujouhou-11120000-Iyakushokuhinkyoku/keshouhin-standard.pdf", date: "2026-11-10" };
+/* 2026-11-10（ユーザーの指示）：確かな数字は書く。別表第2・第3の2も、PDFの表を列の位置（座標）まで確かめて数字を入れた。空欄は「配合してはならない」、○は「上限なし」（表の注1） */
 const REG = new Map([
   ["安息香酸", { t: "防腐剤として、化粧品に配合できる量の上限が決められています（100gあたり0.2gまで。化粧品基準 別表第3の1「安息香酸」）。" }],
   ["安息香酸Na", { t: "防腐剤として、化粧品に配合できる量の上限が決められています（安息香酸塩類の合計で100gあたり1.0gまで。化粧品基準 別表第3の1「安息香酸塩類」）。" }],
@@ -586,22 +603,105 @@ const REG = new Map([
   ["ソルビン酸K", { t: "防腐剤として、化粧品に配合できる量の上限が決められています（ソルビン酸とその塩類の合計で100gあたり0.50gまで。化粧品基準 別表第3の1「ソルビン酸及びその塩類」）。" }],
   ["メチルパラベン", { t: "防腐剤として、化粧品に配合できる量の上限が決められています（パラベン類の合計で100gあたり1.0gまで。化粧品基準 別表第3の1「パラオキシ安息香酸エステル及びそのナトリウム塩」）。" }],
   ["フェノキシエタノール", { t: "防腐剤として、化粧品に配合できる量の上限が決められています（100gあたり1.0gまで。化粧品基準 別表第3の1「フェノキシエタノール」）。" }],
-  ["イソプロピルメチルフェノール", { t: "化粧品の防腐剤として、洗い流すものか、粘膜に使うものかなど、化粧品の種類ごとに配合できる量が決められています（化粧品基準 別表第3の2）。医薬部外品の有効成分としての配合は、別の基準で承認されます。" }],
-  ["クロルフェネシン", { t: "防腐剤として、洗い流すものか、粘膜に使うものかなど、化粧品の種類ごとに配合できる量が決められています（化粧品基準 別表第3の2）。" }],
-  ["ピロクトンオラミン", { t: "化粧品の防腐剤として、化粧品の種類ごとに配合できる量が決められています（化粧品基準 別表第3の2）。医薬部外品の有効成分としての配合は、別の基準で承認されます。" }],
-  ["ブチルカルバミン酸ヨウ化プロピニル", { t: "防腐剤として、化粧品の種類ごとに配合できる量が決められています（化粧品基準 別表第3の2）。" }],
-  ["メチルイソチアゾリノン", { t: "防腐剤として、化粧品の種類ごとに配合できる量が決められています（化粧品基準 別表第3の2）。" }],
-  ["ラウロイルサルコシンNa", { t: "化粧品の種類や使い方によって、配合の制限がある成分です（化粧品基準 別表第2の2「ラウロイルサルコシンナトリウム」）。" }],
-  ["ユビキノン", { t: "化粧品の種類によって、配合の制限がある成分です（化粧品基準 別表第2の3「ユビデカレノン」）。" }]
+  ["イソプロピルメチルフェノール", { t: "化粧品の防腐剤として、化粧品の種類ごとに配合できる量が決められています。洗い流すものは上限なし、洗い流さないものと粘膜に使われることがあるものは100g中0.10gまでです（化粧品基準 別表第3の2）。医薬部外品の有効成分としての配合は、別の基準で承認されます。" }],
+  ["クロルフェネシン", { t: "防腐剤として、化粧品に配合できる量は100g中0.30gまでと決められています（粘膜に使われることがない化粧品。洗い流すもの・洗い流さないものとも）。粘膜に使われることがある化粧品には配合できません（化粧品基準 別表第3の2）。" }],
+  ["ピロクトンオラミン", { t: "化粧品の防腐剤として、配合できる量は100g中0.05gまでと決められています（粘膜に使われることがない化粧品。洗い流すもの・洗い流さないものとも）。粘膜に使われることがある化粧品には配合できません（化粧品基準 別表第3の2）。医薬部外品の有効成分としての配合は、別の基準で承認されます。" }],
+  ["ブチルカルバミン酸ヨウ化プロピニル", { t: "防腐剤として、化粧品に配合できる量は100g中0.02gまでと決められています。エアゾール剤（スプレー）には配合できません（化粧品基準 別表第3の2）。" }],
+  ["メチルイソチアゾリノン", { t: "防腐剤として、化粧品に配合できる量は100g中0.01gまでと決められています（粘膜に使われることがない化粧品。洗い流すもの・洗い流さないものとも）。粘膜に使われることがある化粧品には配合できません（化粧品基準 別表第3の2）。" }],
+  ["ラウロイルサルコシンNa", { t: "化粧品の種類によって、配合の制限がある成分です。シャンプーや洗顔料など、すぐに洗い流す化粧品以外には配合できません。歯みがきは100g中0.50gまでです（化粧品基準 別表第2の2「ラウロイルサルコシンナトリウム」）。" }],
+  ["ユビキノン", { t: "化粧品に配合できる量は、100g中0.03gまでと決められています（粘膜に使われることがない化粧品。洗い流すもの・洗い流さないものとも）。粘膜に使われることがある化粧品には配合できません（化粧品基準 別表第2の3「ユビデカレノン」）。" }]
 ].map(([k, v]) => [C.key(k), v]));
-const regOf = name => REG.get(C.key(name)) || { t: "化粧品基準で、配合できる量の上限が決められた成分ではありません（この表示名で確認）。", none: true };
+const regOf = name => REG.get(C.key(name)) || { none: true };
 const noteOf = name => NOTES.get(C.key(name));
+/* 成分ページの作り直し（2026-11-09、ユーザーと決定）：名前を言い換えただけ・役割を繰り返すだけの文をやめ、
+   ひと言（分かりづらい時はたとえ）→ 働き（アイコン3つまで）→ 使用感（さっぱり⇔しっとり）→ 気をつけること（3段階）にする。
+   notes に one・tatoe・acts・feel・care・like を書いた成分はその内容、書いていない成分は辞書の役割とタグから組み立てる（タグにない主張は足さない） */
+const ICO = {
+  bubble: '<circle cx="9" cy="14" r="5"/><circle cx="16.5" cy="8.5" r="3.5"/><circle cx="17" cy="17" r="2"/>',
+  comb: '<path d="M3 8h18v3H3z"/><path d="M5 11v7M8.5 11v7M12 11v7M15.5 11v7M19 11v7"/>',
+  hair: '<path d="M6 21c0-7 2-12 6-17"/><path d="M12 21c0-6 1.5-11 5-16"/><path d="M18 21c0-4 .5-7 2-10"/>',
+  drop: '<path d="M12 3c3.5 4.5 6 8 6 11a6 6 0 0 1-12 0c0-3 2.5-6.5 6-11z"/>',
+  shield: '<path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z"/>',
+  wave: '<path d="M3 9c3-3 6 3 9 0s6 3 9 0"/><path d="M3 15c3-3 6 3 9 0s6 3 9 0"/>',
+  feather: '<path d="M20 4C11 4 6 10 6 18"/><path d="M20 4c0 8-5 12-11 12"/><path d="M4 20l3-3"/>',
+  spark: '<path d="M12 3v5M12 16v5M3 12h5M16 12h5"/><path d="M12 8l1.5 2.5L16 12l-2.5 1.5L12 16l-1.5-2.5L8 12l2.5-1.5z"/>',
+  leaf: '<path d="M5 19C5 10 10 5 20 4c0 9-5 15-13 15"/><path d="M5 19l8-8"/>',
+  mix: '<path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="8" cy="17" r="1.6"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
+  lock: '<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  flower: '<circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="12" r="3"/>',
+  snow: '<path d="M12 3v18M4 7.5l16 9M20 7.5l-16 9"/>',
+  palette: '<path d="M12 3a9 9 0 1 0 0 18c1.5 0 2-1 2-2s-1-2 0-3h2a5 5 0 0 0 5-5c0-4.5-4-8-9-8z"/><circle cx="8" cy="10" r="1.2"/><circle cx="12" cy="7.5" r="1.2"/><circle cx="16" cy="10" r="1.2"/>',
+  star: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>'
+};
+const icoSvg = k => `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[k] || ICO.spark}</svg>`;
+const ACT = {
+  wash: ["bubble", "汚れを落とす"], mildSurf: ["bubble", "やさしく洗う"], strongSurf: ["bubble", "泡立てて洗う"], sebum: ["bubble", "皮脂を落とす"],
+  cond: ["comb", "指通りをよくする"], silicone: ["comb", "すべりをよくする"], repair: ["hair", "髪の補修"],
+  hum1: ["drop", "うるおいを与える"], hum2: ["drop", "うるおいを保つ"],
+  occS: ["shield", "膜で水分を守る"], occM: ["wave", "なめらかにする"], light: ["feather", "軽い仕上がり"],
+  beauty: ["spark", "ケア成分"], extract: ["leaf", "植物などのエキス"], emul: ["mix", "混ぜる・とろみ"], uv: ["sun", "紫外線をカット"],
+  pres: ["lock", "品質を保つ"], fragrance: ["flower", "香りをつける"], essoil: ["flower", "香りをつける"], menthol: ["snow", "スーッとさせる"],
+  alcohol: ["snow", "さっぱりさせる"], colorant: ["palette", "色をつける"], scalp: ["leaf", "頭皮をすこやかに保つ"], active: ["star", "医薬部外品の有効成分"], base: ["drop", "全体のベース"]
+};
+function actsOf(g, n) {
+  if (n && n.acts) return n.acts.slice(0, 3).map(a => typeof a === "string" ? ACT[a] : [a.i, a.t]).filter(Boolean);
+  const t = new Set(g.tags), k = [];
+  const first = { clean: t.has("mildSurf") ? "mildSurf" : t.has("strongSurf") ? "strongSurf" : "wash", cond: "cond", hum: t.has("hum2") ? "hum2" : "hum1",
+    oil: t.has("occS") ? "occS" : t.has("light") ? "light" : "occM", emul: "emul", uv: "uv", pres: "pres", beauty: "beauty", active: "active", base: "base" }[g.role];
+  if (first) k.push(first);
+  ["silicone", "repair", "cond", "light", "sebum", "scalp", "hum2", "beauty", "extract", "fragrance", "essoil", "menthol", "alcohol", "colorant"].forEach(x => { if (t.has(x)) k.push(x); });
+  return [...new Set(k)].map(x => ACT[x]).filter((a, i, L) => a && L.findIndex(b => b && b[1] === a[1]) === i).slice(0, 3);
+}
+/* 使用感（0 さっぱり〜4 しっとり）：保湿・油性・清涼の成分だけ。辞書の分類から出す目安 */
+function feelOf(g, n) {
+  if (n && typeof n.feel === "number") return n.feel;
+  const t = new Set(g.tags);
+  if (t.has("menthol") || t.has("alcohol")) return 0;
+  if (t.has("light")) return 1;
+  if (t.has("occS")) return 4;
+  if (g.role === "oil" && t.has("silicone")) return 2;
+  if (g.role === "oil" || g.role === "hum") return 3;
+  return null;
+}
+const TATOE = {
+  clean: "台所の洗剤と同じように、油汚れを水で流せるようにする仕組みです。",
+  occS: "ラップのように表面をおおって、水分を逃がしにくくします。",
+  hum1: "スポンジのように、水分を引き寄せて抱えこみます。",
+  pres: "食品の保存料のように、使っているあいだに中身が傷むのを防ぎます。",
+  silicone: "髪の表面に薄いコートをかけるように、すべりをよくします。",
+  uv: "日傘のように、紫外線が肌に届くのをさえぎります。"
+};
+const tatoeOf = (g, n) => (n && n.tatoe) || TATOE[["occS", "silicone", "hum1"].find(t => g.tags.includes(t))] || TATOE[g.role] || "";
+/* 気をつけること（0 特になし／1 人によっては注意／2 注意が必要）。notes の care は成分ごとに確かめたもの。
+   ないときは辞書のタグ（香料・精油・清涼剤・アルコール・強めの洗浄成分・少量で効く防腐剤・エキス）から出す。
+   「危険」「有害」など、規制の中身より強い言葉は使わない */
+const CARE_T = [
+  ["strongpres", "少ない量で働く防腐剤です。肌に合わないと感じる人もいます。"],
+  ["menthol", "スーッとする清涼感が出る成分です。人によっては刺激に感じることがあります。"],
+  ["fragrance", "香りをつける成分です。香りが苦手な人や刺激を感じやすい人は、香料の入っていない商品を選ぶ方法もあります。"],
+  ["essoil", "植物から取った香りの油（精油）です。香りが苦手な人や刺激を感じやすい人は、気になることがあります。"],
+  ["alcohol", "さっぱり感を出す成分です。アルコールに敏感な人は、刺激を感じることがあります。"],
+  ["strongSurf", "洗う力が強めの洗浄成分です。乾燥しやすい人は、洗い上がりのつっぱりが気になることがあります。"],
+  ["extract", "植物などから取ったエキスです。もとの植物にアレルギーがある人は、使う前に確かめてください。"]
+];
+const CARE_LV = ["特になし", "人によっては注意", "注意が必要"];
+function careOf(g, n) {
+  if (n && n.care) return { lv: n.care.lv, t: n.care.t, own: true };
+  const hit = CARE_T.filter(([k]) => g.tags.includes(k)).map(([, t]) => t);
+  if (hit.length) return { lv: 1, t: hit.slice(0, 2).join("") };
+  return { lv: 0, t: "一般的な使い方では、特に知られた注意点はありません。香料・清涼剤・アルコール・強めの洗浄成分など、気にする人が多い成分にも当たりません。" };
+}
 
 ING_PAGES.forEach(g => {
   const u = ingUrl.get(g.name);
   const others = [...g.aliases].filter(a => C.key(a) !== C.key(g.name));
   const tagTxt = g.tags.map(t => TAG_EXPLAIN[t]).filter(Boolean);
-  const same = ING_PAGES.filter(h => h !== g && h.role === g.role).slice(0, 12);
+  /* 似た働きの成分（2026-11-09）：notes の like を先に、ほかは同じ役割でタグが多く重なる順 */
+  const likeK = new Set(((noteOf(g.name) || {}).like || []).map(C.key));
+  const same = ING_PAGES.filter(h => h !== g && (likeK.has(C.key(h.name)) || h.role === g.role))
+    .map(h => ({ h, s: (likeK.has(C.key(h.name)) ? 100 : 0) + h.tags.filter(t => g.tags.includes(t)).length * 10 + Math.min(9, h.uses.length / 10) }))
+    .sort((a, b) => b.s - a.s).slice(0, 12).map(o => o.h);
   const top = g.uses.slice().sort((a, b) => a.pos / a.of - b.pos / b.of);
   /* 数字で見る（2026年10月22日）：手元の商品データから計算できることだけを出す。新しい主張は書かない */
   const catStat = CAT_ORDER.map(cat => { const n = P.filter(x => x.p.category === cat).length, k = g.uses.filter(u => u.x.p.category === cat).length; return { cat, n, k, pct: n ? Math.round(k / n * 100) : 0 }; }).filter(o => o.k > 0);
@@ -619,23 +719,32 @@ ING_PAGES.forEach(g => {
   const sameT = new Set(((nf && nf.same) || []).map(C.key));
   const altSame = others.filter(a => sameT.has(C.key(a))), altGroup = others.filter(a => !sameT.has(C.key(a)));
   const roleT = ["other", "unk"].includes(g.role) ? "" : `${ROLE_N(g.role)}の成分`;
-  const titleName = altSame.length && (g.name + altSame[0]).length <= 24 ? `${g.name}（${altSame[0]}）` : g.name;
-  const pageTitle = `${titleName}とは？${roleT ? roleT + "｜" : ""}化粧品での役割と入っている商品${g.uses.length}件`;
-  const answer = (nf ? nf.what + nf.why : `${g.desc}。`).replace(/\s+/g, "");
+  /* 2026-11-10：成分表の名前より、よく知られた呼び名で検索される成分（ユビキノン＝コエンザイムQ10 など）は、notes の aka を題名・見出し・説明文の先頭に出す */
+  const aka = (nf && nf.aka) || "";
+  const fullName = aka ? `${g.name}（${aka}）` : g.name;
+  const titleName = aka ? `${aka}（${g.name}）` : altSame.length && (g.name + altSame[0]).length <= 24 ? `${g.name}（${altSame[0]}）` : g.name;
+  /* 医薬部外品での扱い：有効成分として入っているか、その他の成分か（商品データから数えるだけ） */
+  const qU = g.uses.filter(u => u.x.p.kind === "quasi"), qAct = qU.filter(u => u.active).length;
+  /* notes の ask は、検索する人のいちばんの疑問（例：「肌に良いの？」）。あれば、題名の役割の言葉の代わりに出す。desc は検索結果の説明文の「答え」の部分 */
+  const pageTitle = `${titleName}とは？${nf && nf.ask ? nf.ask + "｜" : roleT ? roleT + "｜" : ""}化粧品での役割と入っている商品${g.uses.length}件`;
+  const answer = (nf && nf.desc ? nf.desc : nf ? (nf.one || nf.what) + (nf.why || "") : `${g.desc}。${actsOf(g, nf).length ? `主な働きは「${actsOf(g, nf).map(a => a[1]).join("」「")}」。` : ""}`).replace(/\s+/g, "");
   const altTxt = (altSame.length ? `「${altSame.slice(0, 3).join("」「")}」とも表示されます。` : "")
     + (altGroup.length ? `成分表で「${altGroup.slice(0, 3).join("」「")}」と書かれる仲間の成分もまとめて数えています。` : "");
-  const desc = `${g.name}とは？${altTxt}${answer}入っている商品${g.uses.length}件を成分表での位置つきで紹介。${faqQ ? `よくある疑問（${faqQ}）にも。` : ""}`;
+  const desc = `${fullName}とは？${altTxt}${answer}入っている商品${g.uses.length}件を成分表での位置つきで紹介。${faqQ ? `よくある疑問（${faqQ}）にも。` : ""}`;
   write(u, pageTitle, desc, r => `
 <article>
   <p class="eyebrow">成分</p>
-  <h1>${esc(g.name)}<span class="sub">とは</span></h1>
+  <h1>${esc(g.name)}${aka ? `<span class="aka">（${esc(aka)}）</span>` : ""}<span class="sub">とは</span></h1>
   <div class="row"><span class="role big" style="--c:var(${ROLE_C(g.role)})">${esc(ROLE_N(g.role))}</span>${tagTxt.map(t => `<span class="chip">${esc(t)}</span>`).join("")}</div>
-  ${(() => { const n = noteOf(g.name), rg = regOf(g.name), srcs = [...(n && n.src || []), KSRC];
-    return `<div class="qa">
-    <div class="qa-c"><p class="qa-q"><span class="qa-i" aria-hidden="true">?</span>何の成分？</p><p>${esc(n ? n.what : g.desc + "。")}</p></div>
-    <div class="qa-c"><p class="qa-q"><span class="qa-i" aria-hidden="true">◎</span>何のために入っている？</p><p>${esc(n ? n.why : `「${ROLE_N(g.role)}」の役割で配合されます。`)}</p></div>
-    <div class="qa-c${rg.none ? "" : " reg"}"><p class="qa-q"><span class="qa-i" aria-hidden="true">!</span>気をつけることは？</p><p>${esc(rg.t)}</p></div>
-    <p class="qa-src">出典：${srcs.map(o => `<a href="${esc(o.url)}" rel="nofollow noopener" target="_blank">${esc(o.label)}</a>`).join("・")}（${esc(srcs.map(o => o.date || KSRC.date).sort().pop())}確認）。効果や安全性を保証するものではありません。</p>
+  ${(() => { const n = noteOf(g.name), rg = regOf(g.name), acts = actsOf(g, n), feel = feelOf(g, n), care = careOf(g, n), tt = tatoeOf(g, n);
+    const srcs = [...(n && n.src || []), ...(rg.none ? [] : [KSRC])];
+    const derived = !(n && n.acts && n.care);
+    return `<div class="ig">
+    <div class="ig-c ig-one"><p class="ig-h">ひと言でいうと</p><p class="ig-big">${esc(n ? (n.one || n.what) : g.desc + "。")}</p>${tt ? `<p class="ig-tt"><span>たとえると</span>${esc(tt)}</p>` : ""}</div>
+    ${acts.length ? `<div class="ig-c"><p class="ig-h">髪・肌への働き</p><ul class="ig-acts" style="--c:var(${ROLE_C(g.role)})">${acts.map(([i, t]) => `<li><span class="ig-ic">${icoSvg(i)}</span>${esc(t)}</li>`).join("")}</ul>${n && n.why ? `<p class="small ig-why">${esc(n.why)}</p>` : ""}</div>` : n && n.why ? `<div class="ig-c"><p class="ig-h">何のために入っている？</p><p>${esc(n.why)}</p></div>` : ""}
+    ${feel === null ? "" : `<div class="ig-c"><p class="ig-h">使用感</p><div class="ig-feel" role="img" aria-label="さっぱり0〜しっとり4のうち${feel}"><span class="ig-tr">${[0, 1, 2, 3, 4].map(k => `<i class="${k === feel ? "on" : ""}"></i>`).join("")}</span><span class="ig-fl"><span>さっぱり</span><span>しっとり</span></span></div></div>`}
+    <div class="ig-c ig-care lv${care.lv}"><p class="ig-h">気をつけること</p><p class="ig-lv"><span class="ig-dot" aria-hidden="true"></span>${esc(CARE_LV[care.lv])}</p><p>${esc(care.t)}</p>${rg.none ? "" : `<p class="small ig-reg"><b>配合量のきまり</b>${esc(rg.t)}</p>`}<p class="small muted">どの成分でも、肌や頭皮に合わないと感じたら使うのをやめてください。</p></div>
+    <p class="qa-src">${derived ? "働き・使用感・気をつけることは、クラベルの成分辞書の分類から出した目安です。" : ""}${srcs.length ? `出典：${srcs.map(o => `<a href="${esc(o.url)}" rel="nofollow noopener" target="_blank">${esc(o.label)}</a>`).join("・")}（${esc(srcs.map(o => o.date || KSRC.date).sort().pop())}確認）。` : ""}効果や安全性を保証するものではありません。</p>
   </div>`; })()}
   <p class="lead">${esc(dataLead)}</p>
   <p class="jump"><a class="btn solid wide" href="#ing-products">${esc(g.name)}が入っている商品（${g.uses.length}件）を見る<span aria-hidden="true">↓</span></a></p>
@@ -654,18 +763,19 @@ ING_PAGES.forEach(g => {
       if (m.size < 2) return "";
       const L = [...m.values()].sort((a, b) => b.c - a.c), mx = L[0].c;
       return `<h3>成分表での書かれ方</h3><div class="cbars names">${L.map(o => `<div class="cbar"><span class="cl-n">${esc(o.nm)}</span><span class="st"><i style="width:${Math.round(o.c / mx * 100)}%"></i></span><b class="mono">${o.c}件</b></div>`).join("")}</div><p class="small muted">商品の成分表に書かれている名前ごとの件数です。</p>`; })()}
+    ${qU.length >= 2 ? `<h3>医薬部外品（薬用）での扱い</h3><p>医薬部外品${qU.length}件のうち、<b>有効成分として配合が${qAct}件</b>、その他の成分として配合が${qU.length - qAct}件です。</p><p class="small muted">有効成分は、その商品の効能（パッケージに表示されるもの）のもとになる成分です。その他の成分は、保湿や使い心地などのために入っています。</p>` : ""}
     ${posU.length >= 2 ? `<h3>成分表での位置</h3><div class="pbar" role="img" aria-label="前のほう${bk[0]}件、真ん中${bk[1]}件、後ろのほう${bk[2]}件"><i class="p0" style="flex:${bk[0]}"></i><i class="p1" style="flex:${bk[1]}"></i><i class="p2" style="flex:${bk[2]}"></i></div>
       <div class="pleg"><span><b class="mono">${bk[0]}</b>前のほう</span><span><b class="mono">${bk[1]}</b>真ん中</span><span><b class="mono">${bk[2]}</b>後ろのほう</span></div>
       <p class="small muted">化粧品${posU.length}件で数えています。化粧品の成分表は配合量の多い順（1%以下は順不同）です。</p>` : ""}
     ${co.length ? `<h3>よく一緒に入っている成分</h3><div class="tags">${co.map(o => `<a class="tagl" href="${r(ingUrl.get(o.n))}">${esc(o.n)}<span class="mono">${o.pct}%</span></a>`).join("")}</div><p class="small muted">${esc(g.name)}が入っている商品のうち、その成分も入っている割合です。</p>` : ""}
   </section>
-  ${(() => { const n = noteOf(g.name); return n && n.faq ? `<section class="ifaq"><h2>${esc(g.name)}のよくある疑問</h2>${n.faq.map(o => `<div class="qa-c"><h3 class="qa-q"><span class="qa-i" aria-hidden="true">Q</span>${esc(o.q)}</h3><p>${esc(o.a)}</p></div>`).join("")}</section>` : ""; })()}
+  ${(() => { const n = noteOf(g.name); return n && n.faq ? `<section class="ifaq"><h2>${esc(aka || g.name)}のよくある疑問</h2>${n.faq.map(o => `<div class="qa-c"><h3 class="qa-q"><span class="qa-i" aria-hidden="true">Q</span>${esc(o.q)}</h3><p>${esc(o.a)}</p></div>`).join("")}</section><script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: n.faq.map(o => ({ "@type": "Question", name: o.q, acceptedAnswer: { "@type": "Answer", text: o.a } })) }).replace(/</g, "\\u003c")}</script>` : ""; })()}
   <section id="ing-products"><h2>${esc(g.name)}が入っている商品（${g.uses.length}件）</h2>
     <p class="small muted">「◯番目／全◯成分」は成分表での位置です。化粧品では前のほうほど配合量が多い目安になります。医薬部外品は配合量の順とは限りません。「有効成分として配合」は、医薬部外品の有効成分として表示されているものです（有効成分は成分表の先頭に別枠で書かれるため、位置は出していません）。</p>
     <div class="plist">${top.map(({ x, pos, of, active, raw }) => { const rn = raw ? C.norm(raw) : "", shown = rn && C.key(rn) !== C.key(g.name) ? `・表示名「${esc(rn)}」` : "";
       return productCard(x, r, (active ? `有効成分として配合（全${of}成分）` : `${pos}番目／全${of}成分`) + shown, { posOnly: true }); }).join("")}</div>
   </section>
-  ${same.length ? `<section><h2>同じ「${esc(ROLE_N(g.role))}」の成分</h2><div class="tags">${same.map(h => `<a class="tagl" href="${r(ingUrl.get(h.name))}">${esc(h.name)}<span class="mono">${h.uses.length}</span></a>`).join("")}</div></section>` : ""}
+  ${same.length ? `<section><h2>似た働きの成分</h2><div class="tags">${same.map(h => `<a class="tagl" href="${r(ingUrl.get(h.name))}">${esc(h.name)}<span class="mono">${h.uses.length}</span></a>`).join("")}</div></section>` : ""}
 </article>`, { crumbs: [["トップ", ""], ["成分", "ingredients/"], [g.name, u]] });
 });
 
@@ -699,7 +809,7 @@ ${(() => { const L = [...CMP.values()].filter(c => c.a.p.brand === b && c.b.p.br
    「で、どっちが合うの？」に答える（成分表から見た向き・不向きを言い切る。効果は約束しない） */
 const buyLink = (x, r) => isDirect(x)
   ? shopBtns(x)
-  : useRk(x) ? `<span class="pr-tag" data-rk-pr="${esc(rkKey(x))}" hidden>PR</span><a class="rk-buy" data-rk-link="${esc(rkKey(x))}" hidden rel="sponsored noopener" target="_blank">楽天市場で見る</a>` : "";
+  : useRk(x) ? rkBtn(x) : "";
 const ingList = (L, r) => L.length ? `<div class="tags">${L.map(it => { const u = ingUrl.get(it.name); const nm = esc(C.norm(it.raw)); return u ? `<a class="tagl" href="${r(u)}">${nm}</a>` : `<span class="tagl plain">${nm}</span>`; }).join("")}</div>` : `<p class="small muted">ありません。</p>`;
 /* 観点ごとに「こんな人に」。成分表から見た処方の傾向として書き、効果は書かない */
 const REC = {
@@ -937,8 +1047,8 @@ ${(f.related || []).length || (f.links || []).length ? `<div class="tags">${relL
 <ul class="facts"><li><span>のせた商品</span><b class="mono">${n}</b><i>${esc(f.who || "男性向け")}</i></li><li><span>医薬部外品</span><b class="mono">${quasi.length}</b><i>薬用</i></li>${aio ? `<li><span>何役か</span><b class="mono">${nMin}〜${nMax}</b><i>メーカーの表示</i></li>` : hairF ? `<li><span>やさしい洗浄成分が主</span><b class="mono">${L.filter(mildOf).length}</b><i>件</i></li>` : `<li><span>有効成分</span><b class="mono">${actGroups.length}</b><i>種類</i></li>`}</ul>
 ${cmp ? tabSec(r) : ""}
 <section class="fconc" aria-labelledby="fc-conc"><h2 id="fc-conc">先に結論：目的別の1本</h2>
-<div class="fcg">${conc.map(([k, it, why]) => `<a class="fci" href="${r(it.x.url)}"><span class="fck">${esc(k)}</span>${imgSlot(it.x, "thumb")}<b>${esc(nameOf(it))}</b><small>${esc(why)}</small></a>`).join("")}</div>
-<p class="fnote">点数は、成分表を決まったルールで数えた「成分の傾向スコア」です（<a href="${r("about/scoring/")}">数え方</a>）。</p></section>
+<div class="fcg">${conc.map(([k, it, why]) => `<div class="fcw"><a class="fci" href="${r(it.x.url)}"><span class="fck">${esc(k)}</span>${imgSlot(it.x, "thumb")}<b>${esc(nameOf(it))}</b><small>${esc(why)}</small></a>${buyLink(it.x, r) ? `<div class="acts">${buyLink(it.x, r)}</div>` : ""}</div>`).join("")}</div>
+<p class="fnote">${anyRk || anyDirect ? "「楽天市場で見る」などは広告のリンクで、紹介料の有無は点数や順位に関係しません。" : ""}点数は、成分表を決まったルールで数えた「成分の傾向スコア」です（<a href="${r("about/scoring/")}">数え方</a>）。</p></section>
 <nav class="ftoc" aria-label="このページの目次"><b>目次</b><ol>${toc.map(([id, t]) => `<li><a href="#${id}">${esc(t)}</a></li>`).join("")}</ol></nav>
 ${aio ? `<section><h2 id="fc-what">そもそも、オールインワンとは</h2>
 <div class="fstep"><div><span class="fsl">ふつうのお手入れ</span><span class="fss"><i>化粧水</i><em aria-hidden="true">→</em><i>乳液</i><em aria-hidden="true">→</em><i>クリーム</i></span></div><div><span class="fsl">オールインワン</span><span class="fss"><i class="on">これ1つ</i></span></div></div>
@@ -957,8 +1067,8 @@ ${brands.length ? `<section><h2 id="fc-brand">ブランドごとの違い</h2>${
 ${fam.length ? `<section><h2 id="fc-ing">よく知られた成分は、どれに入っている？</h2><p class="small muted">成分表に入っているかどうかを数えています。</p>
 <div class="fbars">${fam.map(o => `<div class="fbar"><div class="fb-h">${o.link ? `<a href="${r(o.link)}">${esc(o.d)}</a>` : esc(o.d)}<span class="mono">${o.hit.length}/${n}件</span></div><div class="fb-t" aria-hidden="true"><span style="width:${Math.round(o.hit.length / n * 100)}%"></span></div><p class="small muted">${o.hit.map(it => esc(nameOf(it))).join("・")}</p></div>`).join("")}</div></section>` : ""}
 <section><h2 id="fc-list">${esc(fill(f.listH || "おすすめ{n}選"))}</h2><p class="small muted">成分の傾向スコアの高い順です。${QUIZ[f.category] ? `<a href="${r("app/")}${QUIZ[f.category].hash}">7つの質問で、自分に合う順に並べ替える</a>` : ""}</p>
-${sorted.map((it, i) => `<article class="fit"${dat(it)}><h3><span class="fno mono">${i + 1}</span><span class="fnm">${esc(nameOf(it))}</span></h3>${productCard(it.x, r, aio ? `${it.n ? it.n + "役" : "オールインワン"}・${it.type}` : it.type)}<p>${esc(sumOf(it))}</p>${factsOf(it, r)}${bars(it)}<p class="fmore"><a href="${r(it.x.url)}">全成分${it.x.a.items.length}種類と、それぞれの役割を見る</a></p></article>`).join("")}
-${anyRk || anyDirect ? `<p class="pr-note">商品ページの「楽天市場で見る」などは広告のリンクです。紹介料の有無は、点数や順位に関係しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}</section>
+${sorted.map((it, i) => `<article class="fit"${dat(it)}><h3><span class="fno mono">${i + 1}</span><span class="fnm">${esc(nameOf(it))}</span></h3>${productCard(it.x, r, aio ? `${it.n ? it.n + "役" : "オールインワン"}・${it.type}` : it.type)}<p>${esc(sumOf(it))}</p>${factsOf(it, r)}${bars(it)}${buyLink(it.x, r) ? `<div class="acts fbuy">${buyLink(it.x, r)}</div>` : ""}<p class="fmore"><a href="${r(it.x.url)}">全成分${it.x.a.items.length}種類と、それぞれの役割を見る</a></p></article>`).join("")}
+${anyRk || anyDirect ? `<p class="pr-note">「楽天市場で見る」などは広告のリンクです。紹介料の有無は、点数や順位に関係しません。<a href="${r("about/")}#ad">広告について</a></p>` : ""}</section>
 ${f.A.length ? `<section><h2>${esc(f.also.h)}</h2><p class="small muted">${esc(f.also.note)}</p><div class="plist">${f.A.map(it => productCard(it.x, r, aio ? `${it.n ? it.n + "役" : "オールインワン"}・${it.type}` : it.type)).join("")}</div></section>` : ""}
 <section class="ifaq"><h2 id="fc-faq">よくある疑問</h2>${faq.map(o => `<div class="qa-c"><h3 class="qa-q"><span class="qa-i" aria-hidden="true">Q</span>${esc(o.q)}</h3><p>${esc(o.a)}</p></div>`).join("")}</section>
 <section><h2>この一覧に入れた条件と出典</h2><div class="rule"><b>条件</b><p>${esc(f.rule)}</p>${f.near ? `<p class="small muted">${esc(f.near.note)}</p>` : ""}</div>
@@ -1063,7 +1173,7 @@ write("about/", "クラベルとは", "クラベルは、シャンプーやス�
 /* ---------- トップ ---------- */
 const searchIndex = [
   ...P.map(x => [x.p.name, x.p.brand || "", CAT_N[x.p.category] || "", x.url]),
-  ...ING_PAGES.map(g => [g.name, [...g.aliases].filter(a => C.key(a) !== C.key(g.name)).join(" "), "成分", ingUrl.get(g.name)])
+  ...ING_PAGES.map(g => { const n = noteOf(g.name) || {}; return [g.name, [...new Set([...g.aliases].filter(a => C.key(a) !== C.key(g.name)).concat(n.aka || [], n.same || []))].join(" "), "成分", ingUrl.get(g.name)]; })
 ];
 const latestDate = PRODUCTS.map(p => (p.source && p.source.date) || "").sort().pop() || "";
 const latest = P.filter(x => ((x.p.source && x.p.source.date) || "") === latestDate).slice(0, 6);
@@ -1144,7 +1254,7 @@ if (APP && fs.existsSync(APP)) {
   const cs = h.indexOf("var SKCore = (function(){"), ce = h.indexOf("\n})();", cs);
   if (cs < 0 || ce < 0) throw new Error("app/index.html に採点ロジックの位置が見つかりません");
   h = h.slice(0, cs) + core.trim() + h.slice(ce + "\n})();".length);
-  const rk = RK_ON ? `<script>window.RK={api:${JSON.stringify(r("api/rk"))}}</script><script src="${r("assets/rk.js")}?v=${av("rk.js")}" defer></script>` : "";
+  const rk = RK_ON ? `<script>window.RK={api:${JSON.stringify(r("api/rk"))},aff:${JSON.stringify(RK_AFF)}}</script><script src="${r("assets/rk.js")}?v=${av("rk.js")}" defer></script>` : "";
   const inject = `<link rel="stylesheet" href="${r("assets/chrome.css")}?v=${av("chrome.css")}">${rk}${sprite(head + foot, Object.values(PH))}${head}`;
   if (GA) h = h.replace("</head>", GA + "</head>");
   h = h.replace("</head>", ICONS + "</head>");
@@ -1214,6 +1324,6 @@ if (SITE) {
 }
 if (SITE) {
   fs.writeFileSync(path.join(OUT, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${PAGES.map(p => `  <url><loc>${SITE}/${encodeURI(p)}</loc>${UPDATED ? `<lastmod>${UPDATED}</lastmod>` : ""}</url>`).join("\n")}\n</urlset>\n`);
-  fs.writeFileSync(path.join(OUT, "robots.txt"), `User-agent: *\nAllow: /\nSitemap: ${SITE}/sitemap.xml\n`);
+  fs.writeFileSync(path.join(OUT, "robots.txt"), `User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: ${SITE}/sitemap.xml\n`);
 }
 console.log(JSON.stringify({ pages: PAGES.length, products: P.length, ingredients: ING_PAGES.length, brands: BRAND_PAGES.length, concerns: CONCERNS.map(c => [c.id, c.list.length]) }));

@@ -143,6 +143,10 @@ body.has-qbar{padding-bottom:88px}
 .rk-buy::after{content:"↗";font-weight:500}
 .rk-buy[hidden]{display:none}
 .acts{align-items:center}
+/* スマホの商品ページ：Amazonと楽天のボタンを1行に並べる（2026-11-15） */
+@media (max-width:520px){.prod .acts{flex-wrap:nowrap}.prod .acts .rk-buy{flex:1 1 0;justify-content:center;padding:0 10px;font-size:15px;white-space:nowrap}}
+@media (max-width:380px){.prod .acts{gap:6px}.prod .acts .rk-buy{font-size:14px;padding:0 6px;gap:4px}}
+@media (max-width:340px){.prod .acts{flex-wrap:wrap}}
 .pr-tag{display:inline-grid;place-items:center;min-width:34px;height:24px;padding:0 6px;border:1.5px solid var(--ink3);border-radius:6px;font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--ink2);line-height:1}
 .pr-tag[hidden],.pr-note[hidden]{display:none}
 .pr-note{margin:6px 0 0;font-size:13px;line-height:1.6;color:var(--ink3)}
@@ -517,6 +521,13 @@ ul.chk.dif li small{margin-left:6px;font-size:12px;color:var(--ink3)}
 .fconc h2{margin-top:0}
 .fcg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .fci{display:flex;flex-direction:column;gap:4px;background:var(--card);border-radius:14px;padding:12px;color:var(--ink);text-decoration:none;min-width:0}
+.fcw{display:flex;flex-direction:column;background:var(--card);border-radius:14px;min-width:0}
+.fcw .fci{flex:1;background:none}
+.fcw .acts{margin:0;padding:0 12px 12px;gap:6px;flex-direction:column;align-items:stretch}
+.fcw .pr-tag{align-self:flex-start}
+.fcw .rk-buy{font-size:14px;padding:0 8px;justify-content:center;white-space:nowrap}
+.fcw .rk-buy::after{content:none}
+.fbuy{margin:12px 0 4px}
 .fci .fck{font-size:13px;font-weight:700;background:var(--hl);border-radius:6px;padding:2px 8px;align-self:flex-start}
 .fci .thumb{width:64px;height:64px;margin:4px 0}
 .fci b{font-size:15px;line-height:1.4}
@@ -571,3 +582,29 @@ ul.chk.dif li small{margin-left:6px;font-size:12px;color:var(--ink3)}
 .fch[aria-pressed="true"]{background:var(--ink);color:var(--card);border-color:var(--ink)}
 .fch[aria-pressed="true"] span{color:inherit;opacity:.8}
 .ffn{margin:0;font-size:14px;color:var(--ink2)}
+/* 成分ページ：ひと言・働き・使用感・気をつけること（2026-11-09）。罫線の片側だけに色を付けない */
+.ig{display:grid;gap:10px;margin:16px 0 8px}
+.ig-c{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px}
+.ig-c p:last-child{margin-bottom:0}
+.ig-h{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--ink3);margin:0 0 6px}
+.ig-big{font-size:19px;font-weight:700;line-height:1.6;margin:0}
+.ig-tt{margin:10px 0 0;padding:10px 12px;background:var(--hl-soft);border-radius:10px;line-height:1.7}
+.ig-tt span{display:inline-block;font-size:12.5px;font-weight:700;background:var(--ink);color:var(--paper);border-radius:6px;padding:2px 7px;margin-right:8px;vertical-align:1px}
+.ig-acts{list-style:none;margin:0;padding:0;display:flex;justify-content:center;gap:8px}
+.ig-acts li{flex:1 1 0;max-width:33.4%;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;font-size:14px;font-weight:700;line-height:1.45}
+.ig-ic{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;color:var(--c);background:color-mix(in srgb,var(--c) 14%,var(--card))}
+.ig-ic svg{width:28px;height:28px}
+.ig-why{margin:12px 0 0;color:var(--ink2)}
+.ig-tr{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;height:14px}
+.ig-tr i{border-radius:7px;background:var(--line)}
+.ig-tr i:nth-child(1){background:color-mix(in srgb,var(--r-clean) 25%,var(--line))}
+.ig-tr i:nth-child(5){background:color-mix(in srgb,var(--r-oil) 25%,var(--line))}
+.ig-tr i.on{background:var(--ink);transform:scaleY(1.5)}
+.ig-fl{display:flex;justify-content:space-between;font-size:13.5px;color:var(--ink2);margin-top:8px}
+.ig-lv{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:700;margin:0 0 4px}
+.ig-dot{width:14px;height:14px;border-radius:50%;flex:none;background:var(--lv)}
+.ig-care.lv0{--lv:var(--r-hum)}.ig-care.lv1{--lv:var(--r-beauty);background:var(--hl-soft)}.ig-care.lv2{--lv:var(--r-uv);background:var(--hl-soft)}
+.ig-reg{margin:8px 0}
+.ig-reg b{display:block;font-size:13px}
+
+h1 .aka{font-size:.72em;font-weight:700}

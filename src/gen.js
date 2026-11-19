@@ -50,7 +50,7 @@ const TARGET_N = { men: "メンズ向け", women: "レディース向け", all: 
 const ROLE_N = r => (C.ROLES[r] || C.ROLES.unk).n;
 const ROLE_C = r => (C.ROLES[r] && C.ROLES[r].c) || "--line2";
 const TAG_EXPLAIN = {
-  strongSurf: "洗浄力の強い洗浄成分（硫酸系など）", midSurf: "中程度の洗浄成分", mildSurf: "やさしい洗浄成分（アミノ酸系・ベタイン系・糖系など）",
+  strongSurf: "洗浄力の強い洗浄成分（硫酸系など）", midSurf: "中程度の洗浄成分", mildSurf: "やさしい洗浄成分（アミノ酸系・ベタイン系・糖系など）", soap: "石けん系の洗浄成分",
   cond: "髪の指通りをよくする", repair: "髪の補修", scalp: "頭皮をすこやかに保つ", scalpA: "医薬部外品で有効成分になることがある殺菌成分",
   sebum: "皮脂を取り除く", hum1: "基本の保湿剤", hum2: "高機能な保湿成分", occS: "水分の蒸発を防ぐ強い保護油", occM: "一般的な油分", light: "軽い使用感を出す",
   beauty: "ケア成分（ビタミン類など）", extract: "植物などのエキス", fragrance: "香料", essoil: "精油", alcohol: "アルコール（エタノール）", uvabs: "紫外線吸収剤",
@@ -65,8 +65,9 @@ const PA = PRODUCTS.map(p => {
   const names = [...new Set(a.items.map(i => i.name))];
   const tags = new Set(a.items.flatMap(i => i.tags));
   const cat = C.CATS[p.category];
-  const sc = cat && cat.scored ? cat.score(a.items, null) : null;
-  const ev = cat && cat.scored ? C.evaluate([p], p.category, null, () => a)[0] : null;
+  const on = !!(cat && cat.scored && !(cat.skip && cat.skip(p))); // 洗顔料の中のメイク落としには点数を付けない（2026-11-19）
+  const sc = on ? cat.score(a.items, null) : null;
+  const ev = on ? C.evaluate([p], p.category, null, () => a)[0] : null;
   return { p, a, names, tags, sc, match: ev ? ev.match : null, grade: ev ? ev.grade : null, url: `products/${slug(p.id)}/` };
 });
 /* 製造終了品（discontinued）：ページは残し、いま買える近い商品へ案内する（2026-10-27、ユーザーの指示）。
@@ -287,7 +288,8 @@ ${RK_ON || PREVIEW ? `<p>商品画像と販売ページへのリンクは、楽�
 const QUIZ = {
   shampoo: { n: "シャンプー", hash: "", what: "頭皮のタイプ" },
   conditioner: { n: "コンディショナー", hash: "#conditioner", what: "髪の長さ" },
-  skincare: { n: "保湿クリーム", hash: "#skincare", what: "肌のタイプ" }
+  skincare: { n: "保湿クリーム", hash: "#skincare", what: "肌のタイプ" },
+  facewash: { n: "洗顔料", hash: "#facewash", what: "肌のタイプ" }
 };
 const QUIZ_CATS = Object.keys(QUIZ);
 const HAIR = new Set(["shampoo", "conditioner", "scalp", "colorrinse"]);
@@ -406,7 +408,8 @@ function themesBlock(x) {
 const AX_LABEL = {
   shampoo: { mild: "やさしい洗浄", clean: "洗浄力", scalp: "頭皮ケア", repair: "髪の補修", smooth: "指通り", gentle: "低刺激" },
   skincare: { moist: "うるおい", barrier: "保護（フタ）", light: "軽さ", beauty: "ケア成分", concern: "悩み対応", gentle: "低刺激" },
-  conditioner: { smooth: "指通り", repair: "髪の補修", moist: "うるおい", light: "軽さ", gentle: "低刺激" }
+  conditioner: { smooth: "指通り", repair: "髪の補修", moist: "うるおい", light: "軽さ", gentle: "低刺激" },
+  facewash: { mild: "やさしい洗浄", clean: "洗浄力", moist: "うるおい", care: "肌ケア成分", gentle: "低刺激" }
 };
 const CAT_AVG = {}, CAT_RANK = {};
 Object.keys(C.CATS).filter(k => C.CATS[k].scored).forEach(cat => {
@@ -444,6 +447,11 @@ ${rings}${spokes}${hasAvg ? `<polygon points="${poly(t => avg[t.k])}" class="avg
 }
 /* 商品ページのグラフの下に出す、観点ごとの見方（何が多いと高くなるか。効果ではなく処方の傾向として書く） */
 const AX_DESC = {
+  facewash: { mild: "主な洗浄成分が、アミノ酸系・ベタイン系・酸性石けん系などのマイルドなものほど高くなります。石けん系や硫酸系が主体だと低めになります。",
+    clean: "主な洗浄成分が、硫酸系・石けん系などの洗浄力の高いものほど高くなります。泥やスクラブの粒、シリカなどが入っていると少し上がります。皮脂や汚れをしっかり落とす処方の傾向です。",
+    moist: "グリセリンなどの保湿剤や、ヒアルロン酸・セラミドなどの保湿成分が多いほど高くなります。",
+    care: "グリチルリチン酸2K・アラントイン・ビタミンC誘導体など、肌ケアの成分が多いほど高くなります。医薬部外品の有効成分は少し重く数えます。",
+    gentle: "香料・アルコール・メントール・着色料などが少ないほど高くなります。" },
   shampoo: { mild: "主な洗浄成分が、アミノ酸系・ベタイン系などのマイルドなものほど高くなります。",
     clean: "主な洗浄成分が、硫酸系などの洗浄力の高いものほど高くなります。皮脂をしっかり落とす処方の傾向です。",
     scalp: "グリチルリチン酸2K・ピロクトンオラミンなど、頭皮ケアの成分が多いほど高くなります。",

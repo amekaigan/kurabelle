@@ -991,6 +991,12 @@ const Q_CAT = {
     {id:'concerns', q:'気になることは？', note:'いくつでも選べます', type:'multi', opts:[['dry','乾燥・つっぱり'],['oily','ベタつき・テカリ'],['rough','肌あれ・ニキビ'],['spot','シミ・くすみ（顔の明るさ）'],['firm','ハリ・小じわ'],['sensitive','刺激を感じやすい']]},
     {id:'texture', q:'使い心地の好みは？', type:'one', opts:[['rich','しっとり重め',''],['any','こだわらない',''],['light','さっぱり軽め','']]},
     {id:'beauty', q:'ビタミン類やナイアシンアミドなどのケア成分は？', note:'化粧水や乳液によく入っている成分です', type:'one', opts:[['high','多く入っているものがいい',''],['mid','ほどほどでいい',''],['low','こだわらない','']]}
+  ],
+  facewash: [
+    {id:'skin', q:'肌のタイプは？', type:'one', opts:[['dry','乾燥肌','洗顔後につっぱりやすい'],['normal','普通肌',''],['oily','脂性肌','顔全体がテカりやすい'],['combo','混合肌','Tゾーンだけテカる'],['unknown','わからない','']]},
+    {id:'concerns', q:'顔で気になることは？', note:'いくつでも選べます', type:'multi', opts:[['dry','乾燥・つっぱり'],['oily','ベタつき・テカリ'],['pore','毛穴の汚れ・黒ずみ'],['rough','肌あれ・ニキビ'],['sensitive','刺激を感じやすい']]},
+    {id:'texture', q:'洗い上がりの好みは？', type:'one', opts:[['rich','しっとり',''],['any','こだわらない',''],['light','さっぱり','']]},
+    {id:'makeup', q:'日焼け止めやメイクを、洗顔料で落とすことはありますか？', type:'one', opts:[['yes','ある',''],['no','ない・ほとんどない','']]}
   ]
 };
 const questionsFor = cat => Q_COMMON.concat(Q_CAT[cat], [ngQ(cat)]);
@@ -1025,7 +1031,16 @@ const RULES = {
     <dt>悩みへの対応</dt><dd>選んだ悩みごとに 0.5 ＋ 関連成分1種につき1.25（有効成分なら＋0.5）を計算して平均。悩みを選んでいなければ6つの悩みの平均</dd>
     <dt>刺激の少なさ</dt><dd>5.0 − 香料1.0 − アルコール1.0 − 紫外線吸収剤0.75 − メントール0.75 − 精油0.5 − 着色料0.5 − イソチアゾリノン系1.0 − 強い洗浄成分0.75 − 2種目以降の防腐剤1種につき0.5</dd>
     <dt>重み（診断）</dt><dd>全観点1.0から始めます。いちばん強く効くのは「気になること」です。シミ・くすみ、ハリ・小じわ、肌あれ：悩みへの対応＋2（シミとハリはケア成分＋0.5）。乾燥：うるおい＋1.5・保護＋0.5・悩み＋1。ベタつき：軽さ＋1・悩み＋1。刺激を感じやすい：刺激の少なさ＋2・悩み＋1。肌のタイプ（乾燥肌：うるおい・保護＋1、脂性肌：軽さ＋1.25、混合肌：軽さ・うるおい＋0.5）と使い心地の好み（しっとり：保護＋0.75、さっぱり：軽さ＋1）は、それより小さく効きます。メンズ：うるおい・軽さ＋0.5。40代：うるおい＋1・保護＋0.5・ケア成分＋0.5</dd>
-    <dt>相性スコアと順位</dt><dd>シャンプーと同じ計算です</dd></dl>`
+    <dt>相性スコアと順位</dt><dd>シャンプーと同じ計算です</dd></dl>`,
+  facewash: `<p>点数は成分表から読み取れる「処方の傾向」です。配合量・泡立ち・使用感・効果そのものは反映されません。メイク落とし（クレンジング）は洗顔料と比べにくいため、点数と順位を付けていません。</p><dl>
+    <dt>主洗浄成分の決め方</dt><dd>有効成分を除いて、最初に出てくる洗浄成分を主洗浄成分にします。洗顔料に多い「ステアリン酸・ミリスチン酸などの脂肪酸」と「水酸化K（水酸化カリウム）・水酸化Na」が両方入った成分表は、混ぜると石けんになる書き方なので、脂肪酸が6番目までにあれば「石けん系」の洗浄成分として数えます。医薬部外品は表示順が配合量の順とは限らないため、判定は目安です</dd>
+    <dt>洗浄のやさしさ</dt><dd>3.0 ＋ 主洗浄成分がアミノ酸系・ベタイン系・糖系・酸性石けん系などのマイルドなものなら＋1.5、中程度なら＋0.5、石けん系なら−0.5、硫酸系など強めなら−1.5、洗浄成分の種類を判定できない処方なら＋1.0 ／ ほかの強めの洗浄成分1種につき−0.5 ／ ほかのマイルドな洗浄成分1種につき＋0.25（上限＋1.0）</dd>
+    <dt>洗浄力</dt><dd>2.5 ＋ 主洗浄成分が硫酸系など強めなら＋2、石けん系なら＋1.5、中程度なら＋1、判定できない処方なら−0.5 ／ ほかの強めの洗浄成分1種につき＋0.5 ／ ほかに石けん系があれば＋0.5 ／ 泥（カオリン・ベントナイトなど）、粒・粉（セルロース・コーンスターチなど）、皮脂を除く成分（シリカ・サリチル酸など）が入っていれば、1つにつき＋0.5（上限＋1.0）</dd>
+    <dt>洗い上がりのうるおい</dt><dd>0.5 ＋ 基本の保湿剤（グリセリン・BG・ソルビトールなど）1種につき0.5（上限2.0）＋ 高機能保湿成分（ヒアルロン酸・セラミド類など）1種につき0.75（保湿クリームと同じ）</dd>
+    <dt>肌ケア成分</dt><dd>0.5 ＋ 肌ケア成分（グリチルリチン酸2K・アラントイン・ビタミンC誘導体・セラミドなど）1種につき1.0、有効成分ならさらに＋0.5 ＋ ほかのエキス1種につき0.25（上限1.0）</dd>
+    <dt>刺激の少なさ</dt><dd>シャンプーと同じ計算です（洗浄成分の強さは「洗浄のやさしさ」で評価するので、ここでは引きません）</dd>
+    <dt>重み（診断）</dt><dd>全観点1.0から始めます。いちばん強く効くのは「気になること」です。乾燥・つっぱり：うるおい＋2.5・やさしさ＋1・洗浄力×0.7。ベタつき・テカリ：洗浄力＋2.5。毛穴の汚れ・黒ずみ：洗浄力＋2・やさしさ×0.8。肌あれ・ニキビ：肌ケア成分＋2.5・刺激の少なさ＋0.5。刺激を感じやすい：刺激の少なさ＋2.5・やさしさ＋1。肌のタイプ（乾燥肌：やさしさ＋1・うるおい＋0.5・洗浄力×0.6、脂性肌：洗浄力＋1・やさしさ×0.8、混合肌：洗浄力・うるおい＋0.5）、洗い上がりの好み（しっとり：うるおい＋0.75・洗浄力×0.7、さっぱり：洗浄力＋0.75・うるおい×0.7）、日焼け止めやメイクを落とす：洗浄力＋0.75 は、それより小さく効きます。メンズ：洗浄力＋0.25。10代：洗浄力＋0.5。40代：うるおい＋0.25。50代以上：うるおい・やさしさ＋0.5</dd>
+    <dt>相性スコアと順位</dt><dd>シャンプーと同じ計算です（診断をしていないときは、5つの観点の平均）</dd></dl>`
 };
 
 /* ---------- 状態 ---------- */
@@ -1084,7 +1099,8 @@ function analyze(p){
 }
 const allProducts = () => S.catalog.concat(S.mine.map(p=>Object.assign({mine:true}, p)));
 const ans = () => S.answers[S.cat] || null;
-function catProducts(cat){ return allProducts().filter(p=>p.category===cat); }
+const skipped = p => !!(CATS[p.category] && CATS[p.category].skip && CATS[p.category].skip(p)); /* 点数を付けない商品（洗顔料の中のメイク落としなど） */
+function catProducts(cat){ return allProducts().filter(p=>p.category===cat && !skipped(p)); }
 function visibleProducts(){
   let list = catProducts(S.cat);
   const a = ans(), g = a && a.gender;
@@ -1155,7 +1171,7 @@ function metaChips(p, e){
 function renderCats(){
   const all = allProducts();
   $('#cats').innerHTML = CAT_ORDER.filter(inApp).map(c=>{
-    const n = all.filter(p=>p.category===c).length;
+    const n = catProducts(c).length;
     return `<button type="button" data-act="cat" data-c="${c}" aria-pressed="${S.cat===c}"><b>${CATS[c].n}</b><span>${S.loaded?n+'商品':'読み込み中'}</span></button>`;
   }).join('');
   $('#nav-now').textContent = CATS[S.cat].n;
@@ -1215,12 +1231,14 @@ function renderDiag(cur){
 const TYPE_N = {
   shampoo:{mild:'やさしい洗浄', clean:'洗浄力', scalp:'頭皮ケア', repair:'髪の補修', smooth:'指通り', gentle:'低刺激'},
   conditioner:{smooth:'指通り', repair:'髪の補修', moist:'うるおい', light:'軽い仕上がり', gentle:'低刺激'},
-  skincare:{moist:'うるおい', barrier:'保護', light:'軽い使い心地', beauty:'ケア成分', concern:'悩みケア', gentle:'低刺激'}
+  skincare:{moist:'うるおい', barrier:'保護', light:'軽い使い心地', beauty:'ケア成分', concern:'悩みケア', gentle:'低刺激'},
+  facewash:{mild:'やさしい洗浄', clean:'洗浄力', moist:'うるおい', care:'肌ケア', gentle:'低刺激'}
 };
 const FAVOR = {
   shampoo:{mild:'アミノ酸系・ベタイン系など、マイルドな洗浄成分が主体の商品', clean:'硫酸系など、洗浄力の高い洗浄成分が主体の商品', scalp:'グリチルリチン酸2K・ピロクトンオラミンなど、頭皮ケア成分が入った商品', repair:'ケラチン・セラミド・加水分解タンパクなど、補修成分が多い商品', smooth:'カチオン成分・シリコーン・油分が入った商品', gentle:'香料・アルコール・メントールなどが入っていない商品'},
   conditioner:{smooth:'カチオン成分・シリコーンが多い商品', repair:'ケラチン・セラミド・加水分解タンパクなど、補修成分が多い商品', moist:'アミノ酸・ヒアルロン酸・PCA-Naなど、保湿成分が多い商品', light:'油分やシリコーンが少なめの商品', gentle:'香料・アルコールなどが入っていない商品'},
-  skincare:{moist:'ヒアルロン酸・セラミドなど、保湿成分が多い商品', barrier:'ワセリン・シア脂など、フタをする油分が入った商品', light:'油分が少なめの商品', beauty:'ナイアシンアミド・ビタミン類など、ケア成分が多い商品', concern:'選んだ悩みに関係する成分が入った商品', gentle:'香料・アルコール・紫外線吸収剤などが入っていない商品'}
+  skincare:{moist:'ヒアルロン酸・セラミドなど、保湿成分が多い商品', barrier:'ワセリン・シア脂など、フタをする油分が入った商品', light:'油分が少なめの商品', beauty:'ナイアシンアミド・ビタミン類など、ケア成分が多い商品', concern:'選んだ悩みに関係する成分が入った商品', gentle:'香料・アルコール・紫外線吸収剤などが入っていない商品'},
+  facewash:{mild:'アミノ酸系・ベタイン系など、マイルドな洗浄成分が主体の商品', clean:'石けん系・硫酸系など洗浄力の高い洗浄成分が主体の商品や、泥・スクラブ入りの商品', moist:'ヒアルロン酸・セラミドなど、保湿成分が多い商品', care:'グリチルリチン酸2K・ビタミンC誘導体など、肌ケア成分が入った商品', gentle:'香料・アルコール・メントールなどが入っていない商品'}
 };
 function weightRadar(w){
   const T = themes(), n = T.length, max = Math.max(...T.map(t=>w[t.k])), cx=150, cy=128, R=88;
@@ -1246,14 +1264,16 @@ const FAMOUS = [
 ];
 const CONCERN_N = {
   shampoo:{dandruff:'フケ・かゆみ', oily:'ベタつき・ニオイ', damage:'ダメージ', volume:'ボリューム', dry:'頭皮の乾燥', sensitive:'刺激'},
-  conditioner:{damage:'ダメージ', tangle:'からまり', dry:'乾燥', volume:'ボリューム', sensitive:'刺激'}
+  conditioner:{damage:'ダメージ', tangle:'からまり', dry:'乾燥', volume:'ボリューム', sensitive:'刺激'},
+  facewash:{dry:'乾燥', oily:'ベタつき', pore:'毛穴の汚れ', rough:'肌あれ', sensitive:'刺激'}
 };
 const famousName = n => { const k=key(n); for(const [re,d] of FAMOUS) if(re.test(k)) return d; return null; };
 const famousRank = d => FAMOUS.findIndex(x=>x[1]===d); /* 先に並べたものほど、よく知られた名前として前に出す */
 const THEME_TAGS = {
   shampoo:{mild:['mildSurf'], clean:['strongSurf','midSurf','sebum'], scalp:['scalp','scalpA'], repair:['repair'], smooth:['cond','silicone']},
   conditioner:{smooth:['cond','silicone'], repair:['repair'], moist:['hum2'], light:['light']},
-  skincare:{moist:['hum2'], barrier:['occS'], light:['light'], beauty:['beauty']}
+  skincare:{moist:['hum2'], barrier:['occS'], light:['light'], beauty:['beauty']},
+  facewash:{mild:['mildSurf'], clean:['strongSurf','soap','sebum'], moist:['hum2'], care:['beauty','rough','sensitive','spot']}
 };
 /* いまの診断で上位3つの商品に、その観点で数えた成分のうち、知られた名前のものを多い順に */
 function topIngredients(themeKey, cur, concerns){
@@ -1469,11 +1489,11 @@ function tableView(sel){
 /* ---------- 準備中カテゴリ ---------- */
 function renderPending(){
   const cats = CAT_ORDER.filter(c=>!inApp(c));
-  const list = allProducts().filter(p=>cats.includes(p.category));
+  const list = allProducts().filter(p=>cats.includes(p.category) || skipped(p));
   $('#pending').hidden = !S.loaded || !list.length;
   if(!list.length) return;
-  $('#pend-meta').textContent = cats.map(c=>`${CATS[c].n} ${list.filter(p=>p.category===c).length}`).filter(s=>!/ 0$/.test(s)).join('・');
-  $('#pend-body').innerHTML = `<p class="small muted">成分データは登録済みで、採点ルールを作ったらランキングに出ます。</p>` + list.map(p=>{
+  $('#pend-meta').textContent = CAT_ORDER.map(c=>`${CATS[c].n} ${list.filter(p=>p.category===c).length}`).filter(s=>!/ 0$/.test(s)).join('・');
+  $('#pend-body').innerHTML = `<p class="small muted">成分データは登録済みで、採点ルールを作ったらランキングに出ます。洗顔料の中のメイク落としは、洗顔料と比べにくいため、ここに分けています。</p>` + list.map(p=>{
     const a = analyze(p), open = !!S.open[p.id];
     return `<div class="pend-item"><div class="row" style="justify-content:space-between"><h3>${esc(p.name)}</h3><span class="chip">${esc(CATS[p.category].n)}</span></div>
       <div class="row" style="gap:6px">${metaChips(p,null)}</div>${mixBar(a.items)}

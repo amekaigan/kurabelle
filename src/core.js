@@ -7,7 +7,7 @@ const ROLES = {
   other:{n:'香料・pH・その他',c:'--r-other'}, base:{n:'水',c:'--r-base'}, unk:{n:'未分類',c:''}
 };
 const ROLE_ORDER = ['active','clean','cond','hum','beauty','oil','emul','uv','pres','other','base','unk'];
-const TAGSET = ['hum1','hum2','occS','occM','light','beauty','extract','dry','oily','rough','spot','firm','sensitive','fragrance','alcohol','uvabs','silicone','paraben','mineral','menthol','colorant','preserv','strongpres','strongSurf','midSurf','mildSurf','cond','repair','scalp','scalpA','essoil','sebum'];
+const TAGSET = ['hum1','hum2','occS','occM','light','beauty','extract','dry','oily','rough','spot','firm','sensitive','fragrance','alcohol','uvabs','silicone','paraben','mineral','menthol','colorant','preserv','strongpres','strongSurf','midSurf','mildSurf','cond','repair','scalp','scalpA','essoil','sebum','soap'];
 
 const ESS = 'ユーカリ油|ハッカ油|オレンジ油|スペアミント油|ペパーミント油|ラベンダー油|ローズマリー油|ローズマリー葉油|ティーツリー油|ティーツリー葉油|レモン果皮油|ベルガモット果実油|ニオイテンジクアオイ油|オレンジ果皮油|ヒノキ油'.split('|').map(n=>[n,'other','essoil','精油。香りづけや清涼感']);
 const D = [
@@ -21,7 +21,7 @@ const D = [
 ['ヘキシレングリコール','hum','hum1','保湿・溶剤'],
 ['イソペンチルジオール','hum','hum1','保湿・溶剤。べたつきにくい'],
 ['グリセリンモノイソデシルエーテル|イソデシルグリセリルエーテル','hum','hum1','保湿・使用感の調整'],
-['PEG|ポリエチレングリコール|ポリエチレングリコール1500|ポリエチレングリコール400|ポリエチレングリコール300|PEG-6|PEG-8|PEG-32|PEG-75|ポリエチレングリコール20000|PEG(30)','hum','hum1','保湿・粘度の調整'],
+['PEG|ポリエチレングリコール|ポリエチレングリコール1500|ポリエチレングリコール400|PEG(400)|ポリエチレングリコール300|PEG-6|PEG-8|PEG-32|PEG-75|ポリエチレングリコール20000|PEG(30)','hum','hum1','保湿・粘度の調整'],
 ['マルチトール|マルチトール液|還元麦芽糖水アメ','hum','hum1','糖由来の保湿剤'],
 ['ソルビトール|D-ソルビトール|D-ソルビット液|ソルビット','hum','hum1','糖由来の保湿剤'],
 ['キシリトール','hum','hum1','糖由来の保湿剤'],
@@ -190,7 +190,7 @@ const D = [
 ['オレフィン(C14-16)スルホン酸Na|テトラデセンスルホン酸Na|テトラデセンスルホン酸ナトリウム液','clean','strongSurf','洗浄力の強い洗浄成分'],
 ['スルホコハク酸ラウリル2Na|スルホコハク酸ラウリル二ナトリウム|スルホコハク酸(C12-14)パレス-2Na','clean','midSurf','中程度の洗浄力の洗浄成分'],
 ['コカミドプロピルベタイン','clean','mildSurf','両性の洗浄成分。泡立ちを助ける'],
-['ラウラミドプロピルベタイン|ラウリン酸アミドプロピルベタイン液','clean','mildSurf','両性の洗浄成分。泡立ちを助ける'],
+['ラウラミドプロピルベタイン|ラウリン酸アミドプロピルベタイン液|ラウリン酸アミドプロピルジメチルアミノ酢酸液','clean','mildSurf','両性の洗浄成分。泡立ちを助ける'],
 ['ラウリルヒドロキシスルタイン|ラウリルヒドロキシスルホベタイン液|ラウリルヒドロキシスルホベタイン','clean','mildSurf','両性の洗浄成分。泡質を整える'],
 ['ココアンホ酢酸Na|アルキルカルボキシメチルヒドロキシエチルイミダゾリニウムベタイン','clean','mildSurf','両性の洗浄成分'],
 ['ラウラミドプロピルアミンオキシド|ラウリルジメチルアミンオキシド','clean','mildSurf','泡を安定させる洗浄成分'],
@@ -290,7 +290,7 @@ const D = [
 ['メタリン酸Na|メタリン酸ナトリウム','pres','','品質を安定させるキレート剤'],
 ['エチドロン酸4Na','pres','','品質を安定させるキレート剤'],
 ['PEG1000','hum','hum1','保湿・粘度の調整'],
-['ポリエチレングリコール4000','hum','hum1','保湿・粘度の調整'],
+['ポリエチレングリコール4000|PEG4000','hum','hum1','保湿・粘度の調整'],
 ['PEG/PPG-14/7ジメチルエーテル','hum','hum1','保湿・粘度の調整'],
 ['ポリグリセリン','hum','hum1','グリセリンがつながった保湿成分'],
 ['ポリグリセリン-3','hum','hum1','グリセリンが3つつながった保湿成分'],
@@ -436,8 +436,29 @@ const D = [
 ['ココイルイセチオン酸Na','clean','mildSurf','やさしい洗浄成分（イセチオン酸系）'],
 ['ラウロイルイセチオン酸Na','clean','mildSurf','やさしい洗浄成分（イセチオン酸系）'],
 ['イセチオン酸Na','other','','洗浄成分の原料にもなる成分。pHや使用感の調整'],
-['ラウリン酸Na','clean','','石けん系の洗浄成分'],
-['ヤシ脂肪酸K','clean','','石けん系の洗浄成分（ヤシ油由来）'],
+['ラウリン酸Na','clean','soap','石けん系の洗浄成分'],
+['ヤシ脂肪酸K','clean','soap','石けん系の洗浄成分（ヤシ油由来）'],
+/* 2026-11-19 洗顔料の点数のために追加（石けん・酸性石けん系の洗浄成分など） */
+['石ケン素地','clean','soap','石けん系の洗浄成分（ナトリウム石けん）'],
+['カリ石ケン素地','clean','soap','石けん系の洗浄成分（カリウム石けん）'],
+['カリ含有石ケン素地','clean','soap','石けん系の洗浄成分（カリウムを含む石けん）'],
+['ラウリン酸K','clean','soap','石けん系の洗浄成分'],
+['ミリスチン酸K','clean','soap','石けん系の洗浄成分'],
+['パルミチン酸K','clean','soap','石けん系の洗浄成分'],
+['ステアリン酸K','clean','soap','石けん系の洗浄成分'],
+['オレイン酸K','clean','soap','石けん系の洗浄成分'],
+['ラウレス-4カルボン酸','clean','mildSurf','酸性石けん系の洗浄成分のもと。水酸化Kなどと合わせて洗浄成分になる'],
+['ラウレス-5カルボン酸','clean','mildSurf','酸性石けん系の洗浄成分のもと。水酸化Kなどと合わせて洗浄成分になる'],
+['ラウレス-6カルボン酸','clean','mildSurf','酸性石けん系の洗浄成分のもと。水酸化Kなどと合わせて洗浄成分になる'],
+['POEラウリルエーテル酢酸','clean','mildSurf','酸性石けん系の洗浄成分のもと（医薬部外品の表示名）'],
+['オレフィンC16スルホン酸Na','clean','strongSurf','洗浄力の強い洗浄成分'],
+['マンニトール','hum','hum1','糖アルコールの保湿剤'],
+['タナクラクレイ','other','','汚れを吸着する泥（クレイ）'],
+['モンモリロナイト','other','','汚れを吸着する粘土鉱物（クレイ）'],
+['含硫ケイ酸Al','other','','汚れを吸着する粉体（クレイ）'],
+['ラウロイルカラスムギアミノ酸Na','clean','mildSurf','アミノ酸系の洗浄成分（オーツ麦由来）'],
+['ラウロイルアルギニン','clean','mildSurf','アミノ酸系の洗浄成分'],
+['ラウロアンホ酢酸Na','clean','mildSurf','両性の洗浄成分'],
 ['ラウリルアミノジ酢酸Na液','clean','mildSurf','両性の洗浄成分'],
 ['カプリル酸','oil','','脂肪酸の一種'],
 ['カプリン酸','oil','','脂肪酸の一種'],
@@ -742,6 +763,83 @@ function weightsConditioner(w, a){
   else if(a.length==='short') w.light+=0.25;
 }
 
+/* --- 洗顔料（2026-11-19 案） ---
+   シャンプーと同じく「最初に出てくる洗浄成分」を主洗浄成分にする。
+   洗顔料に多い「脂肪酸（ステアリン酸・ミリスチン酸など）＋水酸化K」は、混ぜると石けんになる書き方なので、
+   脂肪酸が成分表の6番目まで（有効成分を除く。医薬部外品は順番が配合量の順とは限らないので位置を問わない）にあり、水酸化K・水酸化Naも入っていれば「石けん系」として数える。
+   メイク落とし（クレンジング）は洗顔料と比べにくいので、点数と順位を付けない（ページは残す）。 */
+const FW_SKIP = p => /メイク落とし|クレンジング(オイル|ミルク|バーム|クリーム|ウォーター)/.test(String(p && p.name || ''));
+const FW_LABEL = {strong:'硫酸系など強め', soap:'石けん系', mid:'中程度', mild:'マイルド'};
+function fwSurfs(items){
+  const others = items.filter(i=>!i.active);
+  const alk = others.find(i=>i.name==='水酸化K');
+  const lim = items.some(i=>i.active) ? Infinity : 6;   /* 医薬部外品は表示順が配合量の順とは限らないので、位置で区切らない */
+  const out=[]; let soap=false;
+  others.forEach((it,idx)=>{
+    let k=null, name=it.name;
+    if(it.tags.includes('soap')) k='soap';
+    else if(it.role==='clean' && SURF_KIND(it)) k=SURF_KIND(it);
+    else if(it.name==='ステアリン酸' && alk && idx<lim){ k='soap'; name=`${norm(it.raw)}＋${norm(alk.raw)}`; }
+    if(!k) return;
+    if(k==='soap'){ if(soap) return; soap=true; }
+    if(out.some(s=>s.name===name)) return;
+    out.push({name, kind:k});
+  });
+  return out;
+}
+const FW_CLAY = it => it.name==='カオリン' || /(クレイ|泥)$|^モンモリロナイト$|^含硫ケイ酸Al$/.test(it.name);
+const FW_SCRUB = it => /^(結晶)?セルロース$|^ポリエチレン(末)?$|^コーンスターチ$/.test(it.name);
+function scoreFacewash(items){
+  const v={}, why={};
+  const S = fwSurfs(items), main=S[0]||null, mk=main?main.kind:null, rest=S.slice(1);
+  const rs = rest.filter(s=>s.kind==='strong').map(s=>s.name);
+  const rm = rest.filter(s=>s.kind==='mild').map(s=>s.name);
+  const rsoap = rest.some(s=>s.kind==='soap');
+  v.mild = 3 + (mk==='mild'?1.5:mk==='mid'?0.5:mk==='soap'?-0.5:mk==='strong'?-1.5:1) - 0.5*rs.length + Math.min(1, 0.25*rm.length);
+  why.mild = (main ? `主洗浄成分：${main.name}（${FW_LABEL[mk]}）` : '洗浄成分の種類を判定できない処方（非イオン性の成分・ジェル・泥などで洗うタイプ）') + (rs.length?` ／ ほかの強めの洗浄成分：${rs.join('、')}`:'') + (rm.length?` ／ マイルドな洗浄成分${rm.length}種`:'');
+  const pw = [];
+  const clay = uniq(items.filter(FW_CLAY).map(i=>i.name)), scrub = uniq(items.filter(FW_SCRUB).map(i=>i.name)), seb = namesWith(items,'sebum');
+  if(clay.length) pw.push('泥：'+clay.join('、'));
+  if(scrub.length) pw.push('粒・粉：'+scrub.join('、'));
+  if(seb.length) pw.push('皮脂を除く成分：'+seb.join('、'));
+  v.clean = 2.5 + (mk==='strong'?2:mk==='soap'?1.5:mk==='mid'?1:mk==='mild'?0:-0.5) + 0.5*rs.length + (rsoap?0.5:0) + Math.min(1, 0.5*pw.length);
+  why.clean = (main?`主洗浄成分が${FW_LABEL[mk]}`:'主洗浄成分なし') + (rs.length?` ＋ 強めの洗浄成分${rs.length}種`:'') + (rsoap?' ＋ 石けん系':'') + (pw.length?` ＋ ${pw.join('、')}`:'');
+  const h1=namesWith(items,'hum1'), h2=namesWith(items,'hum2');
+  v.moist = 0.5 + Math.min(2, 0.5*h1.length) + 0.75*h2.length;
+  why.moist = h2.length||h1.length ? [...h2,...h1].join('、') : '保湿成分なし';
+  const cm = items.filter(i=>['beauty','rough','sensitive','spot'].some(t=>i.tags.includes(t)));
+  const cN = uniq(cm.map(i=>i.name)), cA = uniq(cm.filter(i=>i.active).map(i=>i.name));
+  const ex = namesWith(items,'extract').filter(n=>!cN.includes(n));
+  v.care = 0.5 + 1.0*cN.length + 0.5*cA.length + Math.min(1, 0.25*ex.length);
+  why.care = (cN.length?cN.map(n=>cA.includes(n)?n+'（有効成分）':n).join('、'):'肌ケア成分なし') + (ex.length?` ＋ エキス${ex.length}種`:'');
+  const g = gentleScore(items,{surf:false}); v.gentle=g.v; why.gentle=g.why;
+  for(const k in v) v[k]=clampR(v[k]);
+  return {v, why, mainSurf: main ? {name:main.name, kind:mk} : null};
+}
+function adjFacewash(a){
+  const out=[];
+  if(!a) return out;
+  if(a.gender==='men') out.push(['メンズ', {clean:0.25}, {}]);
+  const age = {teen:['10代',{clean:0.5},{}], '40s':['40代',{moist:0.25},{}], '50s':['50代以上',{moist:0.5,mild:0.5},{}]}[a.age];
+  if(age) out.push(age);
+  return out;
+}
+function weightsFacewash(w, a){
+  /* 選んだ悩みがいちばん強く効く（ほかのカテゴリと同じ考え方） */
+  if(a.skin==='dry'){w.mild+=1;w.moist+=0.5;w.clean*=0.6;}
+  else if(a.skin==='oily'){w.clean+=1;w.mild*=0.8;}
+  else if(a.skin==='combo'){w.clean+=0.5;w.moist+=0.5;}
+  const c=a.concerns||[];
+  if(c.includes('dry')){w.moist+=2.5;w.mild+=1;w.clean*=0.7;}
+  if(c.includes('oily')){w.clean+=2.5;}
+  if(c.includes('pore')){w.clean+=2;w.mild*=0.8;}
+  if(c.includes('rough')){w.care+=2.5;w.gentle+=0.5;}
+  if(c.includes('sensitive')){w.gentle+=2.5;w.mild+=1;}
+  if(a.texture==='rich'){w.moist+=0.75;w.clean*=0.7;}
+  else if(a.texture==='light'){w.clean+=0.75;w.moist*=0.7;}
+  if(a.makeup==='yes') w.clean+=0.75;
+}
+
 const CATS = {
   shampoo:{n:'シャンプー', scored:true, unit:'ml',
     themes:[{k:'mild',n:'洗浄のやさしさ',s:'やさしさ'},{k:'clean',n:'洗浄力',s:'洗浄力'},{k:'scalp',n:'頭皮ケア',s:'頭皮'},{k:'repair',n:'髪の補修',s:'補修'},{k:'smooth',n:'指通り',s:'指通り'},{k:'gentle',n:'刺激の少なさ',s:'低刺激'}],
@@ -751,7 +849,10 @@ const CATS = {
     themes:[{k:'moist',n:'うるおい補給',s:'うるおい'},{k:'barrier',n:'保護力（フタ）',s:'保護'},{k:'light',n:'軽さ',s:'軽さ'},{k:'beauty',n:'ケア成分（ビタミン類など）',s:'ケア成分'},{k:'concern',n:'悩みへの対応',s:'悩み'},{k:'gentle',n:'刺激の少なさ',s:'低刺激'}],
     ng:{fragrance:'香料', alcohol:'アルコール', uvabs:'紫外線吸収剤', silicone:'シリコーン', paraben:'パラベン', mineral:'鉱物油'},
     score:scoreSkincare, adjust:adjSkincare, weigh:weightsSkincare},
-  facewash:{n:'洗顔料', scored:false, unit:'g'},
+  facewash:{n:'洗顔料', scored:true, unit:'g', skip:FW_SKIP,
+    themes:[{k:'mild',n:'洗浄のやさしさ',s:'やさしさ'},{k:'clean',n:'洗浄力',s:'洗浄力'},{k:'moist',n:'洗い上がりのうるおい',s:'うるおい'},{k:'care',n:'肌ケア成分',s:'肌ケア'},{k:'gentle',n:'刺激の少なさ',s:'低刺激'}],
+    ng:{fragrance:'香料', strongSurf:'硫酸系など強めの洗浄成分', menthol:'メントール', alcohol:'アルコール', paraben:'パラベン', colorant:'着色料'},
+    score:scoreFacewash, adjust:adjFacewash, weigh:weightsFacewash},
   conditioner:{n:'コンディショナー・トリートメント', scored:true, unit:'g',
     themes:[{k:'smooth',n:'指通り',s:'指通り'},{k:'repair',n:'髪の補修',s:'補修'},{k:'moist',n:'うるおい',s:'うるおい'},{k:'light',n:'仕上がりの軽さ',s:'軽さ'},{k:'gentle',n:'刺激の少なさ',s:'低刺激'}],
     ng:{fragrance:'香料', silicone:'シリコーン', alcohol:'アルコール', paraben:'パラベン'},

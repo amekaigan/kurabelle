@@ -16,13 +16,16 @@ const ROOT_DIR = path.join(__dirname, "..");
 const PREVIEW = rest.includes("--preview"); // ファイルを直接開く見本用：リンクの末尾に index.html を付ける
 const DATA = JSON.parse(fs.readFileSync(SRC, "utf8"));
 const PRODUCTS = DATA.products;
+/* Amazonの商品番号（ASIN）の確かめ（2026-11-15）。楽天の商品に並べるボタン用。メーカー直販（shop）の商品には付けない */
+{ const bad = PRODUCTS.filter(p => p.amazon != null && (!/^[A-Z0-9]{10}$/.test(p.amazon) || (p.shop && p.shop.url)));
+  if (bad.length) { console.error("amazon（ASIN）の書き方が違うか、メーカー直販の商品に付いています：" + bad.map(p => p.id).join(", ")); process.exit(1); } }
 const UPDATED = DATA.updated || "";
 const SITE_NAME = "クラベル";
 /* Googleアナリティクス4の測定ID。見本（--preview）では入れない。使っていることは「クラベルとは」の #analytics に書いている */
 const ICONS = `<link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/assets/icons/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">`;
 const GA4_ID = "G-DJ0D89ETX9";
 /* 購入ボタン（広告リンク）が押されたときに、ページの種類・商品・飛び先を記録する（2026-11-10。どのページ・どの商品から押されたかを見るため。個人は特定しない） */
-const BUY_TRACK = `document.addEventListener("click",function(e){var a=e.target&&e.target.closest&&e.target.closest('a[rel~="sponsored"]');if(!a)return;var h=a.hostname||"";gtag("event","buy_click",{page_type:location.pathname.split("/")[1]||"top",item_id:a.getAttribute("data-buy")||"",shop:/rakuten/.test(h)?"rakuten":/amazon|amzn/.test(h)?"amazon":"direct",transport_type:"beacon"})},true)`;
+const BUY_TRACK = `document.addEventListener("click",function(e){var a=e.target&&e.target.closest&&e.target.closest('a[rel~="sponsored"]');if(!a)return;var h=a.hostname||"";gtag("event","buy_click",{page_type:location.pathname.split("/")[1]||"top",item_id:a.getAttribute("data-buy")||"",shop:a.getAttribute("data-shop")||(/rakuten/.test(h)?"rakuten":/amazon|amzn/.test(h)?"amazon":"direct"),transport_type:"beacon"})},true)`;
 const GA = GA4_ID && !PREVIEW ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA4_ID}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","${GA4_ID}");${BUY_TRACK}</script>` : "";
 const OPERATOR_OK = false; // 「運営者より」の文章をユーザーが確かめたら true（それまでは見本にだけ出す）
 /* プライバシーポリシー・免責事項（2026-11-12 ユーザーの依頼。アフィリエイトの審査で見られるページ）
@@ -53,7 +56,7 @@ const TARGET_N = { men: "メンズ向け", women: "レディース向け", all: 
 const ROLE_N = r => (C.ROLES[r] || C.ROLES.unk).n;
 const ROLE_C = r => (C.ROLES[r] && C.ROLES[r].c) || "--line2";
 const TAG_EXPLAIN = {
-  strongSurf: "洗浄力の強い洗浄成分（硫酸系など）", midSurf: "中程度の洗浄成分", mildSurf: "やさしい洗浄成分（アミノ酸系・ベタイン系・糖系など）",
+  strongSurf: "洗浄力の強い洗浄成分（硫酸系など）", midSurf: "中程度の洗浄成分", mildSurf: "やさしい洗浄成分（アミノ酸系・ベタイン系・糖系など）", soap: "石けん系の洗浄成分",
   cond: "髪の指通りをよくする", repair: "髪の補修", scalp: "頭皮をすこやかに保つ", scalpA: "医薬部外品で有効成分になることがある殺菌成分",
   sebum: "皮脂を取り除く", hum1: "基本の保湿剤", hum2: "高機能な保湿成分", occS: "水分の蒸発を防ぐ強い保護油", occM: "一般的な油分", light: "軽い使用感を出す",
   beauty: "ケア成分（ビタミン類など）", extract: "植物などのエキス", fragrance: "香料", essoil: "精油", alcohol: "アルコール（エタノール）", uvabs: "紫外線吸収剤",
@@ -68,8 +71,9 @@ const PA = PRODUCTS.map(p => {
   const names = [...new Set(a.items.map(i => i.name))];
   const tags = new Set(a.items.flatMap(i => i.tags));
   const cat = C.CATS[p.category];
-  const sc = cat && cat.scored ? cat.score(a.items, null) : null;
-  const ev = cat && cat.scored ? C.evaluate([p], p.category, null, () => a)[0] : null;
+  const on = !!(cat && cat.scored && !(cat.skip && cat.skip(p))); // 洗顔料の中のメイク落としには点数を付けない（2026-11-19）
+  const sc = on ? cat.score(a.items, null) : null;
+  const ev = on ? C.evaluate([p], p.category, null, () => a)[0] : null;
   return { p, a, names, tags, sc, match: ev ? ev.match : null, grade: ev ? ev.grade : null, url: `products/${slug(p.id)}/` };
 });
 /* 製造終了品（discontinued）：ページは残し、いま買える近い商品へ案内する（2026-10-27、ユーザーの指示）。
@@ -293,7 +297,8 @@ ${RK_ON || PREVIEW ? `<p>商品画像と販売ページへのリンクは、楽�
 const QUIZ = {
   shampoo: { n: "シャンプー", hash: "", what: "頭皮のタイプ" },
   conditioner: { n: "コンディショナー", hash: "#conditioner", what: "髪の長さ" },
-  skincare: { n: "保湿クリーム", hash: "#skincare", what: "肌のタイプ" }
+  skincare: { n: "保湿クリーム", hash: "#skincare", what: "肌のタイプ" },
+  facewash: { n: "洗顔料", hash: "#facewash", what: "肌のタイプ" }
 };
 const QUIZ_CATS = Object.keys(QUIZ);
 const HAIR = new Set(["shampoo", "conditioner", "scalp", "colorrinse"]);
@@ -363,7 +368,7 @@ const chips = x => `<span class="chip">${KIND_N[x.p.kind] || ""}</span>${TARGET_
 const mix = x => { const cnt = {}; x.a.items.forEach(i => { const r = C.compRole(i); cnt[r] = (cnt[r] || 0) + 1; });
   return `<div class="mix" aria-hidden="true">${C.ROLE_ORDER.filter(r => cnt[r]).map(r => `<span style="flex:${cnt[r]};background:var(${ROLE_C(r)})"></span>`).join("")}</div>`; };
 /* メーカー直販の商品（アフィリエイトの仲介サービス経由）は、楽天の情報（画像・価格・リンク）を使わない。
-   楽天ウェブサービスの規約で、楽天の情報を使う商品に楽天以外のアフィリエイトを付けられないため。 */
+   楽天の情報を使う商品に他社のリンクを並べるときの決まりは spec.md 10章「楽天と他社のアフィリエイトを並べる」（2026-11-15）。 */
 const SHOP_N = { a8: "A8.net", moshimo: "もしもアフィリエイト", accesstrade: "アクセストレード", afb: "afb" };
 const REL_IMG = p => "/" + p;
 const isDirect = x => !!(x.p.shop && x.p.shop.url);
@@ -373,17 +378,23 @@ const DEST_OFFICIAL = { btn: "公式サイトで見る", page: "メーカーの�
 const destOf = s => DEST[s && s.dest] || DEST_OFFICIAL;
 const dest = x => destOf(x.p.shop);
 /* 2026-10-24：1商品に広告リンクを2つ（公式サイトとAmazonなど）出せるようにした。2つ目以降は shop.also に {asp, url, pixel, dest} で書く */
-const shops = x => isDirect(x) ? [x.p.shop, ...(x.p.shop.also || []).filter(s => s && s.url)].sort((a, b) => (b.dest === "amazon") - (a.dest === "amazon")) : [];   /* Amazonを先に（2026-10-24 ユーザーの指定） */
+const shops = x => isDirect(x) ? [x.p.shop, ...(x.p.shop.also || []).filter(s => s && s.url)].sort((a, b) => x.p.shop.amazonFirst ? (b.dest === "amazon") - (a.dest === "amazon") : 0) : [];   /* 既定は公式サイトが先。shop.amazonFirst のある商品（U-MA）だけAmazonを先に（2026-11-15 ユーザーの指定） */
 /* 楽天の返事を待たずに押せるよう、JAN（なければ商品名）で楽天市場の検索結果へ飛ぶ広告リンクを最初から入れておく。
    返事が来たら assets/rk.js が商品ページへのリンクに差し替える（2026-11-10。混み合って返事が来ないとボタンが出なかったため）。楽天から取得した情報は使っていない */
 const RK_AFF = process.env.RAKUTEN_AFFILIATE_ID || "588643c2.b560f3b3.588643c3.4dd69634";
 const rkSearch = x => { const u = encodeURIComponent(`https://search.rakuten.co.jp/search/mall/${encodeURIComponent(rkKey(x))}/`); return `https://hb.afl.rakuten.co.jp/hgc/${RK_AFF}/?pc=${u}&m=${u}`; };
-const rkBtn = x => `<span class="pr-tag">PR</span><a class="rk-buy" href="${esc(rkSearch(x))}" data-rk-link="${esc(rkKey(x))}" data-buy="${esc(x.p.id)}" rel="sponsored noopener" target="_blank">楽天市場で見る</a>`;
-const shopBtns = x => `<span class="pr-tag">PR</span>` + shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" data-buy="${esc(x.p.id)}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("");
+/* Amazon（A8.net「Amazon.co.jp成果反映用」、2026-11-15）：楽天の商品に、楽天のボタンと並べて出す。
+   リンクは A8.net のツールが出すものと同じ形で、商品番号（ASIN）だけが商品ごとに変わる。ASIN はクラベルで調べたもの（楽天から取った情報では作らない）。
+   Amazonの値段・画像は出さない。決まりは spec.md 10章「楽天と他社のアフィリエイトを並べる」 */
+const AMZ_MAT = "1NWF4S+B5AGJE+249K+BWGDT", AMZ_TAG = "a8-affi-322705-22";
+const amzUrl = asin => `https://px.a8.net/svt/ejp?a8mat=${AMZ_MAT}&a8ejpredirect=${encodeURIComponent(`https://www.amazon.co.jp/dp/${asin}?tag=${AMZ_TAG}`)}`;
+const amzBtn = x => x.p.amazon ? `<a class="rk-buy" href="${esc(amzUrl(x.p.amazon))}" data-buy="${esc(x.p.id)}" data-shop="amazon" rel="sponsored noopener" target="_blank">Amazonで見る</a><img class="px" src="https://www17.a8.net/0.gif?a8mat=${AMZ_MAT}" width="1" height="1" alt="">` : "";
+const rkBtn = x => `<span class="pr-tag">PR</span>${amzBtn(x)}<a class="rk-buy" href="${esc(rkSearch(x))}" data-rk-link="${esc(rkKey(x))}" data-buy="${esc(x.p.id)}" data-shop="rakuten" rel="sponsored noopener" target="_blank">楽天市場で見る</a>`;
+const shopBtns = x => `<span class="pr-tag">PR</span>` + shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" data-buy="${esc(x.p.id)}" data-shop="${s.dest === "amazon" ? "amazon" : "direct"}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("");
 const shopTag = x => shops(x).map(s => destOf(s).tag).filter((v, i, a) => a.indexOf(v) === i).join("・");
 const shopNote = () => `広告リンクです。紹介料は点数・順位に関係しません。価格は各サイトでご確認ください。`;   /* 2026-10-24 ユーザーの指定で短くした */
 /* 商品ページの購入ボックス：PRの札・ボタン（縦に並べる）・説明文をひとつの枠に入れる（2026-10-24 ユーザーの指定） */
-const buyBox = (x, r) => `<div class="buybox"><span class="pr-tag">PR</span>${shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" data-buy="${esc(x.p.id)}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("")}<p class="pr-note">${shopNote(x)}<a href="${r("about/")}#ad">広告について</a></p></div>`;
+const buyBox = (x, r) => `<div class="buybox"><span class="pr-tag">PR</span>${shops(x).map(s => `<a class="rk-buy" href="${esc(s.url)}" data-buy="${esc(x.p.id)}" data-shop="${s.dest === "amazon" ? "amazon" : "direct"}" rel="sponsored noopener" target="_blank">${destOf(s).btn}</a>${s.pixel ? `<img class="px" src="${esc(s.pixel)}" width="1" height="1" alt="">` : ""}`).join("")}<p class="pr-note">${shopNote(x)}<a href="${r("about/")}#ad">広告について</a></p></div>`;
 const useRk = x => (RK_ON || PREVIEW) && !isDirect(x);
 const rkKey = x => x.p.jan || `${x.p.brand || ""} ${x.p.name}`.trim();
 const ownImg = x => (isDirect(x) && x.p.shop.img) || x.p.img || "";   /* 運営者が用意した商品画像（メーカー直販の素材、または差し替え用） */
@@ -406,7 +417,8 @@ function themesBlock(x) {
 const AX_LABEL = {
   shampoo: { mild: "やさしい洗浄", clean: "洗浄力", scalp: "頭皮ケア", repair: "髪の補修", smooth: "指通り", gentle: "低刺激" },
   skincare: { moist: "うるおい", barrier: "保護（フタ）", light: "軽さ", beauty: "ケア成分", concern: "悩み対応", gentle: "低刺激" },
-  conditioner: { smooth: "指通り", repair: "髪の補修", moist: "うるおい", light: "軽さ", gentle: "低刺激" }
+  conditioner: { smooth: "指通り", repair: "髪の補修", moist: "うるおい", light: "軽さ", gentle: "低刺激" },
+  facewash: { mild: "やさしい洗浄", clean: "洗浄力", moist: "うるおい", care: "肌ケア成分", gentle: "低刺激" }
 };
 const CAT_AVG = {}, CAT_RANK = {};
 Object.keys(C.CATS).filter(k => C.CATS[k].scored).forEach(cat => {
@@ -444,6 +456,11 @@ ${rings}${spokes}${hasAvg ? `<polygon points="${poly(t => avg[t.k])}" class="avg
 }
 /* 商品ページのグラフの下に出す、観点ごとの見方（何が多いと高くなるか。効果ではなく処方の傾向として書く） */
 const AX_DESC = {
+  facewash: { mild: "主な洗浄成分が、アミノ酸系・ベタイン系・酸性石けん系などのマイルドなものほど高くなります。石けん系や硫酸系が主体だと低めになります。",
+    clean: "主な洗浄成分が、硫酸系・石けん系などの洗浄力の高いものほど高くなります。泥やスクラブの粒、シリカなどが入っていると少し上がります。皮脂や汚れをしっかり落とす処方の傾向です。",
+    moist: "グリセリンなどの保湿剤や、ヒアルロン酸・セラミドなどの保湿成分が多いほど高くなります。",
+    care: "グリチルリチン酸2K・アラントイン・ビタミンC誘導体など、肌ケアの成分が多いほど高くなります。医薬部外品の有効成分は少し重く数えます。",
+    gentle: "香料・アルコール・メントール・着色料などが少ないほど高くなります。" },
   shampoo: { mild: "主な洗浄成分が、アミノ酸系・ベタイン系などのマイルドなものほど高くなります。",
     clean: "主な洗浄成分が、硫酸系などの洗浄力の高いものほど高くなります。皮脂をしっかり落とす処方の傾向です。",
     scalp: "グリチルリチン酸2K・ピロクトンオラミンなど、頭皮ケアの成分が多いほど高くなります。",
@@ -1116,7 +1133,7 @@ ${featureLinks(r)}
 CAT_ORDER.forEach(cat => {
   const list = P.filter(x => x.p.category === cat); if (!list.length) return;
   const u = `categories/${cat}/`;
-  write(u, `${CAT_N[cat]}の成分を比べる`, `${CAT_N[cat]}${list.length}件の全成分を、役割つきで比べられます。`, r => `
+  write(u, list.length >= 2 ? `${CAT_N[cat]}の成分比較${list.length}選｜全成分を役割つきでくらべる` : `${CAT_N[cat]}の成分を比べる`, `${CAT_N[cat]}${list.length}件の全成分を、役割つきで比べられます。`, r => `
 <h1>${esc(CAT_N[cat])}</h1><p class="lead">登録している${esc(CAT_N[cat])}は${list.length}件です。${C.CATS[cat] && C.CATS[cat].scored ? "成分の傾向スコアが高い順に並べています。" : "このカテゴリはまだ点数をつけていません。"}</p>
 ${featureLinks(r, cat)}
 ${cat === "shampoo" ? `<div class="clist">${CONCERNS.map(c => `<a class="cl" href="${r(concernUrl(c))}"><b>${esc(c.short)}</b><i>${c.list.length}件</i></a>`).join("")}</div>` : ""}

@@ -71,6 +71,8 @@ uid = lambda x: x.get("jan") or x.get("id")
 have = {uid(p) for p in D["products"]} | {uid(p) for p in PEND["products"]}
 skipped = {uid(s) for s in SKIP["items"]}
 public_cats = {p["category"] for p in D["products"]}
+# 2026-11-19 ユーザーの指示：全成分が同じ商品（つめかえ用・香り違い・量違い）は登録しない。重複ページになるため
+same_ing = {(p["category"], p.get("ingredients")): p["name"] for p in D["products"] + PEND["products"]}
 ok, ng = [], []
 for c in C:
     if not c.get("jan") and not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)+", c.get("id", "")):
@@ -100,6 +102,10 @@ for c in C:
     p = {"id": f"jan-{c['jan']}" if c.get("jan") else c["id"], "jan": c.get("jan") or "", "category": c["category"], "brand": c["brand"], "name": c["name"],
          "kind": c["kind"], "target": c["target"], "volume": c["volume"], "unit": c["unit"], "price": None,
          "ingredients": ("有効成分：" + "、".join(act) + "　その他の成分：" + "、".join(others)) if act else "、".join(a)}
+    twin = same_ing.get((p["category"], p["ingredients"]))
+    if twin:
+        ng.append((c, [f"登録済みの「{twin}」と全成分が同じ（つめかえ用・香り違い・量違いは登録しない）"])); continue
+    same_ing[(p["category"], p["ingredients"])] = p["name"]
     if c.get("note"): p["note"] = c["note"]
     p["source"] = {"type": c["A"]["type"], "label": c["A"]["label"], "url": c["A"]["url"], "date": c.get("date", TODAY)}
     ok.append((c, p)); have.add(uid(c))

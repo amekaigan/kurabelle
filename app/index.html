@@ -156,6 +156,8 @@ section{padding-top:30px;display:grid;gap:14px;scroll-margin-top:56px}
 .pc-pic .thumb{position:relative}
 .pc-pic .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff}
 .pc-pic .pc-rank{position:absolute;top:-8px;left:-8px;min-width:30px;height:30px;padding:0 7px;display:flex;align-items:baseline;justify-content:center;padding-top:7px;box-sizing:border-box;border-radius:15px;background:var(--ink);color:var(--paper);font-size:15px;line-height:1}
+.cmp-full{flex-basis:100%;margin:4px 0 0;padding:10px 12px;border-radius:8px;background:var(--note,#FCF2C2);color:var(--ink);font-size:15px;line-height:1.6}
+.cmp-full a{margin-left:6px}
 .pc-pic .pc-rank small{display:inline;font-size:10px;margin:0 0 0 1px;color:inherit}
 .pc-go{flex-basis:100%;min-height:48px;font-size:15px;font-weight:700;text-decoration:none}
 .rk-price{font-size:13px;color:var(--ink2)}
@@ -1684,12 +1686,23 @@ document.addEventListener('click', e=>{
   if(act==='view'){ S.cmpView=b.dataset.v; save(); renderCompare(current()); return; }
   if(act==='focus'){ const i=+b.dataset.i; S.focus = S.focus===i ? null : i; renderCompare(current()); return; }
 });
+/* 2026-11-19（ユーザーの指摘）：上限の5商品に達しているとき、押したチェックのすぐ下に理由を出す。
+   以前は離れた「横並び比較」の見出しの横に出ていて、押しても反応がないように見えていた */
+function cmpFull(t, chosen){
+  const foot = t.closest('.pc-foot'); if(!foot) return;
+  document.querySelectorAll('.cmp-full').forEach(x=>x.remove());
+  const n = document.createElement('p');
+  n.className = 'cmp-full'; n.setAttribute('role','alert');
+  n.innerHTML = `横並び比較に入れられるのは<b>5商品まで</b>です。いま5商品が入っています${chosen?'':'（最初は上位5商品が自動で入っています）'}。入れ替えるときは、ほかの商品のチェックを外してから選んでください。<a href="#compare">比較中の商品を見る</a>`;
+  t.closest('label').after(n);
+  clearTimeout(cmpFull.tm); cmpFull.tm = setTimeout(()=>n.remove(), 8000);
+}
 document.addEventListener('change', e=>{
   const t=e.target;
   if(t.matches('[data-act="cmp"]')){
     const cur=current();
     let ids = compareIds(cur.ordered).slice();
-    if(t.checked){ if(ids.length>=5){ t.checked=false; $('#cmp-meta').textContent='比較できるのは5商品までです'; return; } ids.push(t.dataset.id); }
+    if(t.checked){ if(ids.length>=5){ t.checked=false; cmpFull(t, S.compare[S.cat]); return; } ids.push(t.dataset.id); }
     else ids = ids.filter(x=>x!==t.dataset.id);
     setCompare(ids); renderCompare(cur);
   }

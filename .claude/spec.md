@@ -228,7 +228,11 @@
   6. アセチルヒアルロン酸Na
   - あわせて確かめること：成分表に「マカデミアナッツ油脂肪酸フィトステリル」（4件）と「マカデミアナッツ脂肪酸フィトステリル」（23件）の両方の書き方があり、検索では「油」の入った名前でも探されている。同じ成分の別の表示名だと出典で確かめられたら、notes の `same` に足す（確かめられないうちは足さない）。
   - 花王の製品カタログは成分を並べるだけで、成分の説明はない（2026年11月21日に確かめた）。説明の出典は原料メーカーの資料・CIR・化粧品工業会を当たる。
-  - 接続先を追加（2026年11月21日、ユーザーの許可）：cir-reports.cir-safety.org・www.jcia.org・www.nisshin-oillio.com・www.nipponseika.co.jp・finechemical-cosmetics.nisshin-oillio.com・www.nipponseika-cosme.com。同じ日の時点で、cir-reports は検索結果を画面上で組み立てる作りで、シェルからは中身を取り出せない。finechemical-cosmetics.nisshin-oillio.com は503（一時的に使えない）、www.jcia.org・www.nipponseika-cosme.com はまだ届かない。日を置いてもう一度試す。
+  - 接続先を追加（2026年11月21日、ユーザーの許可）：cir-reports.cir-safety.org・www.jcia.org・www.nisshin-oillio.com・www.nipponseika.co.jp・finechemical-cosmetics.nisshin-oillio.com・www.nipponseika-cosme.com・nipponseika-cosme.com・cir-safety.org。同じ日に試し直した結果：
+    - www.jcia.org：読める。
+    - 日本精化の化粧品原料サイト：www なしの nipponseika-cosme.com へ転送するため、nipponseika-cosme.com も追加して読めるようになった。商品カタログ（/products/catalog）に成分の表示名での一覧はない。
+    - 日清オイリオの化粧品原料サイト（finechemical-cosmetics.nisshin-oillio.com）：先方が「PHPの脆弱性への対策として、ホームページの一部を一時停止」と表示している（503）。再開を待つ。リンゴ酸ジイソステアリルはそれまで後回しにしてよい。
+    - CIR：cir-safety.org（www なし）も追加したが、報告書の検索は画面上で組み立てる作りで、この環境からは検索できない。報告書のPDFのアドレスが分かれば読める見込み（運営者にブラウザで探してもらう方法がある）。
 
 ## 消えたページの転送（2026年10月27日、ユーザーのOK）
 - 10月16日から10月26日までの全部の版を作り直して比べると、11ページが知らないうちに消えていた：成分2（ヒドロキシエチルウレア＝商品が1件に減った、オクチルドデカノール＝辞書でミリスチルアルコールの仲間にまとめた）、成分1（チャ乾留液。10月26日に説明を厚くして戻した）、商品4（ルシード2件は手で転送済み、ニベアメン モーニング10・ダヴメン+ケア オールインワンは転送なし）、比較5（外した商品を含む組み合わせ）。

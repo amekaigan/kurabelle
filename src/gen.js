@@ -729,7 +729,7 @@ ING_PAGES.forEach(g => {
   const co = [...coCnt].map(([n, c]) => ({ n, c, pct: Math.round(c / g.uses.length * 100), lift: c / g.uses.length - (ING.get(n).uses.length / P.length) }))
     .filter(o => o.c >= 2 && o.lift > 0.1).sort((m, n) => n.lift - m.lift).slice(0, 8);
   const dataLead = best ? `クラベルに登録している${CAT_N[best.cat]}では、${best.n}件のうち${best.k}件（${best.pct}%）に入っています。` : "";
-  const nf = noteOf(g.name), faqQ = nf && nf.faq ? nf.faq.map(o => o.q).join("／") : "";
+  const nf = noteOf(g.name), faqQ = nf && nf.faq ? nf.faq.slice(0, 2).map(o => o.q).join("／") : "" /* 説明文が長くなりすぎないよう、先頭の2問だけ（2026-11-26） */;
   /* 検索結果での見え方（2026-11-01）：成分名＋「美容」「コスメ」の検索で5位前後に出てもクリックが0だったため、
      タイトルに役割（保湿など）と件数、説明文の先頭に「答え」（何の成分か）と、成分表での別の書かれ方を入れる。
      「同じ成分」と言い切るのは notes の same だけ。まとめて数えている表示名は「仲間」と書く（本文と同じ扱い） */
@@ -786,7 +786,7 @@ ING_PAGES.forEach(g => {
       <p class="small muted">化粧品${posU.length}件で数えています。化粧品の成分表は配合量の多い順（1%以下は順不同）です。</p>` : ""}
     ${co.length ? `<h3>よく一緒に入っている成分</h3><div class="tags">${co.map(o => `<a class="tagl" href="${r(ingUrl.get(o.n))}">${esc(o.n)}<span class="mono">${o.pct}%</span></a>`).join("")}</div><p class="small muted">${esc(g.name)}が入っている商品のうち、その成分も入っている割合です。</p>` : ""}
   </section>
-  ${(() => { const n = noteOf(g.name); return n && n.faq ? `<section class="ifaq"><h2>${esc(aka || g.name)}のよくある疑問</h2>${n.faq.map(o => `<div class="qa-c"><h3 class="qa-q"><span class="qa-i" aria-hidden="true">Q</span>${esc(o.q)}</h3><p>${esc(o.a)}</p></div>`).join("")}</section><script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: n.faq.map(o => ({ "@type": "Question", name: o.q, acceptedAnswer: { "@type": "Answer", text: o.a } })) }).replace(/</g, "\\u003c")}</script>` : ""; })()}
+  ${(() => { const n = noteOf(g.name); return n && n.faq ? `<section class="ifaq"><h2>${esc(aka || g.name)}のよくある疑問</h2>${n.faq.map((o, i) => `<details class="qa-d"${i === 0 ? " open" : ""}><summary class="qa-q"><span class="qa-i" aria-hidden="true">Q</span><span>${esc(o.q)}</span></summary><p>${esc(o.a)}</p></details>`).join("")}</section><script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: n.faq.map(o => ({ "@type": "Question", name: o.q, acceptedAnswer: { "@type": "Answer", text: o.a } })) }).replace(/</g, "\\u003c")}</script>` : ""; })()}
   <section id="ing-products"><h2>${esc(g.name)}が入っている商品（${g.uses.length}件）</h2>
     <p class="small muted">「◯番目／全◯成分」は成分表での位置です。化粧品では前のほうほど配合量が多い目安になります。医薬部外品は配合量の順とは限りません。「有効成分として配合」は、医薬部外品の有効成分として表示されているものです（有効成分は成分表の先頭に別枠で書かれるため、位置は出していません）。</p>
     <div class="plist">${top.map(({ x, pos, of, active, raw }) => { const rn = raw ? C.norm(raw) : "", shown = rn && C.key(rn) !== C.key(g.name) ? `・表示名「${esc(rn)}」` : "";

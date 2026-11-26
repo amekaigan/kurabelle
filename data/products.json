@@ -1485,7 +1485,7 @@
    "jan": "4901301446206",
    "category": "conditioner",
    "brand": "THE ANSWER",
-   "name": "花王 THE ANSWER EXモイストトリートメント",
+   "name": "花王 THE ANSWER EXモイストトリートメント FOR DAILY DAMAGE",
    "kind": "cosme",
    "target": "all",
    "volume": 220,
@@ -4762,12 +4762,12 @@
    "volume": 130,
    "unit": "g",
    "price": null,
-   "ingredients": "水、ステアリン酸、グリセリン、パルミチン酸、ミリスチン酸、ラウリン酸、水酸化K、コカミドメチルMEA、エタノール、サリチル酸、ハトムギ種子エキス、リン酸アスコルビルMg、ヨーグルト液(牛乳)、ラウリン酸ポリグリセリル-10、ポリクオタニウム-7、BHT、EDTA-2Na、BG、メントール、フェノキシエタノール、メチルパラベン、香料",
+   "ingredients": "水、パルミチン酸、グリセリン、ステアリン酸、水酸化K、ラウリン酸、ミリスチン酸、シリカ、エタノール、ソルビトール、炭、メントール、セージ葉エキス、トゲキリンサイ/ミツイシコンブ/ウスバアオノリエキス、バンブサアルンジナセア茎、BG、ヒドロキシプロピルメチルセルロース、BHT、EDTA-2Na、フェノキシエタノール、メチルパラベン、香料",
    "source": {
-    "type": "retailer",
-    "label": "ツルハグループ通販 商品ページ",
-    "url": "https://shop.tsuruha.co.jp/10179579.html",
-    "date": "2026-11-05"
+    "type": "brand",
+    "label": "ロート製薬 商品情報サイト（成分表示）",
+    "url": "https://jp.rohto.com/seib/seib?kw=199433",
+    "date": "2026-11-27"
    }
   },
   {
@@ -7891,25 +7891,6 @@
    }
   },
   {
-   "id": "jan-4901301462008",
-   "jan": "4901301462008",
-   "category": "conditioner",
-   "brand": "THE ANSWER",
-   "name": "花王 THE ANSWER EXモイストトリートメント FOR DAILY DAMAGE",
-   "kind": "cosme",
-   "target": "all",
-   "volume": 220,
-   "unit": "g",
-   "price": null,
-   "ingredients": "水、ステアリルアルコール、ジメチコン、セタノール、DPG、ステアロキシプロピルジメチルアミン、ビスメトキシプロピルアミドイソドコサン、オリーブ果実油、セラミドNG、ホホバ種子油、ラノリン脂肪酸、加水分解ケラチン(羊毛)、リンゴ酸、γ-ドコサラクトン、ジラウラミドグルタミドリシンNa、グリセリン、加水分解コンキオリンタンパク、加水分解ヒアルロン酸、乳酸、乳酸Na、BG、ラウロイル加水分解シルクNa、アルギニン、アスパラギン酸、グリシン、アラニン、セリン、バリン、イソロイシン、プロリン、トレオニン、ヒスチジン、フェニルアラニン、PCA、PCA-Na、セバシン酸ジエチル、ベヘントリモニウムクロリド、パルミチン酸イソプロピル、ジアルキル(C12-18)ジモニウムクロリド、ヘキサ(ヒドロキシステアリン酸/ステアリン酸/ロジン酸)ジペンタエリスリチル、ヒドロキシエチルセルロース、アモジメチコン、セテアレス-7、セテアレス-25、セトリモニウムクロリド、PEG-45M、ベンジルアルコール、イソプロパノール、エタノール、香料",
-   "source": {
-    "type": "brand",
-    "label": "花王 製品カタログ",
-    "url": "https://www.kao-kirei.com/ja/item/khg/theanswer/4901301462008/",
-    "date": "2026-11-17"
-   }
-  },
-  {
    "id": "jan-4901301276070",
    "jan": "4901301276070",
    "category": "shampoo",
@@ -8456,7 +8437,7 @@
    "source": {
     "type": "brand",
     "label": "ロゼット公式オンラインショップ",
-    "url": "https://www.None.jp/Form/Product/ProductDetail.aspx?shop=0&pid=054186-900",
+    "url": "https://www.rosette.jp/Form/Product/ProductDetail.aspx?shop=0&pid=054186-900",
     "date": "2026-11-19"
    }
   },
@@ -8475,7 +8456,7 @@
    "source": {
     "type": "brand",
     "label": "ロゼット公式オンラインショップ",
-    "url": "https://www.None.jp/Form/Product/ProductDetail.aspx?shop=0&pid=054189-900",
+    "url": "https://www.rosette.jp/Form/Product/ProductDetail.aspx?shop=0&pid=054189-900",
     "date": "2026-11-19"
    }
   },
@@ -8494,7 +8475,7 @@
    "source": {
     "type": "brand",
     "label": "ロゼット公式オンラインショップ",
-    "url": "https://www.None.jp/Form/Product/ProductDetail.aspx?shop=0&pid=054184-900",
+    "url": "https://www.rosette.jp/Form/Product/ProductDetail.aspx?shop=0&pid=054184-900",
     "date": "2026-11-19"
    }
   },
@@ -8513,7 +8494,7 @@
    "source": {
     "type": "brand",
     "label": "ロゼット公式オンラインショップ",
-    "url": "https://www.None.jp/Form/Product/ProductDetail.aspx?shop=0&pid=054187-900",
+    "url": "https://www.rosette.jp/Form/Product/ProductDetail.aspx?shop=0&pid=054187-900",
     "date": "2026-11-19"
    }
   },
@@ -8532,7 +8513,7 @@
    "source": {
     "type": "brand",
     "label": "ロゼット公式オンラインショップ",
-    "url": "https://www.None.jp/Form/Product/ProductDetail.aspx?shop=0&pid=050317-900",
+    "url": "https://www.rosette.jp/Form/Product/ProductDetail.aspx?shop=0&pid=050317-900",
     "date": "2026-11-19"
    }
   },
@@ -8551,7 +8532,7 @@
    "source": {
     "type": "brand",
     "label": "ロゼット公式オンラインショップ",
-    "url": "https://www.None.jp/Form/Product/ProductDetail.aspx?shop=0&pid=050333-900",
+    "url": "https://www.rosette.jp/Form/Product/ProductDetail.aspx?shop=0&pid=050333-900",
     "date": "2026-11-19"
    }
   },
@@ -8570,7 +8551,7 @@
    "source": {
     "type": "brand",
     "label": "牛乳石鹸 製品情報",
-    "url": "https://www.None-soap.co.jp/products/None-mutenka-face-wash/",
+    "url": "https://www.cow-soap.co.jp/products/cow-mutenka-face-wash/",
     "date": "2026-11-19"
    }
   },
@@ -8589,7 +8570,7 @@
    "source": {
     "type": "brand",
     "label": "牛乳石鹸 製品情報",
-    "url": "https://www.None-soap.co.jp/products/skinlife-face-wash/",
+    "url": "https://www.cow-soap.co.jp/products/skinlife-face-wash/",
     "date": "2026-11-19"
    }
   },
@@ -8608,7 +8589,7 @@
    "source": {
     "type": "brand",
     "label": "牛乳石鹸 製品情報",
-    "url": "https://www.None-soap.co.jp/products/skinlife-bubble-face-wash/",
+    "url": "https://www.cow-soap.co.jp/products/skinlife-bubble-face-wash/",
     "date": "2026-11-19"
    }
   },
@@ -8646,7 +8627,7 @@
    "source": {
     "type": "brand",
     "label": "ロート製薬 商品情報サイト（成分表示）",
-    "url": "https://jp.None.com/seib/seib?kw=199556",
+    "url": "https://jp.rohto.com/seib/seib?kw=199556",
     "date": "2026-11-19"
    }
   },
@@ -8665,7 +8646,7 @@
    "source": {
     "type": "brand",
     "label": "ロート製薬 商品情報サイト（成分表示）",
-    "url": "https://jp.None.com/seib/seib?kw=199358",
+    "url": "https://jp.rohto.com/seib/seib?kw=199358",
     "date": "2026-11-19"
    }
   },
@@ -8684,7 +8665,7 @@
    "source": {
     "type": "brand",
     "label": "ロート製薬 商品情報サイト（成分表示）",
-    "url": "https://jp.None.com/seib/seib?kw=199785",
+    "url": "https://jp.rohto.com/seib/seib?kw=199785",
     "date": "2026-11-19"
    }
   },
@@ -8703,7 +8684,7 @@
    "source": {
     "type": "brand",
     "label": "ロート製薬 商品情報サイト（成分表示）",
-    "url": "https://jp.None.com/seib/seib?kw=199808",
+    "url": "https://jp.rohto.com/seib/seib?kw=199808",
     "date": "2026-11-19"
    }
   },
@@ -8722,7 +8703,7 @@
    "source": {
     "type": "brand",
     "label": "ロート製薬 商品情報サイト（成分表示）",
-    "url": "https://jp.None.com/seib/seib?kw=199471",
+    "url": "https://jp.rohto.com/seib/seib?kw=199471",
     "date": "2026-11-19"
    }
   },

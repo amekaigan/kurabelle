@@ -99,3 +99,8 @@
 /compare/c-cb450124/ /products/jan-4901301276100/ 301
 /compare/c-daa886b2/ /products/jan-4901301276070/ 301
 /compare/c-eea7fe3a/ /products/jan-4901301276100/ 301
+/products/jan-4901301462008/ /products/jan-4901301446206/ 301
+/compare/c-6c417140/ /compare/c-c061bb38/ 301
+/compare/c-c88d4664/ /compare/c-45c7a8be/ 301
+/compare/c-de643396/ /compare/c-321b00cf/ 301
+/compare/c-f8ce074b/ /compare/c-437a0965/ 301

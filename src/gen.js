@@ -729,7 +729,7 @@ ING_PAGES.forEach(g => {
   const co = [...coCnt].map(([n, c]) => ({ n, c, pct: Math.round(c / g.uses.length * 100), lift: c / g.uses.length - (ING.get(n).uses.length / P.length) }))
     .filter(o => o.c >= 2 && o.lift > 0.1).sort((m, n) => n.lift - m.lift).slice(0, 8);
   const dataLead = best ? `クラベルに登録している${CAT_N[best.cat]}では、${best.n}件のうち${best.k}件（${best.pct}%）に入っています。` : "";
-  const nf = noteOf(g.name), faqQ = nf && nf.faq ? nf.faq.map(o => o.q).join("／") : "";
+  const nf = noteOf(g.name), faqQ = nf && nf.faq ? nf.faq.slice(0, 2).map(o => o.q).join("／") : "" /* 説明文が長くなりすぎないよう、先頭の2問だけ（2026-11-26） */;
   /* 検索結果での見え方（2026-11-01）：成分名＋「美容」「コスメ」の検索で5位前後に出てもクリックが0だったため、
      タイトルに役割（保湿など）と件数、説明文の先頭に「答え」（何の成分か）と、成分表での別の書かれ方を入れる。
      「同じ成分」と言い切るのは notes の same だけ。まとめて数えている表示名は「仲間」と書く（本文と同じ扱い） */

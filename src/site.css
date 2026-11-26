@@ -473,6 +473,14 @@ ul.chk.dif li small{margin-left:6px;font-size:12px;color:var(--ink3)}
 .ifaq{display:grid;gap:10px}
 .ifaq h2{margin-bottom:0}
 .ifaq .qa-q{font-size:16px}
+/* 成分ページの「よくある疑問」を、タップで開く形に（2026-11-26）。先頭の1問は開いた状態。押す所は高さ52px */
+.qa-d{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:0 16px}
+.qa-d summary{list-style:none;display:flex;align-items:center;gap:8px;min-height:52px;cursor:pointer;font-weight:700;font-size:16px}
+.qa-d summary::-webkit-details-marker{display:none}
+.qa-d summary span:last-child{flex:1}
+.qa-d summary::after{content:"";flex:none;width:8px;height:8px;border-right:2px solid var(--ink3);border-bottom:2px solid var(--ink3);transform:rotate(45deg);margin-top:-4px}
+.qa-d[open] summary::after{transform:rotate(-135deg);margin-top:4px}
+.qa-d p{margin:0 0 14px}
 /* 商品ページの「よく気にされる成分」：文字のラベルをやめて ● と － にする（2026-10-23、成分名が途中で折り返していたため） */
 .flags li span{min-width:1.4em;text-align:center;padding:0;border:0;background:none;font-size:16px}
 .flags li.on span{background:none;color:var(--ink)}
